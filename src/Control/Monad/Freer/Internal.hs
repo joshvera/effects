@@ -33,6 +33,8 @@ starting point.
 module Control.Monad.Freer.Internal (
   Eff(..),
   type(:|),
+  inj,
+  prj,
   Arr,
   Arrs,
   Union,
