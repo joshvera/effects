@@ -13,7 +13,7 @@ import Control.Monad.Freer.State
 runTestCoroutine :: [Int] -> Int
 runTestCoroutine list = snd $ run $ runState effTestCoroutine 0
   where
-    testCoroutine :: (Members '[Yield () Int, State Int] r) => Eff r ()
+    testCoroutine :: ('[Yield () Int, State Int] <+> r) => Eff r ()
     testCoroutine = do
       -- yield for two elements and hope they're both odd
       b <- (&&)

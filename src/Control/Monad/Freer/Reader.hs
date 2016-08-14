@@ -42,7 +42,7 @@ data Reader e v where
   Reader :: Reader e e
 
 -- | Request a value for the environment
-ask :: (Member (Reader e) r) => Eff r e
+ask :: (Reader e :| r) => Eff r e
 ask = send Reader
 
 -- | Request a value from the environment and applys as function
@@ -57,7 +57,7 @@ runReader m e = handleRelay return (\Reader k -> k e) m
 -- Locally rebind the value in the dynamic environment
 -- This function is like a relay; it is both an admin for Reader requests,
 -- and a requestor of them
-local :: forall e a r. Member (Reader e) r =>
+local :: forall e a r. (Reader e :| r) =>
          (e -> e) -> Eff r a -> Eff r a
 local f m = do
   e0 <- ask

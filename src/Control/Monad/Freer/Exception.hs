@@ -34,7 +34,7 @@ import Control.Monad.Freer.Internal
 newtype Exc e v = Exc e
 
 -- | Throws an error carrying information of type e
-throwError :: (Member (Exc e) r) => e -> Eff r a
+throwError :: (Exc e :| r) => e -> Eff r a
 throwError e = send (Exc e)
 
 -- | Handler for exception effects
@@ -47,6 +47,6 @@ runError =
 
 -- | A catcher for Exceptions. Handlers are allowed to rethrow
 -- exceptions.
-catchError :: Member (Exc e) r =>
+catchError :: (Exc e :| r) =>
         Eff r a -> (e -> Eff r a) -> Eff r a
 catchError m handle = interpose return (\(Exc e) _k -> handle e) m
