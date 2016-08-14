@@ -30,15 +30,15 @@ testExceptionTakesPriority x y = run $ runError (go x y)
 -- The following won't type: unhandled exception!
 -- ex2rw = run et2
 {-
-    No instance for (Member (Exc Int) Void)
+    No instance for (Exc Int :< Void)
       arising from a use of `et2'
 -}
 
 -- exceptions and state
-incr :: Member (State Int) r => Eff r ()
+incr :: (State Int :< r) => Eff r ()
 incr = get >>= put . (+ (1::Int))
 
-tes1 :: (Members '[State Int, Exc String] r) => Eff r b
+tes1 :: ('[State Int, Exc String] :<: r) => Eff r b
 tes1 = do
  incr
  throwError "exc"
@@ -49,7 +49,7 @@ ter1 = run $ runState (runError tes1) (1::Int)
 ter2 :: Either String (String, Int)
 ter2 = run $ runError (runState tes1 (1::Int))
 
-teCatch :: Member (Exc String) r => Eff r a -> Eff r String
+teCatch :: (Exc String :< r) => Eff r a -> Eff r String
 teCatch m = catchError (m >> return "done") (\e -> return (e::String))
 
 ter3 :: (Either String String, Int)
@@ -61,7 +61,7 @@ ter4 = run $ runError (runState (teCatch tes1) (1::Int))
 -- The example from the paper
 newtype TooBig = TooBig Int deriving (Eq, Show)
 
-ex2 :: Member (Exc TooBig) r => Eff r Int -> Eff r Int
+ex2 :: (Exc TooBig :< r) => Eff r Int -> Eff r Int
 ex2 m = do
   v <- m
   if v > 5 then throwError (TooBig v)

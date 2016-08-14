@@ -5,10 +5,10 @@ module Coroutine where
 {-
 
 -- First example of coroutines
-yieldInt :: Member (Yield Int ()) r => Int -> Eff r ()
+yieldInt :: (Yield Int () :< r) => Int -> Eff r ()
 yieldInt = yield
 
-th1 :: Member (Yield Int ()) r => Eff r ()
+th1 :: (Yield Int () :< r) => Eff r ()
 th1 = yieldInt 1 >> yieldInt 2
 
 
@@ -23,11 +23,11 @@ Done
 
 -- Add dynamic variables
 -- The code is essentially the same as that in transf.hs (only added
--- a type specializtion on yield). The inferred signature is different though.
+-- a type specialization on yield). The inferred signature is different though.
 -- Before it was
 --    th2 :: MonadReader Int m => CoT Int m ()
 -- Now it is more general:
-th2 :: (Member (Yield Int ()) r, Member (Reader Int) r) => Eff r ()
+th2 :: ('[Yield Int (), Reader Int] :<: r) => Eff r ()
 th2 = ask >>= yieldInt >> (ask >>= yieldInt)
 
 
@@ -52,7 +52,7 @@ Done
 -}
 
 -- Real example, with two sorts of local rebinding
-th3 :: (Member (Yield Int ()) r, Member (Reader Int) r) => Eff r ()
+th3 :: ('[Yield Int (), Reader Int] :<: r) => Eff r ()
 th3 = ay >> ay >> local (+(10::Int)) (ay >> ay)
  where ay = ask >>= yieldInt
 

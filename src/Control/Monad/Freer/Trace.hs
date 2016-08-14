@@ -32,7 +32,7 @@ data Trace v where
   Trace :: String -> Trace ()
 
 -- | Printing a string in a trace
-trace :: Member Trace r => String -> Eff r ()
+trace :: (Trace :< r) => String -> Eff r ()
 trace = send . Trace
 
 -- | An IO handler for Trace effects

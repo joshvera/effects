@@ -43,13 +43,13 @@ data Teletype s where
   GetLine     :: Teletype String
   ExitSuccess :: Teletype ()
 
-putStrLn' :: Member Teletype r => String -> Eff r ()
+putStrLn' :: (Teletype :< r) => String -> Eff r ()
 putStrLn' = send . PutStrLn
 
-getLine'  :: Member Teletype r => Eff r String
+getLine'  :: (Teletype :< r) => Eff r String
 getLine' = send GetLine
 
-exitSuccess' :: Member Teletype r => Eff r ()
+exitSuccess' :: (Teletype :< r) => Eff r ()
 exitSuccess' = send ExitSuccess
 
 --------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ The key commands are:
 
 # Licensing
 
-This project is distrubted under a BSD3 license. See the included
+This project is distributed under a BSD3 license. See the included
 LICENSE file for more details.
 
 # Acknowledgements
@@ -113,8 +113,8 @@ LICENSE file for more details.
 This package would not be possible without the paper and the reference
 implementation. In particular:
 
-* Data.Open.Union maps to [OpenUnion41.hs](http://okmij.org/ftp/Haskell/extensible/OpenUnion41.hs)
+* Data.Open.Union maps to [OpenUnion51.hs](http://okmij.org/ftp/Haskell/extensible/OpenUnion51.hs)
 * Data.FTCQueue maps to [FTCQueue1](http://okmij.org/ftp/Haskell/extensible/FTCQueue1.hs)
-* Control.Monad.Freer* maps to [Union1.hs](http://okmij.org/ftp/Haskell/extensible/Eff1.hs)
+* Control.Monad.Freer* maps to [Eff1.hs](http://okmij.org/ftp/Haskell/extensible/Eff1.hs)
 
 There will be deviations from the source.

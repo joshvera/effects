@@ -32,8 +32,10 @@ starting point.
 -}
 module Control.Monad.Freer.Internal (
   Eff(..),
-  Member(..),
-  Members,
+  type(:<),
+  type(:<:),
+  inj,
+  prj,
   Arr,
   Arrs,
   Union,
@@ -87,7 +89,7 @@ qApp :: Arrs r b w -> b -> Eff r w
 qApp q' x =
    case tviewl q' of
    TOne k  -> k x
-   k :| t -> case k x of
+   k :< t -> case k x of
      Val y -> qApp t y
      E u q -> E u (q >< t)
 
@@ -118,7 +120,7 @@ instance Monad (Eff r) where
   E u q >>= k = E u (q |> k)
 
 -- | send a request and wait for a reply
-send :: Member t r => t v -> Eff r v
+send :: (t :< r) => t v -> Eff r v
 send t = E (inj t) (tsingleton Val)
 
 --------------------------------------------------------------------------------
@@ -174,7 +176,7 @@ handleRelayS s' ret h = loop s'
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
-interpose :: Member t r =>
+interpose :: (t :< r) =>
              (a -> Eff r w) -> (forall v. t v -> Arr r v w -> Eff r w) ->
              Eff r a -> Eff r w
 interpose ret h = loop
@@ -193,11 +195,11 @@ data NonDetEff a where
   MZero :: NonDetEff a
   MPlus :: NonDetEff Bool
 
-instance Member NonDetEff r => Alternative (Eff r) where
+instance (NonDetEff :< r) => Alternative (Eff r) where
   empty = mzero
   (<|>) = mplus
 
-instance Member NonDetEff r => MonadPlus (Eff r) where
+instance (NonDetEff :< r) => MonadPlus (Eff r) where
   mzero       = send MZero
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
 
@@ -210,7 +212,7 @@ makeChoiceA =
       MZero -> return empty
       MPlus -> liftM2 (<|>) (k True) (k False)
 
-msplit :: Member NonDetEff r
+msplit :: (NonDetEff :< r)
        => Eff r a -> Eff r (Maybe (a, Eff r a))
 msplit = loop []
   where loop jq (Val x)     = return (Just (x, msum jq))

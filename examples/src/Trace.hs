@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE TypeOperators #-}
 module Trace where
 
 import Control.Monad.Freer
@@ -11,7 +12,7 @@ import Common
 -- Higher-order effectful function
 -- The inferred type shows that the Trace affect is added to the effects
 -- of r
-mapMdebug:: (Show a, Member Trace r) =>
+mapMdebug:: (Show a, Trace :< r) =>
      (a -> Eff r b) -> [a] -> Eff r [b]
 mapMdebug _ [] = return []
 mapMdebug f (h:t) = do

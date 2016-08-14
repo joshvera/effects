@@ -48,7 +48,6 @@ library
                      , Control.Monad.Freer.Writer
                      , Data.FTCQueue
                      , Data.Open.Union
-
   build-depends:       base >=4.7 && <5
   hs-source-dirs:      src
   ghc-options:         -Wall

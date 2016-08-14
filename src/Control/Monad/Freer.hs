@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeOperators #-}
 {-|
 Module      : Control.Monad.Freer
 Description : Freer - an extensible effects library
@@ -9,8 +10,8 @@ Portability : POSIX
 
 -}
 module Control.Monad.Freer (
-  Member,
-  Members,
+  type(:<),
+  type(:<:),
   Eff,
   run,
   send,

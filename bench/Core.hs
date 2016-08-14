@@ -58,16 +58,16 @@ data Http out where
   Post  :: String -> Http String
   Get   :: Http String
 
-open' :: Member Http r => String -> Eff r ()
+open' :: (Http :< r) => String -> Eff r ()
 open'  = send . Open
 
-close' :: Member Http r => Eff r ()
+close' :: (Http :< r) => Eff r ()
 close' = send Close
 
-post' :: Member Http r => String -> Eff r String
+post' :: (Http :< r) => String -> Eff r String
 post' = send . Post
 
-get' :: Member Http r => Eff r String
+get' :: (Http :< r) => Eff r String
 get' = send Get
 
 runHttp :: Eff (Http ': r) w -> Eff r w
@@ -113,13 +113,13 @@ runFHttp (Free.Free (FGet n))    = pure "" >>= runFHttp . n
 --------------------------------------------------------------------------------
                         -- Benchmark Suite --
 --------------------------------------------------------------------------------
-prog :: Member Http r => Eff r ()
+prog :: (Http :< r) => Eff r ()
 prog = open' "cats" >> get' >> post' "cats" >> close'
 
 prog' :: FHttp ()
 prog' = fopen' "cats" >> fget' >> fpost' "cats" >> fclose'
 
-p :: Member Http r => Int -> Eff r ()
+p :: (Http :< r) => Int -> Eff r ()
 p count   =  open' "cats" >> replicateM_ count (get' >> post' "cats") >>  close'
 
 p' :: Int -> FHttp ()
