@@ -32,7 +32,7 @@ data CutFalse = CutFalse
 -- data Choose a b = Choose [a] b
 
 -- | Implementation of logical Cut using Exc effects.
-cutFalse :: (Exc CutFalse :| r) => Eff r a
+cutFalse :: (Exc CutFalse :< r) => Eff r a
 cutFalse = throwError CutFalse
 
 {-

@@ -10,7 +10,7 @@ Portability : POSIX
 
 -}
 module Control.Monad.Freer (
-  type(:|),
+  type(:<),
   Eff,
   run,
   send,

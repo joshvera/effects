@@ -42,15 +42,15 @@ data State s v where
   Put :: !s -> State s ()
 
 -- | Retrieve state
-get :: (State s :| r) => Eff r s
+get :: (State s :< r) => Eff r s
 get = send Get
 
 -- | Store state
-put :: (State s :| r) => s -> Eff r ()
+put :: (State s :< r) => s -> Eff r ()
 put s = send (Put s)
 
 -- | Modify state
-modify :: (State s :| r) => (s -> s) -> Eff r ()
+modify :: (State s :< r) => (s -> s) -> Eff r ()
 modify f = fmap f get >>= put
 
 -- | Handler for State effects
@@ -66,7 +66,7 @@ runState (E u q) s = case decomp u of
 -- An encapsulated State handler, for transactional semantics
 -- The global state is updated only if the transactionState finished
 -- successfully
-transactionState :: forall s r w. (State s :| r) =>
+transactionState :: forall s r w. (State s :< r) =>
                     Proxy s -> Eff r w -> Eff r w
 transactionState _ m = do s <- get; loop s m
  where

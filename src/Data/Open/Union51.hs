@@ -37,7 +37,7 @@
 
 -- The interface is the same as of other OpenUnion*.hs
 module Data.Open.Union51 (Union, inj, prj, decomp,
-                   type(:|), MemberU2, weaken
+                   type(:<), MemberU2, weaken
                   ) where
 
 import Unsafe.Coerce(unsafeCoerce)
@@ -62,8 +62,8 @@ prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
 
 newtype P t r = P{unP :: Int}
 
-infixr 5 :|
-class (FindElem t r) => (t :: * -> *) :| r where
+infixr 5 :<
+class (FindElem t r) => (t :: * -> *) :< r where
   inj :: t v -> Union r v
   prj :: Union r v -> Maybe (t v)
 
@@ -76,7 +76,7 @@ instance Member t '[t] where
   prj (Union _ x) = Just (unsafeCoerce x)
 -}
 
-instance (FindElem t r) => t :| r where
+instance (FindElem t r) => t :< r where
   {-# INLINE inj #-}
   {-# INLINE prj #-}
   inj = inj' (unP (elemNo :: P t r))
@@ -117,12 +117,12 @@ type family EQU (a :: k) (b :: k) :: Bool where
   EQU a b = 'False
 
 -- This class is used for emulating monad transformers
-class (t :| r) => MemberU2 (tag :: k -> * -> *) (t :: * -> *) r | tag r -> t
+class (t :< r) => MemberU2 (tag :: k -> * -> *) (t :: * -> *) r | tag r -> t
 instance (MemberU' (EQU t1 t2) tag t1 (t2 ': r)) => MemberU2 tag t1 (t2 ': r)
 
-class (t :| r) =>
+class (t :< r) =>
       MemberU' (f::Bool) (tag :: k -> * -> *) (t :: * -> *) r | tag r -> t
 
 instance MemberU' 'True tag (tag e) (tag e ': r)
-instance (t :| (t' ': r), MemberU2 tag t r) =>
+instance (t :< (t' ': r), MemberU2 tag t r) =>
            MemberU' 'False tag t (t' ': r)
