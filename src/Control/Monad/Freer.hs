@@ -10,7 +10,6 @@ Portability : POSIX
 -}
 module Control.Monad.Freer (
   Member,
-  Members,
   Eff,
   run,
   send,

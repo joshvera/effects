@@ -33,7 +33,6 @@ starting point.
 module Control.Monad.Freer.Internal (
   Eff(..),
   Member(..),
-  Members,
   Arr,
   Arrs,
   Union,
@@ -57,7 +56,7 @@ module Control.Monad.Freer.Internal (
 
 import Control.Monad
 import Control.Applicative
-import Data.Open.Union
+import Data.Open.Union51
 import Data.FTCQueue
 
 
