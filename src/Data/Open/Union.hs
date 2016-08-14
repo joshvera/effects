@@ -80,7 +80,7 @@ type family m :<: r :: Constraint where
 
 {-
 -- Optimized specialized instance
-instance Member t '[t] where
+instance (t :< '[t]) where
   {-# INLINE inj #-}
   {-# INLINE prj #-}
   inj x           = Union 0 x

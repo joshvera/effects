@@ -36,7 +36,7 @@ cutFalse :: (Exc CutFalse :< r) => Eff r a
 cutFalse = throwError CutFalse
 
 {-
-call :: Member (Exc CutFalse) r => Eff (Exc CutFalse ': r) a -> Eff r a
+call :: (Exc CutFalse :< r) => Eff (Exc CutFalse ': r) a -> Eff r a
 call m = loop [] m where
  loop jq (Val x) = return x `mplus` next jq          -- (C2)
  loop jq (E u q) = case decomp u of

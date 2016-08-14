@@ -30,7 +30,7 @@ testExceptionTakesPriority x y = run $ runError (go x y)
 -- The following won't type: unhandled exception!
 -- ex2rw = run et2
 {-
-    No instance for (Member (Exc Int) Void)
+    No instance for (Exc Int :< Void)
       arising from a use of `et2'
 -}
 
