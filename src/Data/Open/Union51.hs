@@ -4,6 +4,7 @@
 {-# LANGUAGE DataKinds, PolyKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 -- Only for MemberU below, when emulating Monad Transformers
 {-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
@@ -37,10 +38,11 @@
 
 -- The interface is the same as of other OpenUnion*.hs
 module Data.Open.Union51 (Union, inj, prj, decomp,
-                   type(:<), MemberU2, weaken
+                   type(:<), type(:<:), MemberU2, weaken
                   ) where
 
 import Unsafe.Coerce(unsafeCoerce)
+import GHC.Exts (Constraint)
 
 -- The data constructors of Union are not exported
 
@@ -66,6 +68,11 @@ infixr 5 :<
 class (FindElem t r) => (t :: * -> *) :< r where
   inj :: t v -> Union r v
   prj :: Union r v -> Maybe (t v)
+
+infixr 5 :<:
+type family m :<: r :: Constraint where
+  (t ': c) :<: r = (t :< r, c :<: r)
+  '[] :<: r = ()
 
 {-
 -- Optimized specialized instance
