@@ -59,7 +59,7 @@ module Control.Monad.Freer.Internal (
 
 import Control.Monad
 import Control.Applicative
-import Data.Open.Union51
+import Data.Open.Union
 import Data.FTCQueue
 
 

@@ -2,101 +2,134 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DataKinds, PolyKinds #-}
-{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ConstraintKinds #-}
 
-{-|
-Module      : Data.Open.Union
-Description : Open unions (type-indexed co-products) for extensible effects.
-Copyright   : Alej Cabrera 2015
-License     : BSD-3
-Maintainer  : cpp.cabrera@gmail.com
-Stability   : experimental
-Portability : POSIX
+-- Only for MemberU below, when emulating Monad Transformers
+{-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
 
-This implementation relies on _closed_ type families added to GHC
-7.8. It has NO overlapping instances and NO Typeable. Alas, the
-absence of Typeable means the projections and injections generally
-take linear time.  The code illustrate how to use closed type families
-to disambiguate otherwise overlapping instances.
+-- Open unions (type-indexed co-products) for extensible effects
+-- All operations are constant-time, and there is no Typeable constraint
 
-The data constructors of Union are not exported. Essentially, the
-nested Either data type.
+-- This is a variation of OpenUion5.hs, which relies on overlapping
+-- instances instead of closed type families. Closed type families
+-- have their problems: overlapping instances can resolve even
+-- for unground types, but closed type families are subject to a
+-- strict apartness condition.
 
-Using <http://okmij.org/ftp/Haskell/extensible/OpenUnion41.hs> as a
-starting point.
+-- This implementation is very similar to OpenUnion1.hs, but without
+-- the annoying Typeable constraint. We sort of emulate it:
 
--}
+-- Our list r of open union components is a small Universe.
+-- Therefore, we can use the Typeable-like evidence in that
+-- universe. We hence can define
+--
+-- data Union r v where
+--  Union :: t v -> TRep t r -> Union r v -- t is existential
+-- where
+-- data TRep t r where
+--  T0 :: TRep t (t ': r)
+--  TS :: TRep t r -> TRep (any ': r)
+-- Then Member is a type class that produces TRep
+-- Taken literally it doesn't seem much better than
+-- OpenUinion41.hs. However, we can cheat and use the index of the
+-- type t in the list r as the TRep. (We will need UnsafeCoerce then).
 
-module Data.Open.Union (
-  Union,
-  decomp,
-  weaken,
-  Member(..),
-  Members
-) where
+-- The interface is the same as of other OpenUnion*.hs
+module Data.Open.Union (Union, inj, prj, decomp,
+                   type(:<), type(:<:), MemberU2, weaken
+                  ) where
 
-import GHC.Exts
+import Unsafe.Coerce(unsafeCoerce)
+import GHC.Exts (Constraint)
 
---------------------------------------------------------------------------------
-                           -- Interface --
---------------------------------------------------------------------------------
+-- The data constructors of Union are not exported
+
+-- Strong Sum (Existential with the evidence) is an open union
+-- t is can be a GADT and hence not necessarily a Functor.
+-- Int is the index of t in the list r; that is, the index of t in the
+-- universe r
 data Union (r :: [ * -> * ]) v where
-  UNow  :: t v -> Union (t ': r) v
-  UNext :: Union r v -> Union (any ': r) v
+  Union :: {-# UNPACK #-} !Int -> t v -> Union r v
 
-{-# INLINE decomp #-}
-decomp :: Union (t ': r) v -> Either (Union r v) (t v)
-decomp (UNow x)  = Right x
-decomp (UNext v) = Left v
+{-# INLINE prj' #-}
+{-# INLINE inj' #-}
+inj' :: Int -> t v -> Union r v
+inj' = Union
 
-{-# INLINE weaken #-}
-weaken :: Union r w -> Union (any ': r) w
-weaken = UNext
+prj' :: Int -> Union r v -> Maybe (t v)
+prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
+                    | otherwise = Nothing
 
-class (Member' t r (FindElem t r)) => Member t r where
+newtype P t r = P{unP :: Int}
+
+infixr 5 :<
+class (FindElem t r) => (t :: * -> *) :< r where
   inj :: t v -> Union r v
   prj :: Union r v -> Maybe (t v)
 
-instance (Member' t r (FindElem t r)) => Member t r where
-  inj = inj' (P :: P (FindElem t r))
-  prj = prj' (P :: P (FindElem t r))
+infixr 5 :<:
+type family m :<: r :: Constraint where
+  (t ': c) :<: r = (t :< r, c :<: r)
+  '[] :<: r = ()
 
-type family Members m r :: Constraint where
-  Members (t ': c) r = (Member t r, Members c r)
-  Members '[] r = ()
+{-
+-- Optimized specialized instance
+instance Member t '[t] where
+  {-# INLINE inj #-}
+  {-# INLINE prj #-}
+  inj x           = Union 0 x
+  prj (Union _ x) = Just (unsafeCoerce x)
+-}
 
---------------------------------------------------------------------------------
-                         -- Implementation --
---------------------------------------------------------------------------------
-data Nat = S Nat | Z
-data P (n :: Nat) = P
+instance (FindElem t r) => t :< r where
+  {-# INLINE inj #-}
+  {-# INLINE prj #-}
+  inj = inj' (unP (elemNo :: P t r))
+  prj = prj' (unP (elemNo :: P t r))
 
--- injecting/projecting at a specified position P n
-class Member' t r (n :: Nat) where
-  inj' :: P n -> t v -> Union r v
-  prj' :: P n -> Union r v -> Maybe (t v)
 
-instance (r ~ (t ': r')) => Member' t r 'Z where
-  inj' _ = UNow
-  prj' _ (UNow x) = Just x
-  prj' _ _        = Nothing
+{-# INLINE [2] decomp #-}
+decomp :: Union (t ': r) v -> Either (Union r v) (t v)
+decomp (Union 0 v) = Right $ unsafeCoerce v
+decomp (Union n v) = Left  $ Union (n-1) v
 
-instance (r ~ (t' ': r'), Member' t r' n) => Member' t r ('S n) where
-  inj' _ = UNext . inj' (P::P n)
-  prj' _ (UNow _)  = Nothing
-  prj' _ (UNext x) = prj' (P::P n) x
+
+-- Specialized version
+{-# RULES "decomp/singleton"  decomp = decomp0 #-}
+{-# INLINE decomp0 #-}
+decomp0 :: Union '[t] v -> Either (Union '[] v) (t v)
+decomp0 (Union _ v) = Right $ unsafeCoerce v
+-- No other case is possible
+
+weaken :: Union r w -> Union (any ': r) w
+weaken (Union n v) = Union (n+1) v
 
 -- Find an index of an element in a `list'
 -- The element must exist
--- This closed type family disambiguates otherwise overlapping
--- instances
-type family FindElem (t :: * -> *) r :: Nat where
-  FindElem t (t ': r)    = 'Z
-  FindElem t (any ': r)  = 'S (FindElem t r)
+-- This is essentially a compile-time computation.
+class FindElem (t :: * -> *) r where
+  elemNo :: P t r
+
+instance {-# OVERLAPPING #-} FindElem t (t ': r) where
+  elemNo = P 0
+
+instance {-# OVERLAPPING #-} FindElem t r => FindElem t (t' ': r) where
+  elemNo = P $ 1 + unP (elemNo :: P t r)
+
 
 type family EQU (a :: k) (b :: k) :: Bool where
   EQU a a = 'True
   EQU a b = 'False
+
+-- This class is used for emulating monad transformers
+class (t :< r) => MemberU2 (tag :: k -> * -> *) (t :: * -> *) r | tag r -> t
+instance (MemberU' (EQU t1 t2) tag t1 (t2 ': r)) => MemberU2 tag t1 (t2 ': r)
+
+class (t :< r) =>
+      MemberU' (f::Bool) (tag :: k -> * -> *) (t :: * -> *) r | tag r -> t
+
+instance MemberU' 'True tag (tag e) (tag e ': r)
+instance (t :< (t' ': r), MemberU2 tag t r) =>
+           MemberU' 'False tag t (t' ': r)
