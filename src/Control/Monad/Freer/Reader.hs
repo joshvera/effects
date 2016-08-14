@@ -47,7 +47,7 @@ ask = send Reader
 
 -- | Request a value from the environment and applys as function
 asks :: (b -> a) -> Eff '[Reader b] a
-asks f = ask >>= return . f
+asks f = fmap f ask
 
 -- | Handler for reader effects
 runReader :: Eff (Reader e ': r) w -> e -> Eff r w
