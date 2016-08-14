@@ -9,47 +9,51 @@
 -- Only for MemberU below, when emulating Monad Transformers
 {-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
 
--- Open unions (type-indexed co-products) for extensible effects
--- All operations are constant-time, and there is no Typeable constraint
+{-|
+Module      : Data.Open.Union
+Description : Open unions (type-indexed co-products) for extensible effects.
+Copyright   : Alej Cabrera 2015
+License     : BSD-3
+Maintainer  : cpp.cabrera@gmail.com
+Stability   : experimental
+Portability : POSIX
 
--- This is a variation of OpenUion5.hs, which relies on overlapping
--- instances instead of closed type families. Closed type families
--- have their problems: overlapping instances can resolve even
--- for unground types, but closed type families are subject to a
--- strict apartness condition.
+All operations are constant-time, and there is no Typeable constraint
 
--- This implementation is very similar to OpenUnion1.hs, but without
--- the annoying Typeable constraint. We sort of emulate it:
+This is a variation of OpenUion5.hs, which relies on overlapping
+instances instead of closed type families. Closed type families
+have their problems: overlapping instances can resolve even
+for unground types, but closed type families are subject to a
+strict apartness condition.
 
--- Our list r of open union components is a small Universe.
--- Therefore, we can use the Typeable-like evidence in that
--- universe. We hence can define
---
--- data Union r v where
---  Union :: t v -> TRep t r -> Union r v -- t is existential
--- where
--- data TRep t r where
---  T0 :: TRep t (t ': r)
---  TS :: TRep t r -> TRep (any ': r)
--- Then Member is a type class that produces TRep
--- Taken literally it doesn't seem much better than
--- OpenUinion41.hs. However, we can cheat and use the index of the
--- type t in the list r as the TRep. (We will need UnsafeCoerce then).
+This implementation is very similar to OpenUnion1.hs, but without
+the annoying Typeable constraint. We sort of emulate it:
 
--- The interface is the same as of other OpenUnion*.hs
-module Data.Open.Union (Union, inj, prj, decomp,
-                   type(:<), type(:<:), MemberU2, weaken
-                  ) where
+Our list r of open union components is a small Universe.
+Therefore, we can use the Typeable-like evidence in that
+universe.
+
+The data constructors of Union are not exported.
+-}
+
+module Data.Open.Union (
+  Union,
+  decomp,
+  weaken,
+  inj,
+  prj,
+  type(:<),
+  type(:<:),
+  MemberU2
+) where
 
 import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
 
--- The data constructors of Union are not exported
-
 -- Strong Sum (Existential with the evidence) is an open union
 -- t is can be a GADT and hence not necessarily a Functor.
 -- Int is the index of t in the list r; that is, the index of t in the
--- universe r
+-- universe r.
 data Union (r :: [ * -> * ]) v where
   Union :: {-# UNPACK #-} !Int -> t v -> Union r v
 
