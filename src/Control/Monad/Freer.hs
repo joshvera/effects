@@ -14,11 +14,7 @@ module Control.Monad.Freer (
   type(:<:),
   Eff,
   run,
-  send,
-
-  NonDetEff(..),
-  makeChoiceA,
-  msplit
+  send
 ) where
 
 import Control.Monad.Freer.Internal
