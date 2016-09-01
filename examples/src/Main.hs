@@ -13,6 +13,6 @@ runner = do
 
 main :: IO ()
 main = do
-  let xs = runTeletypePure ["cat", "fish"] runner
+  let xs = Teletype.runPure ["cat", "fish"] runner
   print xs
-  runTeletype runner
+  Teletype.run runner
