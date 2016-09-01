@@ -9,8 +9,8 @@ traceFresh = runTrace $ flip runFresh' 0 $ do
   trace $ "Fresh " ++ show n
   n' <- fresh
   trace $ "Fresh " ++ show n'
-  n' <- fresh
-  trace $ "Fresh " ++ show n'
+  n'' <- fresh
+  trace $ "Fresh " ++ show n''
 {-
 Fresh 0
 Fresh 1
