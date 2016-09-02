@@ -114,7 +114,7 @@ instance Monad (Eff effs) where
   E u q >>= k = E u (q |> k)
 
 -- | send a request and wait for a reply
-send :: (t :< effs) => t v -> Eff effs v
+send :: (eff :< effs) => eff b -> Eff effs b
 send t = E (inj t) (tsingleton Val)
 
 --------------------------------------------------------------------------------
@@ -143,8 +143,8 @@ runM (E u q) = case decomp u of
 
 -- | Given a request, either handle it or relay it.
 handleRelay :: (a -> Eff effs b) ->
-               (forall v. t v -> Arr effs v b -> Eff effs b) ->
-               Eff (t ': effs) a -> Eff effs b
+               (forall v. eff v -> Arr effs v b -> Eff effs b) ->
+               Eff (eff ': effs) a -> Eff effs b
 handleRelay ret h = loop
  where
   loop (Val x)  = ret x
@@ -158,8 +158,8 @@ handleRelay ret h = loop
 -- effect, or relayed to a handler that can handle the target effect.
 handleRelayS :: s ->
                 (s -> a -> Eff effs b) ->
-                (forall v. s -> t v -> (s -> Arr effs v b) -> Eff effs b) ->
-                Eff (t ': effs) a -> Eff effs b
+                (forall v. s -> eff v -> (s -> Arr effs v b) -> Eff effs b) ->
+                Eff (eff ': effs) a -> Eff effs b
 handleRelayS s' ret h = loop s'
   where
     loop s (Val x)  = ret s x
@@ -170,8 +170,8 @@ handleRelayS s' ret h = loop s'
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
-interpose :: (t :< effs) =>
-             (a -> Eff effs b) -> (forall v. t v -> Arr effs v b -> Eff effs b) ->
+interpose :: (eff :< effs) =>
+             (a -> Eff effs b) -> (forall v. eff v -> Arr effs v b -> Eff effs b) ->
              Eff effs a -> Eff effs b
 interpose ret h = loop
  where
