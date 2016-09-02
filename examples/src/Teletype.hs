@@ -35,14 +35,17 @@ run (E u q) = case decomp u of
   Left  _              -> error "This cannot happen"
 
 -- Takes a list of strings and a teletype effect to run and
--- returns a list of strings.
+-- returns the list of strings in that effect.
 runPure :: [String] -> Eff '[Teletype] w -> [String]
 runPure inputs req = reverse (go inputs req [])
   where go :: [String] -> Eff '[Teletype] w -> [String] -> [String]
-        go _      (Val _) acc = acc
-        go []     _       acc = acc
-        go (x:xs) (E u q) acc = case decomp u of
-          Right (PutStrLn msg) -> go (x:xs) (qApp q ()) (msg:acc)
-          Right GetLine        -> go xs     (qApp q x) acc
-          Right ExitSuccess    -> go xs     (Val ())   acc
-          Left _               -> go xs     (Val ())   acc
+        go _  (Val _) acc = acc
+        go xs (E u q) acc = case xs of
+          (x:xs') -> case decomp u of
+            Right (PutStrLn msg) -> go (x:xs') (qApp q ()) (msg:acc)
+            Right GetLine        -> go xs'     (qApp q x) acc
+            Right ExitSuccess    -> go xs'     (Val ())   acc
+            Left _               -> go xs'     (Val ())   acc
+          _      -> case decomp u of
+            Right (PutStrLn msg) -> go xs (qApp q ()) (msg:acc)
+            _                    -> go xs     (Val ())   acc
