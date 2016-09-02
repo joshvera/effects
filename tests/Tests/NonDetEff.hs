@@ -4,6 +4,7 @@ module Tests.NonDetEff where
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Freer
+import Control.Monad.Freer.NonDetEff
 
 ifte :: (NonDetEff :< r)
      => Eff r a -> (a -> Eff r b) -> Eff r b -> Eff r b
