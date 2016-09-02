@@ -69,8 +69,8 @@ type Arrs effs a b = FTCQueue (Eff effs) a b
 
 -- | An effectful computation that returns 'b' and performs effects 'effs'.
 data Eff effs b
-  -- * Done with the value of type b.
-  = Val b -- ^ Done with the value of type b.
+  -- | Done with the value of type b.
+  = Val b
   -- | Send a request of type 'Union effs a' with the 'Arrs effs a b' queue.
   | forall a. E (Union effs a) (Arrs effs a b)
 
