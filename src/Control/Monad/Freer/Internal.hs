@@ -143,11 +143,11 @@ runM (E u q) = case decomp u of
 handleRelay :: (a -> Eff effs b)
             -> (forall v. eff v -> Arr effs v b -> Eff effs b)
             -> Eff (eff ': effs) a -> Eff effs b
-handleRelay ret h = loop
+handleRelay pure' bind = loop
  where
-  loop (Val x)  = ret x
+  loop (Val x)  = pure' x
   loop (E u' q)  = case decomp u' of
-    Right x -> h x k
+    Right x -> bind x k
     Left  u -> E u (tsingleton k)
    where k = composeEffs q loop
 
@@ -159,11 +159,11 @@ handleRelayS :: s
                 -> (forall v. s -> eff v -> (s -> Arr effs v b) -> Eff effs b)
                 -> Eff (eff ': effs) a
                 -> Eff effs b
-handleRelayS s' ret h = loop s'
+handleRelayS s' pure' bind = loop s'
   where
-    loop s (Val x)  = ret s x
+    loop s (Val x)  = pure' s x
     loop s (E u' q)  = case decomp u' of
-      Right x -> h s x k
+      Right x -> bind s x k
       Left  u -> E u (tsingleton (k s))
      where k s'' x = loop s'' $ applyEffs q x
 
