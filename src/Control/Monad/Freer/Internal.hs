@@ -157,9 +157,9 @@ handleRelay ret h = loop
 -- Allows sending along some state to be handled for the target
 -- effect, or relayed to a handler that can handle the target effect.
 handleRelayS :: s ->
-                (s -> a -> Eff r w) ->
-                (forall v. s -> t v -> (s -> Arr r v w) -> Eff r w) ->
-                Eff (t ': r) a -> Eff r w
+                (s -> a -> Eff r b) ->
+                (forall v. s -> t v -> (s -> Arr r v b) -> Eff r b) ->
+                Eff (t ': r) a -> Eff r b
 handleRelayS s' ret h = loop s'
   where
     loop s (Val x)  = ret s x
@@ -171,8 +171,8 @@ handleRelayS s' ret h = loop s'
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
 interpose :: (t :< r) =>
-             (a -> Eff r w) -> (forall v. t v -> Arr r v w -> Eff r w) ->
-             Eff r a -> Eff r w
+             (a -> Eff r b) -> (forall v. t v -> Arr r v b -> Eff r b) ->
+             Eff r a -> Eff r b
 interpose ret h = loop
  where
    loop (Val x)  = ret x
