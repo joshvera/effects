@@ -25,16 +25,14 @@ getLine' = send GetLine
 exitSuccess' :: (Teletype :< r) => Eff r ()
 exitSuccess' = send ExitSuccess
 
---------------------------------------------------------------------------------
-                     -- Effectful Interpreter --
---------------------------------------------------------------------------------
+-- Takes an teletype Effect w and returns an IO w
 run :: Eff '[Teletype] w -> IO w
 run (Val x) = return x
 run (E u q) = case decomp u of
-              Right (PutStrLn msg) -> putStrLn msg  >> Teletype.run (qApp q ())
-              Right GetLine        -> getLine      >>= \s -> Teletype.run (qApp q s)
-              Right ExitSuccess    -> exitSuccess
-              Left  _              -> error "This cannot happen"
+  Right (PutStrLn msg) -> putStrLn msg  >> Teletype.run (qApp q ())
+  Right GetLine        -> getLine      >>= \s -> Teletype.run (qApp q s)
+  Right ExitSuccess    -> exitSuccess
+  Left  _              -> error "This cannot happen"
 
 --------------------------------------------------------------------------------
                         -- Pure Interpreter --
