@@ -16,12 +16,15 @@ data Teletype s where
   GetLine     :: Teletype String
   ExitSuccess :: Teletype ()
 
+-- Sends a teletype effect.
 putStrLn' :: (Teletype :< r) => String -> Eff r ()
 putStrLn' = send . PutStrLn
 
+-- Gets a line from a Teletype.
 getLine'  :: (Teletype :< r) => Eff r String
 getLine' = send GetLine
 
+-- An exit success effect that returns ().
 exitSuccess' :: (Teletype :< r) => Eff r ()
 exitSuccess' = send ExitSuccess
 
@@ -33,10 +36,6 @@ run (E u q) = case decomp u of
   Right GetLine        -> getLine      >>= \s -> Teletype.run (qApp q s)
   Right ExitSuccess    -> exitSuccess
   Left  _              -> error "This cannot happen"
-
---------------------------------------------------------------------------------
-                        -- Pure Interpreter --
---------------------------------------------------------------------------------
 
 -- Takes a list of strings and a teletype effect to run and
 -- returns a list of strings.
