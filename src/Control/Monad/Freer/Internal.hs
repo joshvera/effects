@@ -60,14 +60,14 @@ import Data.FTCQueue
 -- |
 -- Effectful arrow type: a function from a to b that also does effects
 -- denoted by r
-type Arr r a b = a -> Eff r b
+type Arr effs a b = a -> Eff effs b
 
 -- |
 -- An effectful function from 'a' to 'b' that is a composition of
 -- several effectful functions. The paremeter r describes the overall
 -- effect. The composition members are accumulated in a type-aligned
 -- queue.
-type Arrs r a b = FTCQueue (Eff r) a b
+type Arrs effs a b = FTCQueue (Eff effs) a b
 
 -- |
 -- The Eff representation.
@@ -75,11 +75,11 @@ type Arrs r a b = FTCQueue (Eff r) a b
 -- Status of a coroutine (client):
 -- * Val: Done with the value of type a
 -- * E  : Sending a request of type Union r with the continuation Arrs r b a
-data Eff r b = Val b
-             | forall a. E (Union r a) (Arrs r a b)
+data Eff effs b = Val b
+             | forall a. E (Union effs a) (Arrs effs a b)
 
 -- | Function application in the context of an array of effects, Arrs r b w
-qApp :: Arrs r a b -> a -> Eff r b
+qApp :: Arrs effs a b -> a -> Eff effs b
 qApp q' x =
    case tviewl q' of
    TOne k  -> k x
@@ -89,15 +89,15 @@ qApp q' x =
 
 -- | Composition of effectful arrows
 -- Allows for the caller to change the effect environment, as well
-qComp :: Arrs r a b -> (Eff r b -> Eff r' c) -> Arr r' a c
+qComp :: Arrs effs a b -> (Eff effs b -> Eff effs' c) -> Arr effs' a c
 qComp g h a = h $ qApp g a
 
-instance Functor (Eff r) where
+instance Functor (Eff effs) where
   {-# INLINE fmap #-}
   fmap f (Val x) = Val (f x)
   fmap f (E u q) = E u (q |> (Val . f))
 
-instance Applicative (Eff r) where
+instance Applicative (Eff effs) where
   {-# INLINE pure #-}
   {-# INLINE (<*>) #-}
   pure = Val
@@ -106,7 +106,7 @@ instance Applicative (Eff r) where
   E u q <*> Val x = E u (q |> (Val . ($ x)))
   E u q <*> m     = E u (q |> (`fmap` m))
 
-instance Monad (Eff r) where
+instance Monad (Eff effs) where
   {-# INLINE return #-}
   {-# INLINE (>>=) #-}
   return = Val
@@ -114,7 +114,7 @@ instance Monad (Eff r) where
   E u q >>= k = E u (q |> k)
 
 -- | send a request and wait for a reply
-send :: (t :< r) => t v -> Eff r v
+send :: (t :< effs) => t v -> Eff effs v
 send t = E (inj t) (tsingleton Val)
 
 --------------------------------------------------------------------------------
@@ -142,9 +142,9 @@ runM (E u q) = case decomp u of
 -- terminates.
 
 -- | Given a request, either handle it or relay it.
-handleRelay :: (a -> Eff r b) ->
-               (forall v. t v -> Arr r v b -> Eff r b) ->
-               Eff (t ': r) a -> Eff r b
+handleRelay :: (a -> Eff effs b) ->
+               (forall v. t v -> Arr effs v b -> Eff effs b) ->
+               Eff (t ': effs) a -> Eff effs b
 handleRelay ret h = loop
  where
   loop (Val x)  = ret x
@@ -157,9 +157,9 @@ handleRelay ret h = loop
 -- Allows sending along some state to be handled for the target
 -- effect, or relayed to a handler that can handle the target effect.
 handleRelayS :: s ->
-                (s -> a -> Eff r b) ->
-                (forall v. s -> t v -> (s -> Arr r v b) -> Eff r b) ->
-                Eff (t ': r) a -> Eff r b
+                (s -> a -> Eff effs b) ->
+                (forall v. s -> t v -> (s -> Arr effs v b) -> Eff effs b) ->
+                Eff (t ': effs) a -> Eff effs b
 handleRelayS s' ret h = loop s'
   where
     loop s (Val x)  = ret s x
@@ -170,9 +170,9 @@ handleRelayS s' ret h = loop s'
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
-interpose :: (t :< r) =>
-             (a -> Eff r b) -> (forall v. t v -> Arr r v b -> Eff r b) ->
-             Eff r a -> Eff r b
+interpose :: (t :< effs) =>
+             (a -> Eff effs b) -> (forall v. t v -> Arr effs v b -> Eff effs b) ->
+             Eff effs a -> Eff effs b
 interpose ret h = loop
  where
    loop (Val x)  = ret x
