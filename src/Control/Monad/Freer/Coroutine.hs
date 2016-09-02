@@ -47,5 +47,5 @@ data Status r a b = Done | Continue a (b -> Eff r (Status r a b))
 runC :: Eff (Yield a b ': r) w -> Eff r (Status r a b)
 runC = handleRelay (\_ -> return Done) handler
   where
-    handler :: Yield a b v -> Arr r v (Status r a b) -> Eff r (Status r a b)
+    handler :: Yield a b v -> Arrow r v (Status r a b) -> Eff r (Status r a b)
     handler (Yield a k) arr = return $ Continue a (arr . k)

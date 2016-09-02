@@ -36,7 +36,7 @@ module Control.Monad.Freer.Internal (
   type(:<:),
   inj,
   prj,
-  Arr,
+  Arrow,
   Arrs,
   Union,
 
@@ -57,9 +57,9 @@ import Data.Open.Union
 import Data.FTCQueue
 
 
--- | An effectful function from 'a' to 'b' that also performs effects
--- denoted by 'eff'.
-type Arr effs a b = a -> Eff effs b
+-- | An effectful arrow from 'a' to 'b'
+-- that also performs effects denoted by 'eff'.
+type Arrow effs a b = a -> Eff effs b
 
 -- | An effectful function from 'a' to 'b' that is a composition of
 -- several effectful functions. The paremeter 'effs' describes the overall
@@ -88,7 +88,7 @@ applyEffs q' x =
 
 -- | Returns a queue of effects' from a to c with an updated list of effects,
 -- given a queue of effects and a function from effects to effects'.
-composeEffs :: Arrs effs a b -> (Eff effs b -> Eff effs' c) -> Arr effs' a c
+composeEffs :: Arrs effs a b -> (Eff effs b -> Eff effs' c) -> Arrow effs' a c
 composeEffs g h a = h $ applyEffs g a
 
 
@@ -124,10 +124,10 @@ runM (E u q) = case decomp u of
 
 -- | Given an effect request, either handle it with the given 'pure' function,
 -- or relay it to the given 'bind' function.
-handleRelay :: Arr effs a b -- ^ An 'pure' effectful arrow.
+handleRelay :: Arrow effs a b -- ^ An 'pure' effectful arrow.
             -- | A function to relay to, that binds a relayed 'eff v' to
             -- an effectful arrow and returns a new effect.
-            -> (forall v. eff v -> Arr effs v b -> Eff effs b)
+            -> (forall v. eff v -> Arrow effs v b -> Eff effs b)
             -- | The effect to relay.
             -> Eff (eff ': effs) a
             -- The resulting effect with 'eff' consumed.
@@ -145,7 +145,7 @@ handleRelay pure' bind = loop
 -- effect, or relayed to a handler that can handle the target effect.
 handleRelayS :: s
                 -> (s -> a -> Eff effs b)
-                -> (forall v. s -> eff v -> (s -> Arr effs v b) -> Eff effs b)
+                -> (forall v. s -> eff v -> (s -> Arrow effs v b) -> Eff effs b)
                 -> Eff (eff ': effs) a
                 -> Eff effs b
 handleRelayS s' pure' bind = loop s'
@@ -160,7 +160,7 @@ handleRelayS s' pure' bind = loop s'
 -- unhandled
 interpose :: (eff :< effs)
              => (a -> Eff effs b)
-             -> (forall v. eff v -> Arr effs v b -> Eff effs b)
+             -> (forall v. eff v -> Arrow effs v b -> Eff effs b)
              -> Eff effs a -> Eff effs b
 interpose ret h = loop
  where
