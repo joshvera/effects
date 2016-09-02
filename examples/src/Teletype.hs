@@ -8,15 +8,12 @@ import Control.Monad.Freer
 import Control.Monad.Freer.Internal as I
 import System.Exit hiding (ExitSuccess)
 
---------------------------------------------------------------------------------
-                          -- Effect Model --
-                          --------------------------------------------------------------------------------
 data Teletype s where
   PutStrLn    :: String -> Teletype ()
   GetLine     :: Teletype String
   ExitSuccess :: Teletype ()
 
--- Sends a teletype effect.
+-- Takes a string and returns a teletype effect.
 putStrLn' :: (Teletype :< r) => String -> Eff r ()
 putStrLn' = send . PutStrLn
 
@@ -29,7 +26,7 @@ exitSuccess' :: (Teletype :< r) => Eff r ()
 exitSuccess' = send ExitSuccess
 
 -- Takes an teletype Effect w and returns an IO w
-run :: Eff '[Teletype] w -> IO w
+run :: Eff '[Teletype] b -> IO b
 run (Val x) = return x
 run (E u q) = case decomp u of
   Right (PutStrLn msg) -> putStrLn msg  >> Teletype.run (qApp q ())
