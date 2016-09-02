@@ -37,7 +37,7 @@ module Control.Monad.Freer.Internal (
   inj,
   prj,
   Arrow,
-  Arrs,
+  Arrows,
   Union,
 
   decomp,
@@ -65,20 +65,20 @@ type Arrow effs a b = a -> Eff effs b
 -- several effectful functions. The paremeter 'effs' describes the overall
 -- effect. The composition members are accumulated in a type-aligned
 -- queue.
-type Arrs effs a b = FTCQueue (Eff effs) a b
+type Arrows effs a b = FTCQueue (Eff effs) a b
 
 -- | An effectful computation that returns 'b' and performs effects 'effs'.
 data Eff effs b
   -- | Done with the value of type b.
   = Val b
   -- | Send a request of type 'Union effs a' with the 'Arrs effs a b' queue.
-  | forall a. E (Union effs a) (Arrs effs a b)
+  | forall a. E (Union effs a) (Arrows effs a b)
 
 
 -- * Composing and Applying Effects
 
 -- | Returns an effect by applying a given value to a queue of effects.
-applyEffs :: Arrs effs a b -> a -> Eff effs b
+applyEffs :: Arrows effs a b -> a -> Eff effs b
 applyEffs q' x =
    case tviewl q' of
    TOne k  -> k x
@@ -88,7 +88,7 @@ applyEffs q' x =
 
 -- | Returns a queue of effects' from a to c with an updated list of effects,
 -- given a queue of effects and a function from effects to effects'.
-composeEffs :: Arrs effs a b -> (Eff effs b -> Eff effs' c) -> Arrow effs' a c
+composeEffs :: Arrows effs a b -> (Eff effs b -> Eff effs' c) -> Arrow effs' a c
 composeEffs g h a = h $ applyEffs g a
 
 
