@@ -108,10 +108,13 @@ send t = E (inj t) (tsingleton Val)
 run :: Eff '[] b -> b
 run (Val x) = x
 run _       = error "Internal:run - This (E) should never happen"
+-- the other case is unreachable since Union [] a cannot be
+-- constructed. Therefore, run is a total function if its argument
+-- terminates.
 
--- | Runs a set of Effects. Requires that all effects are consumed,
--- except for a single effect known to be a monad.
--- The value returned is a computation in that monad.
+-- | Runs an effect for which all but one Monad effect has been consumed,
+-- and returns an 'm b'.
+--
 -- This is useful for plugging in traditional transformer stacks.
 runM :: Monad m => Eff '[m] b -> m b
 runM (Val x) = pure x
@@ -119,14 +122,16 @@ runM (E u q) = case decomp u of
   Right mb -> mb >>= runM . applyEffs q
   Left _   -> error "Internal:runM - This (Left) should never happen"
 
--- the other case is unreachable since Union [] a cannot be
--- constructed. Therefore, run is a total function if its argument
--- terminates.
-
--- | Given a request, either handle it or relay it.
-handleRelay :: (a -> Eff effs b)
+-- | Given an effect request, either handle it with the given 'pure' function,
+-- or relay it to the given 'bind' function.
+handleRelay :: Arr effs a b -- ^ An 'pure' effectful arrow.
+            -- | A function to relay to, that binds a relayed 'eff v' to
+            -- an effectful arrow and returns a new effect.
             -> (forall v. eff v -> Arr effs v b -> Eff effs b)
-            -> Eff (eff ': effs) a -> Eff effs b
+            -- | The effect to relay.
+            -> Eff (eff ': effs) a
+            -- The resulting effect with 'eff' consumed.
+            -> Eff effs b
 handleRelay pure' bind = loop
  where
   loop (Val x)  = pure' x
