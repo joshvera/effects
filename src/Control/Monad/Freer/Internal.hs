@@ -74,6 +74,9 @@ data Eff effs b
   -- | Send a request of type 'Union effs a' with the 'Arrs effs a b' queue.
   | forall a. E (Union effs a) (Arrs effs a b)
 
+
+-- * Composing and Applying Effects
+
 -- | Returns an effect by applying a given value to a queue of effects.
 applyEffs :: Arrs effs a b -> a -> Eff effs b
 applyEffs q' x =
@@ -88,36 +91,13 @@ applyEffs q' x =
 composeEffs :: Arrs effs a b -> (Eff effs b -> Eff effs' c) -> Arr effs' a c
 composeEffs g h a = h $ applyEffs g a
 
-instance Functor (Eff effs) where
-  fmap f (Val x) = Val (f x)
-  fmap f (E u q) = E u (q |> (Val . f))
-  {-# INLINE fmap #-}
 
-instance Applicative (Eff effs) where
-  pure = Val
-  {-# INLINE pure #-}
+-- * Sending and Running Effects
 
-  Val f <*> Val x = Val $ f x
-  Val f <*> E u q = E u (q |> (Val . f))
-  E u q <*> Val x = E u (q |> (Val . ($ x)))
-  E u q <*> m     = E u (q |> (`fmap` m))
-  {-# INLINE (<*>) #-}
-
-instance Monad (Eff effs) where
-  return = Val
-  {-# INLINE return #-}
-
-  Val x >>= k = k x
-  E u q >>= k = E u (q |> k)
-  {-# INLINE (>>=) #-}
-
--- | send a request and wait for a reply
+-- | Send a request and wait for a reply.
 send :: (eff :< effs) => eff b -> Eff effs b
 send t = E (inj t) (tsingleton Val)
 
---------------------------------------------------------------------------------
-                       -- Base Effect Runner --
---------------------------------------------------------------------------------
 -- | Runs a set of Effects. Requires that all effects are consumed.
 -- Typically composed as follows:
 -- > run . runEff1 eff1Arg . runEff2 eff2Arg1 eff2Arg2 (program)
@@ -180,3 +160,28 @@ interpose ret h = loop
      Just x -> h x k
      _      -> E u (tsingleton k)
     where k = composeEffs q loop
+
+-- * Effect Instances
+
+instance Functor (Eff effs) where
+  fmap f (Val x) = Val (f x)
+  fmap f (E u q) = E u (q |> (Val . f))
+  {-# INLINE fmap #-}
+
+instance Applicative (Eff effs) where
+  pure = Val
+  {-# INLINE pure #-}
+
+  Val f <*> Val x = Val $ f x
+  Val f <*> E u q = E u (q |> (Val . f))
+  E u q <*> Val x = E u (q |> (Val . ($ x)))
+  E u q <*> m     = E u (q |> (`fmap` m))
+  {-# INLINE (<*>) #-}
+
+instance Monad (Eff effs) where
+  return = Val
+  {-# INLINE return #-}
+
+  Val x >>= k = k x
+  E u q >>= k = E u (q |> k)
+  {-# INLINE (>>=) #-}
