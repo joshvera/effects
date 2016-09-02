@@ -26,7 +26,7 @@ exitSuccess' :: (Teletype :< effs) => Eff effs ()
 exitSuccess' = send ExitSuccess
 
 -- Runs a Teletype effect b and returns IO b.
-run :: Eff '[Teletype] b -> IO b
+run :: Eff '[Teletype] a -> IO a
 run (Val x) = return x
 run (E u q) = case decomp u of
   Right (PutStrLn msg) -> putStrLn msg  >> Teletype.run (applyEffs q ())
@@ -36,7 +36,7 @@ run (E u q) = case decomp u of
 
 -- Takes a list of strings and a teletype effect to run and
 -- returns the list of strings printed in that effect.
-runPure :: [String] -> Eff '[Teletype] b -> [String]
+runPure :: [String] -> Eff '[Teletype] a -> [String]
 runPure inputs req = reverse (go inputs req [])
   where go :: [String] -> Eff '[Teletype] w -> [String] -> [String]
         go _  (Val _) acc = acc

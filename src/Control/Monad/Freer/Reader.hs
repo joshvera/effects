@@ -57,12 +57,12 @@ runReader m e = handleRelay pure (\Reader k -> k e) m
 -- Locally rebind the value in the dynamic environment
 -- This function is like a relay; it is both an admin for Reader requests,
 -- and a requestor of them
-local :: forall e b effs. (Reader e :< effs) =>
-         (e -> e) -> Eff effs b -> Eff effs b
+local :: forall e a effs. (Reader e :< effs) =>
+         (e -> e) -> Eff effs a -> Eff effs a
 local f m = do
   e0 <- ask
   let e = f e0
-  let bind :: Reader e v -> Arr effs v b -> Eff effs b
+  let bind :: Reader e v -> Arr effs v a -> Eff effs a
       bind Reader g = g e
   interpose pure bind m
 
