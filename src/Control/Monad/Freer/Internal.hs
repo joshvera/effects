@@ -69,14 +69,12 @@ type Arr effs a b = a -> Eff effs b
 -- queue.
 type Arrs effs a b = FTCQueue (Eff effs) a b
 
--- |
--- The Eff representation.
---
--- Status of a coroutine (client):
--- * Val: Done with the value of type a
--- * E  : Sending a request of type Union r with the continuation Arrs r b a
-data Eff effs b = Val b
-             | forall a. E (Union effs a) (Arrs effs a b)
+-- | An effectful computation that returns 'b' and performs effects 'effs'.
+data Eff effs b
+  -- * Done with the value of type b.
+  = Val b -- ^ Done with the value of type b.
+  -- | Send a request of type 'Union effs a' with the 'Arrs effs a b' queue.
+  | forall a. E (Union effs a) (Arrs effs a b)
 
 -- | Function application in the context of an array of effects, Arrs r b w
 qApp :: Arrs effs a b -> a -> Eff effs b
