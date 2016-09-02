@@ -44,6 +44,6 @@ msplit = loop []
               case jq of
                 []     -> return Nothing
                 (j:jq') -> loop jq' j
-            Just MPlus -> loop (qApp q False : jq) (qApp q True)
+            Just MPlus -> loop (applyEffs q False : jq) (applyEffs q True)
             Nothing    -> E u (tsingleton k)
-              where k = qComp q (loop jq)
+              where k = composeEffs q (loop jq)
