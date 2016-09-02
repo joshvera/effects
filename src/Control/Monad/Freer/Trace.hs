@@ -32,12 +32,12 @@ data Trace v where
   Trace :: String -> Trace ()
 
 -- | Printing a string in a trace
-trace :: (Trace :< r) => String -> Eff r ()
+trace :: (Trace :< effs) => String -> Eff effs ()
 trace = send . Trace
 
 -- | An IO handler for Trace effects
-runTrace :: Eff '[Trace] w -> IO w
+runTrace :: Eff '[Trace] a -> IO a
 runTrace (Val x) = return x
 runTrace (E u q) = case decomp u of
-     Right (Trace s) -> putStrLn s >> runTrace (qApp q ())
+     Right (Trace s) -> putStrLn s >> runTrace (applyEffs q ())
      Left _          -> error "runTrace:Left - This should never happen"

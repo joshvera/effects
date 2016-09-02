@@ -43,8 +43,8 @@ module Control.Monad.Freer.Internal (
   decomp,
   tsingleton,
 
-  qApp,
-  qComp,
+  applyEffs,
+  composeEffs,
   send,
   run,
   runM,
@@ -57,126 +57,140 @@ import Data.Open.Union
 import Data.FTCQueue
 
 
--- |
--- Effectful arrow type: a function from a to b that also does effects
--- denoted by r
-type Arr r a b = a -> Eff r b
+-- | An effectful function from 'a' to 'b' that also performs effects
+-- denoted by 'eff'.
+type Arr effs a b = a -> Eff effs b
 
--- |
--- An effectful function from 'a' to 'b' that is a composition of
--- several effectful functions. The paremeter r describes the overall
+-- | An effectful function from 'a' to 'b' that is a composition of
+-- several effectful functions. The paremeter 'effs' describes the overall
 -- effect. The composition members are accumulated in a type-aligned
 -- queue.
-type Arrs r a b = FTCQueue (Eff r) a b
+type Arrs effs a b = FTCQueue (Eff effs) a b
 
--- |
--- The Eff representation.
---
--- Status of a coroutine (client):
--- * Val: Done with the value of type a
--- * E  : Sending a request of type Union r with the continuation Arrs r b a
-data Eff r a = Val a
-             | forall b. E (Union r b) (Arrs r b a)
+-- | An effectful computation that returns 'b' and performs effects 'effs'.
+data Eff effs b
+  -- | Done with the value of type b.
+  = Val b
+  -- | Send a request of type 'Union effs a' with the 'Arrs effs a b' queue.
+  | forall a. E (Union effs a) (Arrs effs a b)
 
--- | Function application in the context of an array of effects, Arrs r b w
-qApp :: Arrs r b w -> b -> Eff r w
-qApp q' x =
+
+-- * Composing and Applying Effects
+
+-- | Returns an effect by applying a given value to a queue of effects.
+applyEffs :: Arrs effs a b -> a -> Eff effs b
+applyEffs q' x =
    case tviewl q' of
    TOne k  -> k x
    k :< t -> case k x of
-     Val y -> qApp t y
+     Val y -> applyEffs t y
      E u q -> E u (q >< t)
 
--- | Composition of effectful arrows
--- Allows for the caller to change the effect environment, as well
-qComp :: Arrs r a b -> (Eff r b -> Eff r' c) -> Arr r' a c
-qComp g h a = h $ qApp g a
+-- | Returns a queue of effects' from a to c with an updated list of effects,
+-- given a queue of effects and a function from effects to effects'.
+composeEffs :: Arrs effs a b -> (Eff effs b -> Eff effs' c) -> Arr effs' a c
+composeEffs g h a = h $ applyEffs g a
 
-instance Functor (Eff r) where
-  {-# INLINE fmap #-}
-  fmap f (Val x) = Val (f x)
-  fmap f (E u q) = E u (q |> (Val . f))
 
-instance Applicative (Eff r) where
-  {-# INLINE pure #-}
-  {-# INLINE (<*>) #-}
-  pure = Val
-  Val f <*> Val x = Val $ f x
-  Val f <*> E u q = E u (q |> (Val . f))
-  E u q <*> Val x = E u (q |> (Val . ($ x)))
-  E u q <*> m     = E u (q |> (`fmap` m))
+-- * Sending and Running Effects
 
-instance Monad (Eff r) where
-  {-# INLINE return #-}
-  {-# INLINE (>>=) #-}
-  return = Val
-  Val x >>= k = k x
-  E u q >>= k = E u (q |> k)
-
--- | send a request and wait for a reply
-send :: (t :< r) => t v -> Eff r v
+-- | Send a request and wait for a reply.
+send :: (eff :< effs) => eff b -> Eff effs b
 send t = E (inj t) (tsingleton Val)
 
---------------------------------------------------------------------------------
-                       -- Base Effect Runner --
---------------------------------------------------------------------------------
--- | Runs a set of Effects. Requires that all effects are consumed.
+-- | Runs an effect whose effects has been consumed.
+--
 -- Typically composed as follows:
--- > run . runEff1 eff1Arg . runEff2 eff2Arg1 eff2Arg2 (program)
-run :: Eff '[] w -> w
+--
+-- @
+-- run . runEff1 eff1Arg . runEff2 eff2Arg1 eff2Arg2 (program)
+-- @
+run :: Eff '[] b -> b
 run (Val x) = x
 run _       = error "Internal:run - This (E) should never happen"
-
--- | Runs a set of Effects. Requires that all effects are consumed,
--- except for a single effect known to be a monad.
--- The value returned is a computation in that monad.
--- This is useful for plugging in traditional transformer stacks.
-runM :: Monad m => Eff '[m] w -> m w
-runM (Val x) = return x
-runM (E u q) = case decomp u of
-  Right mb -> mb >>= runM . qApp q
-  Left _   -> error "Internal:runM - This (Left) should never happen"
-
 -- the other case is unreachable since Union [] a cannot be
 -- constructed. Therefore, run is a total function if its argument
 -- terminates.
 
--- | Given a request, either handle it or relay it.
-handleRelay :: (a -> Eff r w) ->
-               (forall v. t v -> Arr r v w -> Eff r w) ->
-               Eff (t ': r) a -> Eff r w
-handleRelay ret h = loop
+-- | Runs an effect for which all but one Monad effect has been consumed,
+-- and returns an 'm b'.
+--
+-- This is useful for plugging in traditional transformer stacks.
+runM :: Monad m => Eff '[m] b -> m b
+runM (Val x) = pure x
+runM (E u q) = case decomp u of
+  Right mb -> mb >>= runM . applyEffs q
+  Left _   -> error "Internal:runM - This (Left) should never happen"
+
+-- | Given an effect request, either handle it with the given 'pure' function,
+-- or relay it to the given 'bind' function.
+handleRelay :: Arr effs a b -- ^ An 'pure' effectful arrow.
+            -- | A function to relay to, that binds a relayed 'eff v' to
+            -- an effectful arrow and returns a new effect.
+            -> (forall v. eff v -> Arr effs v b -> Eff effs b)
+            -- | The effect to relay.
+            -> Eff (eff ': effs) a
+            -- The resulting effect with 'eff' consumed.
+            -> Eff effs b
+handleRelay pure' bind = loop
  where
-  loop (Val x)  = ret x
+  loop (Val x)  = pure' x
   loop (E u' q)  = case decomp u' of
-    Right x -> h x k
+    Right x -> bind x k
     Left  u -> E u (tsingleton k)
-   where k = qComp q loop
+   where k = composeEffs q loop
 
 -- | Parameterized 'handleRelay'
 -- Allows sending along some state to be handled for the target
 -- effect, or relayed to a handler that can handle the target effect.
-handleRelayS :: s ->
-                (s -> a -> Eff r w) ->
-                (forall v. s -> t v -> (s -> Arr r v w) -> Eff r w) ->
-                Eff (t ': r) a -> Eff r w
-handleRelayS s' ret h = loop s'
+handleRelayS :: s
+                -> (s -> a -> Eff effs b)
+                -> (forall v. s -> eff v -> (s -> Arr effs v b) -> Eff effs b)
+                -> Eff (eff ': effs) a
+                -> Eff effs b
+handleRelayS s' pure' bind = loop s'
   where
-    loop s (Val x)  = ret s x
+    loop s (Val x)  = pure' s x
     loop s (E u' q)  = case decomp u' of
-      Right x -> h s x k
+      Right x -> bind s x k
       Left  u -> E u (tsingleton (k s))
-     where k s'' x = loop s'' $ qApp q x
+     where k s'' x = loop s'' $ applyEffs q x
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
-interpose :: (t :< r) =>
-             (a -> Eff r w) -> (forall v. t v -> Arr r v w -> Eff r w) ->
-             Eff r a -> Eff r w
+interpose :: (eff :< effs)
+             => (a -> Eff effs b)
+             -> (forall v. eff v -> Arr effs v b -> Eff effs b)
+             -> Eff effs a -> Eff effs b
 interpose ret h = loop
  where
    loop (Val x)  = ret x
    loop (E u q)  = case prj u of
      Just x -> h x k
      _      -> E u (tsingleton k)
-    where k = qComp q loop
+    where k = composeEffs q loop
+
+-- * Effect Instances
+
+instance Functor (Eff effs) where
+  fmap f (Val x) = Val (f x)
+  fmap f (E u q) = E u (q |> (Val . f))
+  {-# INLINE fmap #-}
+
+instance Applicative (Eff effs) where
+  pure = Val
+  {-# INLINE pure #-}
+
+  Val f <*> Val x = Val $ f x
+  Val f <*> E u q = E u (q |> (Val . f))
+  E u q <*> Val x = E u (q |> (Val . ($ x)))
+  E u q <*> m     = E u (q |> (`fmap` m))
+  {-# INLINE (<*>) #-}
+
+instance Monad (Eff effs) where
+  return = Val
+  {-# INLINE return #-}
+
+  Val x >>= k = k x
+  E u q >>= k = E u (q |> k)
+  {-# INLINE (>>=) #-}

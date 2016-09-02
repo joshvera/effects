@@ -42,29 +42,29 @@ data Reader e v where
   Reader :: Reader e e
 
 -- | Request a value for the environment
-ask :: (Reader e :< r) => Eff r e
+ask :: (Reader e :< effs) => Eff effs e
 ask = send Reader
 
 -- | Request a value from the environment and applys as function
-asks :: (b -> a) -> Eff '[Reader b] a
-asks f = fmap f ask
+asks :: (e -> b) -> Eff '[Reader e] b
+asks f = f <$> ask
 
 -- | Handler for reader effects
-runReader :: Eff (Reader e ': r) w -> e -> Eff r w
-runReader m e = handleRelay return (\Reader k -> k e) m
+runReader :: Eff (Reader e ': effs) b -> e -> Eff effs b
+runReader m e = handleRelay pure (\Reader k -> k e) m
 
 -- |
 -- Locally rebind the value in the dynamic environment
 -- This function is like a relay; it is both an admin for Reader requests,
 -- and a requestor of them
-local :: forall e a r. (Reader e :< r) =>
-         (e -> e) -> Eff r a -> Eff r a
+local :: forall e a effs. (Reader e :< effs) =>
+         (e -> e) -> Eff effs a -> Eff effs a
 local f m = do
   e0 <- ask
   let e = f e0
-  let h :: Reader e v -> Arr r v a -> Eff r a
-      h Reader g = g e
-  interpose return h m
+  let bind :: Reader e v -> Arr effs v a -> Eff effs a
+      bind Reader g = g e
+  interpose pure bind m
 
 
 {- $simpleReaderExample

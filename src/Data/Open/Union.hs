@@ -69,11 +69,13 @@ prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
 newtype P t r = P{unP :: Int}
 
 infixr 5 :<
+-- | Find a member 't' in an open union 'r'.
 class (FindElem t r) => (t :: * -> *) :< r where
   inj :: t v -> Union r v
   prj :: Union r v -> Maybe (t v)
 
 infixr 5 :<:
+-- | Find a list of members 'm' in an open union 'r'.
 type family m :<: r :: Constraint where
   (t ': c) :<: r = (t :< r, c :<: r)
   '[] :<: r = ()
@@ -94,18 +96,18 @@ instance (FindElem t r) => t :< r where
   prj = prj' (unP (elemNo :: P t r))
 
 
-{-# INLINE [2] decomp #-}
 decomp :: Union (t ': r) v -> Either (Union r v) (t v)
 decomp (Union 0 v) = Right $ unsafeCoerce v
 decomp (Union n v) = Left  $ Union (n-1) v
+{-# INLINE [2] decomp #-}
 
 
--- Specialized version
-{-# RULES "decomp/singleton"  decomp = decomp0 #-}
-{-# INLINE decomp0 #-}
+-- | Specialized version of 'decomp'.
 decomp0 :: Union '[t] v -> Either (Union '[] v) (t v)
 decomp0 (Union _ v) = Right $ unsafeCoerce v
 -- No other case is possible
+{-# RULES "decomp/singleton"  decomp = decomp0 #-}
+{-# INLINE decomp0 #-}
 
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
