@@ -58,13 +58,13 @@ import Data.FTCQueue
 
 
 -- |
--- Effectful arrow type: a function from a to b that also does effects
--- denoted by r
+-- An effectful function from 'a' to 'b' that also performs effects
+-- denoted by 'eff'.
 type Arr effs a b = a -> Eff effs b
 
 -- |
 -- An effectful function from 'a' to 'b' that is a composition of
--- several effectful functions. The paremeter r describes the overall
+-- several effectful functions. The paremeter 'effs' describes the overall
 -- effect. The composition members are accumulated in a type-aligned
 -- queue.
 type Arrs effs a b = FTCQueue (Eff effs) a b
