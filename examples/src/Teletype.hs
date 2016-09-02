@@ -14,18 +14,18 @@ data Teletype s where
   ExitSuccess :: Teletype ()
 
 -- Takes a string and returns a teletype effect.
-putStrLn' :: (Teletype :< r) => String -> Eff r ()
+putStrLn' :: (Teletype :< effs) => String -> Eff effs ()
 putStrLn' = send . PutStrLn
 
 -- Gets a line from a Teletype.
-getLine'  :: (Teletype :< r) => Eff r String
+getLine'  :: (Teletype :< effs) => Eff effs String
 getLine' = send GetLine
 
 -- An exit success effect that returns ().
-exitSuccess' :: (Teletype :< r) => Eff r ()
+exitSuccess' :: (Teletype :< effs) => Eff effs ()
 exitSuccess' = send ExitSuccess
 
--- Takes an teletype Effect w and returns an IO w
+-- Runs a Teletype effect b and returns IO b.
 run :: Eff '[Teletype] b -> IO b
 run (Val x) = return x
 run (E u q) = case decomp u of
@@ -35,8 +35,8 @@ run (E u q) = case decomp u of
   Left  _              -> error "This cannot happen"
 
 -- Takes a list of strings and a teletype effect to run and
--- returns the list of strings in that effect.
-runPure :: [String] -> Eff '[Teletype] w -> [String]
+-- returns the list of strings printed in that effect.
+runPure :: [String] -> Eff '[Teletype] b -> [String]
 runPure inputs req = reverse (go inputs req [])
   where go :: [String] -> Eff '[Teletype] w -> [String] -> [String]
         go _  (Val _) acc = acc
