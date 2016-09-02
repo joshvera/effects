@@ -140,9 +140,9 @@ runM (E u q) = case decomp u of
 -- terminates.
 
 -- | Given a request, either handle it or relay it.
-handleRelay :: (a -> Eff effs b) ->
-               (forall v. eff v -> Arr effs v b -> Eff effs b) ->
-               Eff (eff ': effs) a -> Eff effs b
+handleRelay :: (a -> Eff effs b)
+            -> (forall v. eff v -> Arr effs v b -> Eff effs b)
+            -> Eff (eff ': effs) a -> Eff effs b
 handleRelay ret h = loop
  where
   loop (Val x)  = ret x
@@ -154,10 +154,11 @@ handleRelay ret h = loop
 -- | Parameterized 'handleRelay'
 -- Allows sending along some state to be handled for the target
 -- effect, or relayed to a handler that can handle the target effect.
-handleRelayS :: s ->
-                (s -> a -> Eff effs b) ->
-                (forall v. s -> eff v -> (s -> Arr effs v b) -> Eff effs b) ->
-                Eff (eff ': effs) a -> Eff effs b
+handleRelayS :: s
+                -> (s -> a -> Eff effs b)
+                -> (forall v. s -> eff v -> (s -> Arr effs v b) -> Eff effs b)
+                -> Eff (eff ': effs) a
+                -> Eff effs b
 handleRelayS s' ret h = loop s'
   where
     loop s (Val x)  = ret s x
@@ -168,9 +169,10 @@ handleRelayS s' ret h = loop s'
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
-interpose :: (eff :< effs) =>
-             (a -> Eff effs b) -> (forall v. eff v -> Arr effs v b -> Eff effs b) ->
-             Eff effs a -> Eff effs b
+interpose :: (eff :< effs)
+             => (a -> Eff effs b)
+             -> (forall v. eff v -> Arr effs v b -> Eff effs b)
+             -> Eff effs a -> Eff effs b
 interpose ret h = loop
  where
    loop (Val x)  = ret x
