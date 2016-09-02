@@ -123,7 +123,7 @@ send t = E (inj t) (tsingleton Val)
 -- | Runs a set of Effects. Requires that all effects are consumed.
 -- Typically composed as follows:
 -- > run . runEff1 eff1Arg . runEff2 eff2Arg1 eff2Arg2 (program)
-run :: Eff '[] w -> w
+run :: Eff '[] b -> b
 run (Val x) = x
 run _       = error "Internal:run - This (E) should never happen"
 
@@ -131,7 +131,7 @@ run _       = error "Internal:run - This (E) should never happen"
 -- except for a single effect known to be a monad.
 -- The value returned is a computation in that monad.
 -- This is useful for plugging in traditional transformer stacks.
-runM :: Monad m => Eff '[m] w -> m w
+runM :: Monad m => Eff '[m] b -> m b
 runM (Val x) = return x
 runM (E u q) = case decomp u of
   Right mb -> mb >>= runM . qApp q
@@ -142,9 +142,9 @@ runM (E u q) = case decomp u of
 -- terminates.
 
 -- | Given a request, either handle it or relay it.
-handleRelay :: (a -> Eff r w) ->
-               (forall v. t v -> Arr r v w -> Eff r w) ->
-               Eff (t ': r) a -> Eff r w
+handleRelay :: (a -> Eff r b) ->
+               (forall v. t v -> Arr r v b -> Eff r b) ->
+               Eff (t ': r) a -> Eff r b
 handleRelay ret h = loop
  where
   loop (Val x)  = ret x
