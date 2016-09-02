@@ -57,13 +57,11 @@ import Data.Open.Union
 import Data.FTCQueue
 
 
--- |
--- An effectful function from 'a' to 'b' that also performs effects
+-- | An effectful function from 'a' to 'b' that also performs effects
 -- denoted by 'eff'.
 type Arr effs a b = a -> Eff effs b
 
--- |
--- An effectful function from 'a' to 'b' that is a composition of
+-- | An effectful function from 'a' to 'b' that is a composition of
 -- several effectful functions. The paremeter 'effs' describes the overall
 -- effect. The composition members are accumulated in a type-aligned
 -- queue.
@@ -91,25 +89,27 @@ composeEffs :: Arrs effs a b -> (Eff effs b -> Eff effs' c) -> Arr effs' a c
 composeEffs g h a = h $ applyEffs g a
 
 instance Functor (Eff effs) where
-  {-# INLINE fmap #-}
   fmap f (Val x) = Val (f x)
   fmap f (E u q) = E u (q |> (Val . f))
+  {-# INLINE fmap #-}
 
 instance Applicative (Eff effs) where
-  {-# INLINE pure #-}
-  {-# INLINE (<*>) #-}
   pure = Val
+  {-# INLINE pure #-}
+
   Val f <*> Val x = Val $ f x
   Val f <*> E u q = E u (q |> (Val . f))
   E u q <*> Val x = E u (q |> (Val . ($ x)))
   E u q <*> m     = E u (q |> (`fmap` m))
+  {-# INLINE (<*>) #-}
 
 instance Monad (Eff effs) where
-  {-# INLINE return #-}
-  {-# INLINE (>>=) #-}
   return = Val
+  {-# INLINE return #-}
+
   Val x >>= k = k x
   E u q >>= k = E u (q |> k)
+  {-# INLINE (>>=) #-}
 
 -- | send a request and wait for a reply
 send :: (eff :< effs) => eff b -> Eff effs b
