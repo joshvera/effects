@@ -10,11 +10,13 @@ Portability : POSIX
 
 -}
 module Control.Monad.Freer (
-  type(:<),
-  type(:<:),
+  -- * Running and Sending Effects
   Eff,
   run,
-  send
+  send,
+  -- * Checking a List of Effects
+  type(:<),
+  type(:<:)
 ) where
 
 import Control.Monad.Freer.Internal
