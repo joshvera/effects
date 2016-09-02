@@ -79,7 +79,7 @@ data Eff r b = Val b
              | forall a. E (Union r a) (Arrs r a b)
 
 -- | Function application in the context of an array of effects, Arrs r b w
-qApp :: Arrs r b w -> b -> Eff r w
+qApp :: Arrs r a b -> a -> Eff r b
 qApp q' x =
    case tviewl q' of
    TOne k  -> k x
