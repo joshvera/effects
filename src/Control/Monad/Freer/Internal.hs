@@ -75,8 +75,8 @@ type Arrs r a b = FTCQueue (Eff r) a b
 -- Status of a coroutine (client):
 -- * Val: Done with the value of type a
 -- * E  : Sending a request of type Union r with the continuation Arrs r b a
-data Eff r a = Val a
-             | forall b. E (Union r b) (Arrs r b a)
+data Eff r b = Val b
+             | forall a. E (Union r a) (Arrs r a b)
 
 -- | Function application in the context of an array of effects, Arrs r b w
 qApp :: Arrs r b w -> b -> Eff r w
