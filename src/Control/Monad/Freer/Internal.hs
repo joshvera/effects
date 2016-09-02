@@ -130,7 +130,7 @@ run _       = error "Internal:run - This (E) should never happen"
 -- The value returned is a computation in that monad.
 -- This is useful for plugging in traditional transformer stacks.
 runM :: Monad m => Eff '[m] b -> m b
-runM (Val x) = return x
+runM (Val x) = pure x
 runM (E u q) = case decomp u of
   Right mb -> mb >>= runM . applyEffs q
   Left _   -> error "Internal:runM - This (Left) should never happen"
