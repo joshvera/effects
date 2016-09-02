@@ -39,5 +39,5 @@ trace = send . Trace
 runTrace :: Eff '[Trace] w -> IO w
 runTrace (Val x) = return x
 runTrace (E u q) = case decomp u of
-     Right (Trace s) -> putStrLn s >> runTrace (qApp q ())
+     Right (Trace s) -> putStrLn s >> runTrace (applyEffs q ())
      Left _          -> error "runTrace:Left - This should never happen"

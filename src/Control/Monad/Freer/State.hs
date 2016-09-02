@@ -57,9 +57,9 @@ modify f = fmap f get >>= put
 runState :: Eff (State s ': r) w -> s -> Eff r (w,s)
 runState (Val x) s = return (x,s)
 runState (E u q) s = case decomp u of
-  Right Get      -> runState (qApp q s) s
-  Right (Put s') -> runState (qApp q ()) s'
-  Left  u'       -> E u' (tsingleton (\x -> runState (qApp q x) s))
+  Right Get      -> runState (applyEffs q s) s
+  Right (Put s') -> runState (applyEffs q ()) s'
+  Left  u'       -> E u' (tsingleton (\x -> runState (applyEffs q x) s))
 
 
 -- |
@@ -73,6 +73,6 @@ transactionState _ m = do s <- get; loop s m
    loop :: s -> Eff r w -> Eff r w
    loop s (Val x) = put s >> return x
    loop s (E (u :: Union r b) q) = case prj u :: Maybe (State s b) of
-     Just Get      -> loop s (qApp q s)
-     Just (Put s') -> loop s'(qApp q ())
-     _             -> E u (tsingleton k) where k = qComp q (loop s)
+     Just Get      -> loop s (applyEffs q s)
+     Just (Put s') -> loop s'(applyEffs q ())
+     _             -> E u (tsingleton k) where k = composeEffs q (loop s)

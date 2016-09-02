@@ -43,8 +43,8 @@ module Control.Monad.Freer.Internal (
   decomp,
   tsingleton,
 
-  qApp,
-  qComp,
+  applyEffs,
+  composeEffs,
   send,
   run,
   runM,
@@ -76,19 +76,19 @@ data Eff effs b
   -- | Send a request of type 'Union effs a' with the 'Arrs effs a b' queue.
   | forall a. E (Union effs a) (Arrs effs a b)
 
--- | Function application in the context of an array of effects, Arrs r b w
-qApp :: Arrs effs a b -> a -> Eff effs b
-qApp q' x =
+-- | Returns an effect by applying a given value to a queue of effects.
+applyEffs :: Arrs effs a b -> a -> Eff effs b
+applyEffs q' x =
    case tviewl q' of
    TOne k  -> k x
    k :< t -> case k x of
-     Val y -> qApp t y
+     Val y -> applyEffs t y
      E u q -> E u (q >< t)
 
--- | Composition of effectful arrows
--- Allows for the caller to change the effect environment, as well
-qComp :: Arrs effs a b -> (Eff effs b -> Eff effs' c) -> Arr effs' a c
-qComp g h a = h $ qApp g a
+-- | Returns a queue of effects' from a to c with an updated list of effects,
+-- given a queue of effects and a function from effects to effects'.
+composeEffs :: Arrs effs a b -> (Eff effs b -> Eff effs' c) -> Arr effs' a c
+composeEffs g h a = h $ applyEffs g a
 
 instance Functor (Eff effs) where
   {-# INLINE fmap #-}
@@ -132,7 +132,7 @@ run _       = error "Internal:run - This (E) should never happen"
 runM :: Monad m => Eff '[m] b -> m b
 runM (Val x) = return x
 runM (E u q) = case decomp u of
-  Right mb -> mb >>= runM . qApp q
+  Right mb -> mb >>= runM . applyEffs q
   Left _   -> error "Internal:runM - This (Left) should never happen"
 
 -- the other case is unreachable since Union [] a cannot be
@@ -149,7 +149,7 @@ handleRelay ret h = loop
   loop (E u' q)  = case decomp u' of
     Right x -> h x k
     Left  u -> E u (tsingleton k)
-   where k = qComp q loop
+   where k = composeEffs q loop
 
 -- | Parameterized 'handleRelay'
 -- Allows sending along some state to be handled for the target
@@ -164,7 +164,7 @@ handleRelayS s' ret h = loop s'
     loop s (E u' q)  = case decomp u' of
       Right x -> h s x k
       Left  u -> E u (tsingleton (k s))
-     where k s'' x = loop s'' $ qApp q x
+     where k s'' x = loop s'' $ applyEffs q x
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
@@ -177,4 +177,4 @@ interpose ret h = loop
    loop (E u q)  = case prj u of
      Just x -> h x k
      _      -> E u (tsingleton k)
-    where k = qComp q loop
+    where k = composeEffs q loop

@@ -43,4 +43,4 @@ runStateR m s = loop s m
      Left  u'  -> case decomp u' of
        Right Reader -> k s' s'
        Left u'' -> E u'' (tsingleton (k s'))
-    where k s'' = qComp q (loop s'')
+    where k s'' = composeEffs q (loop s'')

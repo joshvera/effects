@@ -29,8 +29,8 @@ exitSuccess' = send ExitSuccess
 run :: Eff '[Teletype] b -> IO b
 run (Val x) = return x
 run (E u q) = case decomp u of
-  Right (PutStrLn msg) -> putStrLn msg  >> Teletype.run (qApp q ())
-  Right GetLine        -> getLine      >>= \s -> Teletype.run (qApp q s)
+  Right (PutStrLn msg) -> putStrLn msg  >> Teletype.run (applyEffs q ())
+  Right GetLine        -> getLine      >>= \s -> Teletype.run (applyEffs q s)
   Right ExitSuccess    -> exitSuccess
   Left  _              -> error "This cannot happen"
 
@@ -42,10 +42,10 @@ runPure inputs req = reverse (go inputs req [])
         go _  (Val _) acc = acc
         go xs (E u q) acc = case xs of
           (x:xs') -> case decomp u of
-            Right (PutStrLn msg) -> go (x:xs') (qApp q ()) (msg:acc)
-            Right GetLine        -> go xs'     (qApp q x) acc
+            Right (PutStrLn msg) -> go (x:xs') (applyEffs q ()) (msg:acc)
+            Right GetLine        -> go xs'     (applyEffs q x) acc
             Right ExitSuccess    -> go xs'     (Val ())   acc
             Left _               -> go xs'     (Val ())   acc
           _      -> case decomp u of
-            Right (PutStrLn msg) -> go xs (qApp q ()) (msg:acc)
+            Right (PutStrLn msg) -> go xs (applyEffs q ()) (msg:acc)
             _                    -> go xs     (Val ())   acc
