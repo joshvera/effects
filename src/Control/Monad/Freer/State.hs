@@ -42,19 +42,19 @@ data State s v where
   Put :: !s -> State s ()
 
 -- | Retrieve state
-get :: (State s :< r) => Eff r s
+get :: (State s :< effs) => Eff effs s
 get = send Get
 
 -- | Store state
-put :: (State s :< r) => s -> Eff r ()
+put :: (State s :< effs) => s -> Eff effs ()
 put s = send (Put s)
 
 -- | Modify state
-modify :: (State s :< r) => (s -> s) -> Eff r ()
+modify :: (State s :< effs) => (s -> s) -> Eff effs ()
 modify f = fmap f get >>= put
 
 -- | Handler for State effects
-runState :: Eff (State s ': r) w -> s -> Eff r (w,s)
+runState :: Eff (State s ': effs) w -> s -> Eff effs (w, s)
 runState (Val x) s = return (x,s)
 runState (E u q) s = case decomp u of
   Right Get      -> runState (applyEffs q s) s
@@ -66,13 +66,15 @@ runState (E u q) s = case decomp u of
 -- An encapsulated State handler, for transactional semantics
 -- The global state is updated only if the transactionState finished
 -- successfully
-transactionState :: forall s r w. (State s :< r) =>
-                    Proxy s -> Eff r w -> Eff r w
+transactionState :: forall s effs w. (State s :< effs)
+                    => Proxy s
+                    -> Eff effs w
+                    -> Eff effs w
 transactionState _ m = do s <- get; loop s m
  where
-   loop :: s -> Eff r w -> Eff r w
+   loop :: s -> Eff effs w -> Eff effs w
    loop s (Val x) = put s >> return x
-   loop s (E (u :: Union r b) q) = case prj u :: Maybe (State s b) of
+   loop s (E (u :: Union effs b) q) = case prj u :: Maybe (State s b) of
      Just Get      -> loop s (applyEffs q s)
      Just (Put s') -> loop s'(applyEffs q ())
      _             -> E u (tsingleton k) where k = composeEffs q (loop s)
