@@ -98,9 +98,13 @@ composeEffs g h a = h $ applyEffs g a
 send :: (eff :< effs) => eff b -> Eff effs b
 send t = E (inj t) (tsingleton Val)
 
--- | Runs a set of Effects. Requires that all effects are consumed.
+-- | Runs an effect whose effects has been consumed.
+--
 -- Typically composed as follows:
--- > run . runEff1 eff1Arg . runEff2 eff2Arg1 eff2Arg2 (program)
+--
+-- @
+-- run . runEff1 eff1Arg . runEff2 eff2Arg1 eff2Arg2 (program)
+-- @
 run :: Eff '[] b -> b
 run (Val x) = x
 run _       = error "Internal:run - This (E) should never happen"
