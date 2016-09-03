@@ -56,10 +56,12 @@ module Control.Monad.Freer.Internal (
 import Data.Open.Union
 import Data.FTCQueue
 
-
--- | An effectful arrow from 'a' to 'b'
--- that also performs effects denoted by 'eff'.
-type Arrow effs a b = a -> Eff effs b
+-- | An effectful computation that returns 'b' and performs 'effects'.
+data Eff effects b
+  -- | Done with the value of type b.
+  = Val b
+  -- | Send a request of type 'Union effs a' with the 'Arrs effs a b' queue.
+  | forall a. E (Union effects a) (Arrows effects a b)
 
 -- | An effectful function from 'a' to 'b' that is a composition of
 -- several effectful functions. The paremeter 'effs' describes the overall
