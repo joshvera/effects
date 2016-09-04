@@ -120,13 +120,13 @@ run _       = error "Internal:run - This (E) should never happen"
 -- terminates.
 
 -- | Runs an effect for which all but one Monad effect has been consumed,
--- and returns an 'm b'.
+-- and returns an 'm a'.
 --
 -- This is useful for plugging in traditional transformer stacks.
-runM :: Monad m => Eff '[m] b -> m b
+runM :: Monad m => Eff '[m] a -> m a
 runM (Val x) = pure x
 runM (E u q) = case decomp u of
-  Right mb -> mb >>= runM . (apply q)
+  Right m -> m >>= runM . (apply q)
   Left _   -> error "Internal:runM - This (Left) should never happen"
 
 -- | Given an effect request, either handle it with the given 'pure' function,
