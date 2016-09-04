@@ -35,17 +35,17 @@ data Yield a b v = Yield a (b -> v)
     deriving (Functor)
 
 -- | Lifts a value and a function into the Coroutine effect
-yield :: ((Yield a b) :< r) => a -> (b -> c) -> Eff r c
+yield :: ((Yield a b) :< e) => a -> (b -> c) -> Eff e c
 yield x f = send (Yield x f)
 
 -- |
 -- Status of a thread: done or reporting the value of the type a and
 -- resuming with the value of type b
-data Status r a b = Done | Continue a (b -> Eff r (Status r a b))
+data Status e a b = Done | Continue a (b -> Eff e (Status e a b))
 
 -- | Launch a thread and report its status
-runC :: Eff (Yield a b ': r) w -> Eff r (Status r a b)
-runC = handleRelay (\_ -> return Done) handler
+runC :: Eff (Yield a b ': e) w -> Eff e (Status e a b)
+runC = handleRelay (\_ -> pure Done) handler
   where
-    handler :: Yield a b v -> Arrow r v (Status r a b) -> Eff r (Status r a b)
-    handler (Yield a k) arr = return $ Continue a (arr . k)
+    handler :: Yield a b v -> Arrow e v (Status e a b) -> Eff e (Status e a b)
+    handler (Yield a k) arr = pure $ Continue a (arr . k)
