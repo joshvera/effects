@@ -54,8 +54,8 @@ module Control.Monad.Freer.Internal (
   run,
   runM,
   -- * Relaying and Interposing Effects
-  handleRelay,
-  handleRelayS,
+  relay,
+  relayState,
   interpose,
 ) where
 
@@ -131,13 +131,13 @@ runM (E u q) = case decomp u of
 
 -- | Given an effect request, either handle it with the given 'pure' function,
 -- or relay it to the given 'bind' function.
-handleRelay :: Arrow e a b -- ^ An 'pure' effectful arrow.
-            -- | A function to relay to, that binds a relayed 'eff v' to
-            -- an effectful arrow and returns a new effect.
-            -> (forall v. eff v -> Arrow e v b -> Eff e b)
-            -> Eff (eff ': e) a -- ^ The 'eff' to relay and consume.
-            -> Eff e b -- ^ The relayed effect with 'eff' consumed.
-handleRelay pure' bind = loop
+relay :: Arrow e a b -- ^ An 'pure' effectful arrow.
+      -- | A function to relay to, that binds a relayed 'eff v' to
+      -- an effectful arrow and returns a new effect.
+      -> (forall v. eff v -> Arrow e v b -> Eff e b)
+      -> Eff (eff ': e) a -- ^ The 'eff' to relay and consume.
+      -> Eff e b -- ^ The relayed effect with 'eff' consumed.
+relay pure' bind = loop
  where
   loop (Val x)  = pure' x
   loop (E u' q)  = case decomp u' of
@@ -148,12 +148,12 @@ handleRelay pure' bind = loop
 -- | Parameterized 'handleRelay'
 -- Allows sending along some state to be handled for the target
 -- effect, or relayed to a handler that can handle the target effect.
-handleRelayS :: s
-                -> (s -> a -> Eff e b)
-                -> (forall v. s -> eff v -> (s -> Arrow e v b) -> Eff e b)
-                -> Eff (eff ': e) a
-                -> Eff e b
-handleRelayS s' pure' bind = loop s'
+relayState :: s
+           -> (s -> a -> Eff e b)
+           -> (forall v. s -> eff v -> (s -> Arrow e v b) -> Eff e b)
+           -> Eff (eff ': e) a
+           -> Eff e b
+relayState s' pure' bind = loop s'
   where
     loop s (Val x)  = pure' s x
     loop s (E u' q)  = case decomp u' of
@@ -164,9 +164,9 @@ handleRelayS s' pure' bind = loop s'
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
 interpose :: (eff :< e)
-             => (a -> Eff e b)
-             -> (forall v. eff v -> Arrow e v b -> Eff e b)
-             -> Eff e a -> Eff e b
+          => (a -> Eff e b)
+          -> (forall v. eff v -> Arrow e v b -> Eff e b)
+          -> Eff e a -> Eff e b
 interpose ret h = loop
  where
    loop (Val x)  = ret x
