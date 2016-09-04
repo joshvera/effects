@@ -6,14 +6,14 @@ import Control.Monad
 import Control.Monad.Freer
 import Control.Monad.Freer.NonDetEff
 
-ifte :: (NonDetEff :< effs)
-     => Eff effs a
-     -> (a -> Eff effs b)
-     -> Eff effs b
-     -> Eff effs b
+ifte :: (NonDetEff :< e)
+     => Eff e a
+     -> (a -> Eff e b)
+     -> Eff e b
+     -> Eff e b
 ifte t th el = msplit t >>= maybe el (\(a,m) -> th a <|> (m >>= th))
 
-generatePrimes :: (NonDetEff :< effs) => [Int] -> Eff effs Int
+generatePrimes :: (NonDetEff :< e) => [Int] -> Eff e Int
 generatePrimes xs = do
   n <- gen
   ifte (do d <- gen

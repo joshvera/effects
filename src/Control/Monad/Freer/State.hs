@@ -42,19 +42,19 @@ data State s v where
   Put :: !s -> State s ()
 
 -- | Retrieve state
-get :: (State s :< effs) => Eff effs s
+get :: (State s :< e) => Eff e s
 get = send Get
 
 -- | Store state
-put :: (State s :< effs) => s -> Eff effs ()
+put :: (State s :< e) => s -> Eff e ()
 put s = send (Put s)
 
 -- | Modify state
-modify :: (State s :< effs) => (s -> s) -> Eff effs ()
+modify :: (State s :< e) => (s -> s) -> Eff e ()
 modify f = fmap f get >>= put
 
 -- | Handler for State effects
-runState :: Eff (State s ': effs) w -> s -> Eff effs (w, s)
+runState :: Eff (State s ': e) w -> s -> Eff e (w, s)
 runState (Val x) s = pure (x,s)
 runState (E u q) s = case decomp u of
   Right Get      -> runState (apply q s) s

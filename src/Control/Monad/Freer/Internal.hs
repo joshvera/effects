@@ -66,7 +66,7 @@ import Data.FTCQueue
 data Eff effects b
   -- | Done with the value of type b.
   = Val b
-  -- | Send a request of type 'Union effs a' with the 'Arrs effs a b' queue.
+  -- | Send a request of type 'Union e a' with the 'Arrs e a b' queue.
   | forall a. E (Union effects a) (Arrows effects a b)
 
 -- | A queue of 'effects' from 'a' to 'b'.
@@ -102,7 +102,7 @@ apply q' x =
 -- * Sending and Running Effects
 
 -- | Send a request and wait for a reply.
-send :: (eff :< effs) => eff b -> Eff effs b
+send :: (eff :< e) => eff b -> Eff e b
 send t = E (inj t) (tsingleton Val)
 
 -- | Runs an effect whose effects has been consumed.
@@ -131,12 +131,12 @@ runM (E u q) = case decomp u of
 
 -- | Given an effect request, either handle it with the given 'pure' function,
 -- or relay it to the given 'bind' function.
-handleRelay :: Arrow effs a b -- ^ An 'pure' effectful arrow.
+handleRelay :: Arrow e a b -- ^ An 'pure' effectful arrow.
             -- | A function to relay to, that binds a relayed 'eff v' to
             -- an effectful arrow and returns a new effect.
-            -> (forall v. eff v -> Arrow effs v b -> Eff effs b)
-            -> Eff (eff ': effs) a -- ^ The 'eff' to relay and consume.
-            -> Eff effs b -- ^ The relayed effect with 'eff' consumed.
+            -> (forall v. eff v -> Arrow e v b -> Eff e b)
+            -> Eff (eff ': e) a -- ^ The 'eff' to relay and consume.
+            -> Eff e b -- ^ The relayed effect with 'eff' consumed.
 handleRelay pure' bind = loop
  where
   loop (Val x)  = pure' x
@@ -149,10 +149,10 @@ handleRelay pure' bind = loop
 -- Allows sending along some state to be handled for the target
 -- effect, or relayed to a handler that can handle the target effect.
 handleRelayS :: s
-                -> (s -> a -> Eff effs b)
-                -> (forall v. s -> eff v -> (s -> Arrow effs v b) -> Eff effs b)
-                -> Eff (eff ': effs) a
-                -> Eff effs b
+                -> (s -> a -> Eff e b)
+                -> (forall v. s -> eff v -> (s -> Arrow e v b) -> Eff e b)
+                -> Eff (eff ': e) a
+                -> Eff e b
 handleRelayS s' pure' bind = loop s'
   where
     loop s (Val x)  = pure' s x
@@ -163,10 +163,10 @@ handleRelayS s' pure' bind = loop s'
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
-interpose :: (eff :< effs)
-             => (a -> Eff effs b)
-             -> (forall v. eff v -> Arrow effs v b -> Eff effs b)
-             -> Eff effs a -> Eff effs b
+interpose :: (eff :< e)
+             => (a -> Eff e b)
+             -> (forall v. eff v -> Arrow e v b -> Eff e b)
+             -> Eff e a -> Eff e b
 interpose ret h = loop
  where
    loop (Val x)  = ret x
@@ -177,12 +177,12 @@ interpose ret h = loop
 
 -- * Effect Instances
 
-instance Functor (Eff effs) where
+instance Functor (Eff e) where
   fmap f (Val x) = Val (f x)
   fmap f (E u q) = E u (q |> (Val . f))
   {-# INLINE fmap #-}
 
-instance Applicative (Eff effs) where
+instance Applicative (Eff e) where
   pure = Val
   {-# INLINE pure #-}
 
@@ -192,7 +192,7 @@ instance Applicative (Eff effs) where
   E u q <*> m     = E u (q |> (`fmap` m))
   {-# INLINE (<*>) #-}
 
-instance Monad (Eff effs) where
+instance Monad (Eff e) where
   return = Val
   {-# INLINE return #-}
 
