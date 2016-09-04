@@ -50,6 +50,14 @@ module Data.Open.Union (
 import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
 
+infixr 5 :<
+-- | Find an functor in a record.
+class (FindElem e r) => (e :: * -> *) :< r where
+  -- | Inject a functor into a type-aligned union.
+  inj :: e v -> Union r v
+  -- | Maybe project a functor out of a type-aligned union.
+  prj :: Union r v -> Maybe (e v)
+
 -- Strong Sum (Existential with the evidence) is an open union
 -- t is can be a GADT and hence not necessarily a Functor.
 -- Int is the index of t in the list r; that is, the index of t in the
@@ -67,12 +75,6 @@ prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
                     | otherwise = Nothing
 
 newtype P t r = P{unP :: Int}
-
-infixr 5 :<
--- | Find a member 't' in an open union 'r'.
-class (FindElem t r) => (t :: * -> *) :< r where
-  inj :: t v -> Union r v
-  prj :: Union r v -> Maybe (t v)
 
 infixr 5 :<:
 -- | Find a list of members 'm' in an open union 'r'.

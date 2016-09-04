@@ -17,33 +17,33 @@ data NonDetEff a where
   MZero :: NonDetEff a
   MPlus :: NonDetEff Bool
 
-instance (NonDetEff :< effs) => Alternative (Eff effs) where
+instance (NonDetEff :< e) => Alternative (Eff e) where
   empty = mzero
   (<|>) = mplus
 
-instance (NonDetEff :< effs) => MonadPlus (Eff effs) where
+instance (NonDetEff :< a) => MonadPlus (Eff a) where
   mzero       = send MZero
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
 
 -- | A handler for nondeterminstic effects
 makeChoiceA :: Alternative f
-            => Eff (NonDetEff ': effs) a -> Eff effs (f a)
+            => Eff (NonDetEff ': e) a -> Eff e (f a)
 makeChoiceA =
-  handleRelay (return . pure) $ \m k ->
+  handleRelay (pure . pure) $ \m k ->
     case m of
-      MZero -> return empty
+      MZero -> pure empty
       MPlus -> liftM2 (<|>) (k True) (k False)
 
-msplit :: (NonDetEff :< effs)
-       => Eff effs a -> Eff effs (Maybe (a, Eff effs a))
+msplit :: (NonDetEff :< e)
+       => Eff e a -> Eff e (Maybe (a, Eff e a))
 msplit = loop []
-  where loop jq (Val x)     = return (Just (x, msum jq))
+  where loop jq (Val x) = pure (Just (x, msum jq))
         loop jq (E u q) =
           case prj u of
             Just MZero ->
               case jq of
-                []     -> return Nothing
+                []      -> pure Nothing
                 (j:jq') -> loop jq' j
-            Just MPlus -> loop (applyEffs q False : jq) (applyEffs q True)
-            Nothing    -> E u (tsingleton k)
-              where k = composeEffs q (loop jq)
+            Just MPlus  -> loop (q `apply` False : jq) (q `apply` True)
+            Nothing     -> E u (tsingleton k)
+              where k = q >>> loop jq

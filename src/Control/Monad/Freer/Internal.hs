@@ -31,23 +31,29 @@ starting point.
 
 -}
 module Control.Monad.Freer.Internal (
+  -- * Constructing and Sending Effects
   Eff(..),
+  send,
+  -- * Decomposing Unions
   type(:<),
   type(:<:),
+  -- | Inserts multiple effects into 'E'.
   inj,
   prj,
+  -- * Constructing and Decomposing Arrows
+  decomp,
   Arrow,
+  tsingleton,
   Arrows,
   Union,
-
-  decomp,
-  tsingleton,
-
-  applyEffs,
-  composeEffs,
-  send,
+  -- * Composing and Applying Arrows
+  apply,
+  (<<<),
+  (>>>),
+  -- * Running Effects
   run,
   runM,
+  -- * Relaying and Interposing Effects
   handleRelay,
   handleRelayS,
   interpose,
@@ -63,36 +69,35 @@ data Eff effects b
   -- | Send a request of type 'Union effs a' with the 'Arrs effs a b' queue.
   | forall a. E (Union effects a) (Arrows effects a b)
 
--- | An effectful function from 'a' to 'b' that is a composition of
--- several effectful functions. The paremeter 'effs' describes the overall
--- effect. The composition members are accumulated in a type-aligned
--- queue.
-type Arrows effs a b = FTCQueue (Eff effs) a b
+-- | A queue of 'effects' from 'a' to 'b'.
+type Arrows effects a b = FTCQueue (Eff effects) a b
 
--- | An effectful computation that returns 'b' and performs effects 'effs'.
-data Eff effs b
-  -- | Done with the value of type b.
-  = Val b
-  -- | Send a request of type 'Union effs a' with the 'Arrs effs a b' queue.
-  | forall a. E (Union effs a) (Arrows effs a b)
-
+-- | An effectful function from 'a' to 'b'
+--   that also performs 'effects'.
+type Arrow effects a b = a -> Eff effects b
 
 -- * Composing and Applying Effects
 
 -- | Returns an effect by applying a given value to a queue of effects.
-applyEffs :: Arrows effs a b -> a -> Eff effs b
-applyEffs q' x =
+apply :: Arrows effects a b -> a -> Eff effects b
+apply q' x =
    case tviewl q' of
    TOne k  -> k x
    k :< t -> case k x of
-     Val y -> applyEffs t y
+     Val y -> t `apply` y
      E u q -> E u (q >< t)
 
--- | Returns a queue of effects' from a to c with an updated list of effects,
--- given a queue of effects and a function from effects to effects'.
-composeEffs :: Arrows effs a b -> (Eff effs b -> Eff effs' c) -> Arrow effs' a c
-composeEffs g h a = h $ applyEffs g a
+-- | Compose left to right.
+(>>>) :: Arrows effects a b
+           -> (Eff effects b -> Eff effects' c) -- ^ An function to compose.
+           -> Arrow effects' a c
+(>>>) arrows f = f . apply arrows
 
+-- | Compose right to left.
+(<<<) :: (Eff effects b -> Eff effects' c) -- ^ An function to compose.
+           -> Arrows effects a b
+           -> Arrow effects' a c
+(<<<) f arrows  = f . apply arrows
 
 -- * Sending and Running Effects
 
@@ -121,7 +126,7 @@ run _       = error "Internal:run - This (E) should never happen"
 runM :: Monad m => Eff '[m] b -> m b
 runM (Val x) = pure x
 runM (E u q) = case decomp u of
-  Right mb -> mb >>= runM . applyEffs q
+  Right mb -> mb >>= runM . (apply q)
   Left _   -> error "Internal:runM - This (Left) should never happen"
 
 -- | Given an effect request, either handle it with the given 'pure' function,
@@ -130,17 +135,15 @@ handleRelay :: Arrow effs a b -- ^ An 'pure' effectful arrow.
             -- | A function to relay to, that binds a relayed 'eff v' to
             -- an effectful arrow and returns a new effect.
             -> (forall v. eff v -> Arrow effs v b -> Eff effs b)
-            -- | The effect to relay.
-            -> Eff (eff ': effs) a
-            -- The resulting effect with 'eff' consumed.
-            -> Eff effs b
+            -> Eff (eff ': effs) a -- ^ The 'eff' to relay and consume.
+            -> Eff effs b -- ^ The relayed effect with 'eff' consumed.
 handleRelay pure' bind = loop
  where
   loop (Val x)  = pure' x
   loop (E u' q)  = case decomp u' of
     Right x -> bind x k
     Left  u -> E u (tsingleton k)
-   where k = composeEffs q loop
+   where k = q >>> loop
 
 -- | Parameterized 'handleRelay'
 -- Allows sending along some state to be handled for the target
@@ -156,7 +159,7 @@ handleRelayS s' pure' bind = loop s'
     loop s (E u' q)  = case decomp u' of
       Right x -> bind s x k
       Left  u -> E u (tsingleton (k s))
-     where k s'' x = loop s'' $ applyEffs q x
+     where k s'' x = loop s'' $ q `apply` x
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
@@ -170,7 +173,7 @@ interpose ret h = loop
    loop (E u q)  = case prj u of
      Just x -> h x k
      _      -> E u (tsingleton k)
-    where k = composeEffs q loop
+    where k = q >>> loop
 
 -- * Effect Instances
 

@@ -37,10 +37,10 @@ runStateR :: Eff (Writer s ': Reader s ': effs) a -> s -> Eff effs (a, s)
 runStateR m s = loop s m
  where
    loop :: s -> Eff (Writer s ': Reader s ': effs) a -> Eff effs (a, s)
-   loop s' (Val x) = return (x,s')
+   loop s' (Val x) = pure (x,s')
    loop s' (E u q) = case decomp u of
      Right (Writer o) -> k o ()
      Left  u'  -> case decomp u' of
        Right Reader -> k s' s'
        Left u'' -> E u'' (tsingleton (k s'))
-    where k s'' = composeEffs q (loop s'')
+    where k s'' = q >>> (loop s'')
