@@ -30,23 +30,23 @@ import Control.Monad.Freer.Internal
 --------------------------------------------------------------------------------
                            -- Exceptions --
 --------------------------------------------------------------------------------
--- | Exceptions of the type e; no resumption
-newtype Exc e v = Exc e
+-- | Exceptions of the type 'exc'; no resumption
+newtype Exc exc a = Exc exc
 
--- | Throws an error carrying information of type e
-throwError :: (Exc exception :< e) => exception -> Eff e a
+-- | Throws an error carrying information of type 'exc'.
+throwError :: (Exc exc :< e) => exc -> Eff e a
 throwError e = send (Exc e)
 
 -- | Handler for exception effects
 -- If there are no exceptions thrown, returns Right If exceptions are
 -- thrown and not handled, returns Left, interrupting the execution of
 -- any other effect handlers.
-runError :: Eff (Exc exception ': e) a -> Eff e (Either exception a)
+runError :: Eff (Exc exc ': e) a -> Eff e (Either exc a)
 runError =
    handleRelay (pure . Right) (\ (Exc e) _k -> pure (Left e))
 
 -- | A catcher for Exceptions. Handlers are allowed to rethrow
 -- exceptions.
-catchError :: (Exc exception :< e) =>
-        Eff e a -> (exception -> Eff e a) -> Eff e a
+catchError :: (Exc exc :< e) =>
+        Eff e a -> (exc -> Eff e a) -> Eff e a
 catchError m handle = interpose pure (\(Exc e) _k -> handle e) m
