@@ -64,7 +64,7 @@ executable examples
                      , Teletype
                      , Trace
   build-depends:       base >=4.7 && <5
-                     , freer
+                     , effects
   hs-source-dirs:      examples/src
   ghc-options:         -Wall
   default-language:    Haskell2010
@@ -83,7 +83,7 @@ test-suite test
                      , Tests.State
                      , Tests.StateRW
   build-depends:    base
-                  , freer
+                  , effects
                   , tasty
                   , tasty-hunit
                   , tasty-quickcheck
@@ -97,7 +97,7 @@ benchmark core
   hs-source-dirs:   bench
   main-is:          Core.hs
   build-depends:    base
-                  , freer
+                  , effects
                   , criterion
                   , mtl
                   , free
