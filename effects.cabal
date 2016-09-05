@@ -1,21 +1,21 @@
-name:                freer
+name:                effects
 version:             0.2.3.0
 synopsis:            Implementation of the Freer Monad
 license:             BSD3
 license-file:        LICENSE
-author:              Allele Dev
-maintainer:          allele.dev@gmail.com
-copyright:           Allele Dev 2016
-homepage:            https://gitlab.com/queertypes/freer
-bug-reports:         https://gitlab.com/queertypes/freer/issues
+author:              Josh Vera, Allele Dev
+maintainer:          josh@joshvera.com
+copyright:           Josh Vera, Allele Dev 2016
+homepage:            https://github.com/joshvera/effects
+bug-reports:         https://github.com/joshvera/effects/issues
 category:            Control
 build-type:          Simple
 cabal-version:       >=1.18
 tested-with:         GHC==7.10.2
 description:
 
-    Freer is an implementation of "Freer Monads, More Extensible
-    Effects"
+    Effects is an implementation of "Freer Monads, More Extensible
+    Effects".
     .
     The key features of Freer are:
     .
@@ -32,7 +32,7 @@ extra-source-files:
 
 source-repository head
     type: git
-    location: git clone https://gitlab.com/queertypes/freer.git
+    location: git clone https://gitlab.com/joshvera/effects.git
 
 library
   exposed-modules:     Control.Monad.Effect
