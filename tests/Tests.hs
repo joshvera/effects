@@ -1,6 +1,6 @@
 module Main where
 
-import Control.Monad.Freer
+import Control.Monad.Effect
 
 import Test.Tasty
 import Test.Tasty.HUnit

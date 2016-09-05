@@ -4,7 +4,7 @@
 {-# LANGUAGE GADTs #-}
 
 {-|
-Module      : Control.Monad.Freer.Trace
+Module      : Control.Monad.Effect.Trace
 Description : Composable Trace effects
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
@@ -19,13 +19,13 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Freer.Trace (
+module Control.Monad.Effect.Trace (
   Trace,
   trace,
   runTrace
 ) where
 
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect.Internal
 
 -- | A Trace effect; takes a String and performs output
 data Trace v where

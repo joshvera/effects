@@ -35,18 +35,18 @@ source-repository head
     location: git clone https://gitlab.com/queertypes/freer.git
 
 library
-  exposed-modules:     Control.Monad.Freer
-                     , Control.Monad.Freer.Coroutine
-                     , Control.Monad.Freer.Cut
-                     , Control.Monad.Freer.Exception
-                     , Control.Monad.Freer.Fresh
-                     , Control.Monad.Freer.Internal
-                     , Control.Monad.Freer.Reader
-                     , Control.Monad.Freer.State
-                     , Control.Monad.Freer.StateRW
-                     , Control.Monad.Freer.Trace
-                     , Control.Monad.Freer.Writer
-                     , Control.Monad.Freer.NonDetEff
+  exposed-modules:     Control.Monad.Effect
+                     , Control.Monad.Effect.Coroutine
+                     , Control.Monad.Effect.Cut
+                     , Control.Monad.Effect.Exception
+                     , Control.Monad.Effect.Fresh
+                     , Control.Monad.Effect.Internal
+                     , Control.Monad.Effect.Reader
+                     , Control.Monad.Effect.State
+                     , Control.Monad.Effect.StateRW
+                     , Control.Monad.Effect.Trace
+                     , Control.Monad.Effect.Writer
+                     , Control.Monad.Effect.NonDetEff
                      , Data.FTCQueue
                      , Data.Open.Union
   build-depends:       base >=4.7 && <5

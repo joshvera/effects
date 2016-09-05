@@ -5,7 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 {-|
-Module      : Control.Monad.Freer.Reader
+Module      : Control.Monad.Effect.Reader
 Description : Reader effects, for encapsulating an environment
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
@@ -20,7 +20,7 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Freer.Reader (
+module Control.Monad.Effect.Reader (
   Reader(..),
 
   ask,
@@ -35,7 +35,7 @@ module Control.Monad.Freer.Reader (
 
 ) where
 
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect.Internal
 
 -- |
 data Reader v a where
@@ -51,7 +51,7 @@ asks f = f <$> ask
 
 -- | Handler for reader effects
 runReader :: Eff (Reader v ': e) a -> v -> Eff e a
-runReader m e = handleRelay pure (\Reader k -> k e) m
+runReader m e = relay pure (\Reader k -> k e) m
 
 -- |
 -- Locally rebind the value in the dynamic environment
@@ -75,8 +75,8 @@ The variable @count@ contains number of variables in the bindings.
 You can see how to run a Reader effect and retrieve data from it
 with 'runReader', how to access the Reader data with 'ask' and 'asks'.
 
->import Control.Monad.Freer
->import Control.Monad.Freer.Reader
+>import Control.Monad.Effect
+>import Control.Monad.Effect.Reader
 >import Data.Map as Map
 >import Data.Maybe
 >
@@ -110,8 +110,8 @@ with 'runReader', how to access the Reader data with 'ask' and 'asks'.
 
 Shows how to modify Reader content with 'local'.
 
-> import Control.Monad.Freer
-> import Control.Monad.Freer.Reader
+> import Control.Monad.Effect
+> import Control.Monad.Effect.Reader
 >
 > import Data.Map as Map
 > import Data.Maybe

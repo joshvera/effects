@@ -4,8 +4,8 @@ module NonDetEff where
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.Freer
-import Control.Monad.Freer.NonDetEff
+import Control.Monad.Effect
+import Control.Monad.Effect.NonDetEff
 
 ifte :: (NonDetEff :< r)
      => Eff r a -> (a -> Eff r b) -> Eff r b -> Eff r b

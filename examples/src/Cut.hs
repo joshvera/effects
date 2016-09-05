@@ -1,6 +1,6 @@
 module Cut where
 
--- import Control.Monad.Freer.Cut
+-- import Control.Monad.Effect.Cut
 
 
 {-

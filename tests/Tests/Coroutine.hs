@@ -7,9 +7,9 @@ module Tests.Coroutine (
 ) where
 
 import Control.Monad
-import Control.Monad.Freer
-import Control.Monad.Freer.Coroutine
-import Control.Monad.Freer.State
+import Control.Monad.Effect
+import Control.Monad.Effect.Coroutine
+import Control.Monad.Effect.State
 
 runTestCoroutine :: [Int] -> Int
 runTestCoroutine list = snd . run $ runState effTestCoroutine 0

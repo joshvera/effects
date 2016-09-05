@@ -16,10 +16,10 @@ module Tests.Exception (
   ex2rr2,
 ) where
 
-import Control.Monad.Freer
-import Control.Monad.Freer.Exception
-import Control.Monad.Freer.Reader
-import Control.Monad.Freer.State
+import Control.Monad.Effect
+import Control.Monad.Effect.Exception
+import Control.Monad.Effect.Reader
+import Control.Monad.Effect.State
 
 import Tests.Common
 

@@ -5,8 +5,8 @@ module Tests.State (
   testGetStart
 ) where
 
-import Control.Monad.Freer
-import Control.Monad.Freer.State
+import Control.Monad.Effect
+import Control.Monad.Effect.State
 
 testPutGet :: Int -> Int -> (Int,Int)
 testPutGet n start = run (runState go start)

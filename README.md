@@ -31,8 +31,8 @@ Here's what using Freer looks like:
 {-# LANGUAGE DataKinds #-}
 module Teletype where
 
-import Control.Monad.Freer
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect
+import Control.Monad.Effect.Internal
 import System.Exit hiding (ExitSuccess)
 
 --------------------------------------------------------------------------------
@@ -115,6 +115,6 @@ implementation. In particular:
 
 * Data.Open.Union maps to [OpenUnion51.hs](http://okmij.org/ftp/Haskell/extensible/OpenUnion51.hs)
 * Data.FTCQueue maps to [FTCQueue1](http://okmij.org/ftp/Haskell/extensible/FTCQueue1.hs)
-* Control.Monad.Freer* maps to [Eff1.hs](http://okmij.org/ftp/Haskell/extensible/Eff1.hs)
+* Control.Monad.Effect* maps to [Eff1.hs](http://okmij.org/ftp/Haskell/extensible/Eff1.hs)
 
 There will be deviations from the source.

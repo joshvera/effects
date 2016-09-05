@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 {-|
-Module      : Control.Monad.Freer.Exception
+Module      : Control.Monad.Effect.Exception
 Description : An Exception effect and handler.
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
@@ -18,14 +18,14 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Freer.Exception (
+module Control.Monad.Effect.Exception (
   Exc(..),
   throwError,
   runError,
   catchError
 ) where
 
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect.Internal
 
 --------------------------------------------------------------------------------
                            -- Exceptions --
@@ -43,7 +43,7 @@ throwError e = send (Exc e)
 -- any other effect handlers.
 runError :: Eff (Exc exc ': e) a -> Eff e (Either exc a)
 runError =
-   handleRelay (pure . Right) (\ (Exc e) _k -> pure (Left e))
+   relay (pure . Right) (\ (Exc e) _k -> pure (Left e))
 
 -- | A catcher for Exceptions. Handlers are allowed to rethrow
 -- exceptions.

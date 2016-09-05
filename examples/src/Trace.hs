@@ -3,9 +3,9 @@
 {-# LANGUAGE TypeOperators #-}
 module Trace where
 
-import Control.Monad.Freer
-import Control.Monad.Freer.Reader
-import Control.Monad.Freer.Trace
+import Control.Monad.Effect
+import Control.Monad.Effect.Reader
+import Control.Monad.Effect.Trace
 
 import Common
 

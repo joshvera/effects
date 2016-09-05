@@ -8,11 +8,11 @@
 module Main where
 
 import Control.Monad
-import Control.Monad.Freer
-import Control.Monad.Freer.Internal
-import Control.Monad.Freer.Exception
-import Control.Monad.Freer.State
-import Control.Monad.Freer.StateRW
+import Control.Monad.Effect
+import Control.Monad.Effect.Internal
+import Control.Monad.Effect.Exception
+import Control.Monad.Effect.State
+import Control.Monad.Effect.StateRW
 
 import Criterion
 import Criterion.Main

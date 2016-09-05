@@ -11,26 +11,7 @@
 -- TODO: remove once GHC can deduce the decidability of this instance
 {-# LANGUAGE UndecidableInstances #-}
 
-{-|
-Module      : Control.Monad.Freer.Internal
-Description : Mechanisms to make effects work
-Copyright   : Alej Cabrera 2015
-License     : BSD-3
-Maintainer  : cpp.cabrera@gmail.com
-Stability   : experimental
-Portability : POSIX
-
-Internal machinery for this effects library. This includes:
-
-* Eff data type, for expressing effects
-* NonDetEff data type, for nondeterministic effects
-* Functions for facilitating the construction of effects and their handlers
-
-Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
-starting point.
-
--}
-module Control.Monad.Freer.Internal (
+module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
   Eff(..),
   send,
@@ -145,7 +126,7 @@ relay pure' bind = loop
     Left  u -> E u (tsingleton k)
    where k = q >>> loop
 
--- | Parameterized 'handleRelay'
+-- | Parameterized 'relay'
 -- Allows sending along some state to be handled for the target
 -- effect, or relayed to a handler that can handle the target effect.
 relayState :: s

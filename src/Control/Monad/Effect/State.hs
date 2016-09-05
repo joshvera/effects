@@ -5,7 +5,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 {-|
-Module      : Control.Monad.Freer.State
+Module      : Control.Monad.Effect.State
 Description : State effects, for state-carrying computations.
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
@@ -19,7 +19,7 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Freer.State (
+module Control.Monad.Effect.State (
   State,
   get,
   put,
@@ -29,7 +29,7 @@ module Control.Monad.Freer.State (
   transactionState
 ) where
 
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect.Internal
 import Data.Proxy
 
 --------------------------------------------------------------------------------

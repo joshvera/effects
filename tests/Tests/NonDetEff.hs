@@ -3,8 +3,8 @@ module Tests.NonDetEff where
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.Freer
-import Control.Monad.Freer.NonDetEff
+import Control.Monad.Effect
+import Control.Monad.Effect.NonDetEff
 
 ifte :: (NonDetEff :< e)
      => Eff e a

@@ -1,7 +1,8 @@
 {-# LANGUAGE DataKinds #-}
+
 module Main where
 
-import Control.Monad.Freer
+import Control.Monad.Effect
 import Teletype
 
 runner :: Eff '[Teletype] ()

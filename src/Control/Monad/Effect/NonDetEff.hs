@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeOperators, GADTs, FlexibleContexts, UndecidableInstances, DataKinds #-}
-module Control.Monad.Freer.NonDetEff (
+module Control.Monad.Effect.NonDetEff (
   NonDetEff(..),
   makeChoiceA,
   msplit
@@ -7,7 +7,7 @@ module Control.Monad.Freer.NonDetEff (
 
 import Control.Monad
 import Control.Applicative
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect.Internal
 
 --------------------------------------------------------------------------------
                     -- Nondeterministic Choice --
@@ -29,7 +29,7 @@ instance (NonDetEff :< a) => MonadPlus (Eff a) where
 makeChoiceA :: Alternative f
             => Eff (NonDetEff ': e) a -> Eff e (f a)
 makeChoiceA =
-  handleRelay (pure . pure) $ \m k ->
+  relay (pure . pure) $ \m k ->
     case m of
       MZero -> pure empty
       MPlus -> liftM2 (<|>) (k True) (k False)

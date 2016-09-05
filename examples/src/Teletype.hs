@@ -4,8 +4,8 @@
 {-# LANGUAGE DataKinds #-}
 module Teletype where
 
-import Control.Monad.Freer
-import Control.Monad.Freer.Internal as I
+import Control.Monad.Effect
+import Control.Monad.Effect.Internal as I
 import System.Exit hiding (ExitSuccess)
 
 data Teletype s where
