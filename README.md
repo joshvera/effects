@@ -1,4 +1,4 @@
-# Freer: Extensible Effects with Freer Monads
+# Effects: Extensible Effects with Freer Monads
 
 Freer is an implementation of
 ["Freer Monads, More Extensible Effects"](http://okmij.org/ftp/Haskell/extensible/more.pdf). Much
