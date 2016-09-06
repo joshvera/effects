@@ -1,6 +1,6 @@
 # Effects: Extensible Effects with Freer Monads
 
-Freer is an implementation of
+Effects is an implementation of
 ["Freer Monads, More Extensible Effects"](http://okmij.org/ftp/Haskell/extensible/more.pdf). Much
 of the implementation is a repackaging and cleaning up of the
 reference materials provided
@@ -8,7 +8,7 @@ reference materials provided
 
 # Features
 
-The key features of Freer are:
+The key features of Effects are:
 
 * An efficient effect system for Haskell as a library
 * Implementations for several common Haskell monad instances:
@@ -22,7 +22,7 @@ The key features of Freer are:
 
 # Example: Teletype DSL
 
-Here's what using Freer looks like:
+Here's what using Effects looks like:
 
 ```haskell
 {-# LANGUAGE GADTs #-}
