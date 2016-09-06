@@ -5,7 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 {-|
-Module      : Control.Monad.Freer.Reader
+Module      : Control.Monad.Effect.Reader
 Description : Reader effects, for encapsulating an environment
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
@@ -20,7 +20,7 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Freer.Reader (
+module Control.Monad.Effect.Reader (
   Reader(..),
 
   ask,
@@ -35,34 +35,34 @@ module Control.Monad.Freer.Reader (
 
 ) where
 
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect.Internal
 
 -- |
-data Reader e v where
-  Reader :: Reader e e
+data Reader v a where
+  Reader :: Reader a a
 
 -- | Request a value for the environment
-ask :: (Reader e :< effs) => Eff effs e
+ask :: (Reader v :< e) => Eff e v
 ask = send Reader
 
 -- | Request a value from the environment and applys as function
-asks :: (e -> b) -> Eff '[Reader e] b
+asks :: (v -> a) -> Eff '[Reader v] a
 asks f = f <$> ask
 
 -- | Handler for reader effects
-runReader :: Eff (Reader e ': effs) b -> e -> Eff effs b
-runReader m e = handleRelay pure (\Reader k -> k e) m
+runReader :: Eff (Reader v ': e) a -> v -> Eff e a
+runReader m e = relay pure (\Reader k -> k e) m
 
 -- |
 -- Locally rebind the value in the dynamic environment
 -- This function is like a relay; it is both an admin for Reader requests,
 -- and a requestor of them
-local :: forall e a effs. (Reader e :< effs) =>
-         (e -> e) -> Eff effs a -> Eff effs a
+local :: forall v b e. (Reader v :< e) =>
+         (v -> v) -> Eff e b -> Eff e b
 local f m = do
   e0 <- ask
   let e = f e0
-  let bind :: Reader e v -> Arrow effs v a -> Eff effs a
+  let bind :: Reader v a -> Arrow e a b -> Eff e b
       bind Reader g = g e
   interpose pure bind m
 
@@ -75,8 +75,8 @@ The variable @count@ contains number of variables in the bindings.
 You can see how to run a Reader effect and retrieve data from it
 with 'runReader', how to access the Reader data with 'ask' and 'asks'.
 
->import Control.Monad.Freer
->import Control.Monad.Freer.Reader
+>import Control.Monad.Effect
+>import Control.Monad.Effect.Reader
 >import Data.Map as Map
 >import Data.Maybe
 >
@@ -110,8 +110,8 @@ with 'runReader', how to access the Reader data with 'ask' and 'asks'.
 
 Shows how to modify Reader content with 'local'.
 
-> import Control.Monad.Freer
-> import Control.Monad.Freer.Reader
+> import Control.Monad.Effect
+> import Control.Monad.Effect.Reader
 >
 > import Data.Map as Map
 > import Data.Maybe

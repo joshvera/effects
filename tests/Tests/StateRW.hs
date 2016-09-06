@@ -5,8 +5,8 @@ module Tests.StateRW (
   testGetStartRW
 ) where
 
-import Control.Monad.Freer
-import Control.Monad.Freer.StateRW
+import Control.Monad.Effect
+import Control.Monad.Effect.StateRW
 
 testPutGetRW :: Int -> Int -> (Int,Int)
 testPutGetRW n start = run (runStateR go start)

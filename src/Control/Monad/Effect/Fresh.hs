@@ -4,7 +4,7 @@
 {-# LANGUAGE GADTs #-}
 
 {-|
-Module      : Control.Monad.Freer.Fresh
+Module      : Control.Monad.Effect.Fresh
 Description : Generation of fresh integers as an effect.
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
@@ -19,13 +19,13 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Freer.Fresh (
+module Control.Monad.Effect.Fresh (
   Fresh,
   fresh,
   runFresh'
 ) where
 
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect.Internal
 
 --------------------------------------------------------------------------------
                              -- Fresh --
@@ -41,6 +41,6 @@ fresh = send Fresh
 -- | Handler for Fresh effects, with an Int for a starting value
 runFresh' :: Eff (Fresh ': r) w -> Int -> Eff r w
 runFresh' m s =
-  handleRelayS s (\_s x -> return x)
-                 (\s' Fresh k -> (k $! s'+1) s')
-                 m
+  relayState s (\_s x -> pure x)
+               (\s' Fresh k -> (k $! s'+1) s')
+               m

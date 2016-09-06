@@ -8,11 +8,11 @@
 module Main where
 
 import Control.Monad
-import Control.Monad.Freer
-import Control.Monad.Freer.Internal
-import Control.Monad.Freer.Exception
-import Control.Monad.Freer.State
-import Control.Monad.Freer.StateRW
+import Control.Monad.Effect
+import Control.Monad.Effect.Internal
+import Control.Monad.Effect.Exception
+import Control.Monad.Effect.State
+import Control.Monad.Effect.StateRW
 
 import Criterion
 import Criterion.Main
@@ -28,15 +28,15 @@ oneGet n = run (runState get n)
 
 countDown :: Int -> (Int,Int)
 countDown start = run (runState go start)
-  where go = get >>= (\n -> if n <= 0 then return n else put (n-1) >> go)
+  where go = get >>= (\n -> if n <= 0 then pure n else put (n-1) >> go)
 
 countDownRW :: Int -> (Int,Int)
 countDownRW start = run (runStateR go start)
-  where go = ask >>= (\n -> if n <= 0 then return n else tell (n-1) >> go)
+  where go = ask >>= (\n -> if n <= 0 then pure n else tell (n-1) >> go)
 
 countDownMTL :: Int -> (Int,Int)
 countDownMTL = MTL.runState go
-  where go = MTL.get >>= (\n -> if n <= 0 then return n else MTL.put (n-1) >> go)
+  where go = MTL.get >>= (\n -> if n <= 0 then pure n else MTL.put (n-1) >> go)
 
 --------------------------------------------------------------------------------
                        -- Exception + State --
@@ -71,13 +71,13 @@ get' :: (Http :< r) => Eff r String
 get' = send Get
 
 runHttp :: Eff (Http ': r) w -> Eff r w
-runHttp (Val x) = return x
+runHttp (Val x) = pure x
 runHttp (E u q) = case decomp u of
-  Right (Open _) -> runHttp (qApp q ())
-  Right Close    -> runHttp (qApp q ())
-  Right (Post d) -> runHttp (qApp q d)
-  Right Get      -> runHttp (qApp q "")
-  Left u'        -> E u' (tsingleton (runHttp . qApp q ))
+  Right (Open _) -> runHttp (q `apply` ())
+  Right Close    -> runHttp (q `apply` ())
+  Right (Post d) -> runHttp (q `apply` d)
+  Right Get      -> runHttp (q `apply` "")
+  Left u'        -> E u' $ tsingleton (runHttp . apply q)
 
 --------------------------------------------------------------------------------
                           -- Free: Interpreter --
@@ -104,7 +104,7 @@ fget' :: FHttp String
 fget' = Free.liftF $ FGet id
 
 runFHttp :: FHttp a -> Maybe a
-runFHttp (Free.Pure x) = return x
+runFHttp (Free.Pure x) = pure x
 runFHttp (Free.Free (FOpen _ n)) = runFHttp n
 runFHttp (Free.Free (FClose n))  = runFHttp n
 runFHttp (Free.Free (FPost s n)) = pure s  >>= runFHttp . n
@@ -132,19 +132,19 @@ main =
         bench "get"          $ whnf oneGet 0
     ],
     bgroup "Countdown Bench" [
-        bench "freer.State"    $ whnf countDown 10000
-      , bench "freer.StateRW"  $ whnf countDownRW 10000
+        bench "effects.State"    $ whnf countDown 10000
+      , bench "effects.StateRW"  $ whnf countDownRW 10000
       , bench "mtl.State"      $ whnf countDownMTL 10000
     ],
     bgroup "Countdown+Except Bench" [
-        bench "freer.ExcState"  $ whnf countDownExc 10000
+        bench "effects.ExcState"  $ whnf countDownExc 10000
       , bench "mtl.ExceptState" $ whnf countDownExcMTL 10000
     ],
     bgroup "HTTP Simple DSL" [
-        bench "freer" $ whnf (run . runHttp) prog
-      , bench "free" $ whnf runFHttp prog'
+        bench "effects"  $ whnf (run . runHttp) prog
+      , bench "effects"  $ whnf runFHttp prog'
 
-      , bench "freerN"      $ whnf (run . runHttp . p) 100000
-      , bench "freeN"       $ whnf (runFHttp . p')     100000
+      , bench "effectsN" $ whnf (run . runHttp . p) 100000
+      , bench "effectsN" $ whnf (runFHttp . p')     100000
     ]
   ]

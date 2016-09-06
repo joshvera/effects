@@ -1,7 +1,7 @@
 module Fresh where
 
-import Control.Monad.Freer.Fresh
-import Control.Monad.Freer.Trace
+import Control.Monad.Effect.Fresh
+import Control.Monad.Effect.Trace
 
 traceFresh :: IO ()
 traceFresh = runTrace $ flip runFresh' 0 $ do

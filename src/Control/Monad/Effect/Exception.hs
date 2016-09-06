@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 {-|
-Module      : Control.Monad.Freer.Exception
+Module      : Control.Monad.Effect.Exception
 Description : An Exception effect and handler.
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
@@ -18,35 +18,35 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Freer.Exception (
+module Control.Monad.Effect.Exception (
   Exc(..),
   throwError,
   runError,
   catchError
 ) where
 
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect.Internal
 
 --------------------------------------------------------------------------------
                            -- Exceptions --
 --------------------------------------------------------------------------------
--- | Exceptions of the type e; no resumption
-newtype Exc e v = Exc e
+-- | Exceptions of the type 'exc'; no resumption
+newtype Exc exc a = Exc exc
 
--- | Throws an error carrying information of type e
-throwError :: (Exc e :< effs) => e -> Eff effs a
+-- | Throws an error carrying information of type 'exc'.
+throwError :: (Exc exc :< e) => exc -> Eff e a
 throwError e = send (Exc e)
 
 -- | Handler for exception effects
 -- If there are no exceptions thrown, returns Right If exceptions are
 -- thrown and not handled, returns Left, interrupting the execution of
 -- any other effect handlers.
-runError :: Eff (Exc e ': effs) a -> Eff effs (Either e a)
+runError :: Eff (Exc exc ': e) a -> Eff e (Either exc a)
 runError =
-   handleRelay (return . Right) (\ (Exc e) _k -> return (Left e))
+   relay (pure . Right) (\ (Exc e) _k -> pure (Left e))
 
 -- | A catcher for Exceptions. Handlers are allowed to rethrow
 -- exceptions.
-catchError :: (Exc e :< effs) =>
-        Eff effs a -> (e -> Eff effs a) -> Eff effs a
-catchError m handle = interpose return (\(Exc e) _k -> handle e) m
+catchError :: (Exc exc :< e) =>
+        Eff e a -> (exc -> Eff e a) -> Eff e a
+catchError m handle = interpose pure (\(Exc e) _k -> handle e) m

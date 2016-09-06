@@ -1,21 +1,21 @@
-name:                freer
+name:                effects
 version:             0.2.3.0
 synopsis:            Implementation of the Freer Monad
 license:             BSD3
 license-file:        LICENSE
-author:              Allele Dev
-maintainer:          allele.dev@gmail.com
-copyright:           Allele Dev 2016
-homepage:            https://gitlab.com/queertypes/freer
-bug-reports:         https://gitlab.com/queertypes/freer/issues
+author:              Josh Vera, Allele Dev
+maintainer:          josh@joshvera.com
+copyright:           Josh Vera, Allele Dev 2016
+homepage:            https://github.com/joshvera/effects
+bug-reports:         https://github.com/joshvera/effects/issues
 category:            Control
 build-type:          Simple
 cabal-version:       >=1.18
 tested-with:         GHC==7.10.2
 description:
 
-    Freer is an implementation of "Freer Monads, More Extensible
-    Effects"
+    Effects is an implementation of "Freer Monads, More Extensible
+    Effects".
     .
     The key features of Freer are:
     .
@@ -32,21 +32,21 @@ extra-source-files:
 
 source-repository head
     type: git
-    location: git clone https://gitlab.com/queertypes/freer.git
+    location: git clone https://gitlab.com/joshvera/effects.git
 
 library
-  exposed-modules:     Control.Monad.Freer
-                     , Control.Monad.Freer.Coroutine
-                     , Control.Monad.Freer.Cut
-                     , Control.Monad.Freer.Exception
-                     , Control.Monad.Freer.Fresh
-                     , Control.Monad.Freer.Internal
-                     , Control.Monad.Freer.Reader
-                     , Control.Monad.Freer.State
-                     , Control.Monad.Freer.StateRW
-                     , Control.Monad.Freer.Trace
-                     , Control.Monad.Freer.Writer
-                     , Control.Monad.Freer.NonDetEff
+  exposed-modules:     Control.Monad.Effect
+                     , Control.Monad.Effect.Coroutine
+                     , Control.Monad.Effect.Cut
+                     , Control.Monad.Effect.Exception
+                     , Control.Monad.Effect.Fresh
+                     , Control.Monad.Effect.Internal
+                     , Control.Monad.Effect.Reader
+                     , Control.Monad.Effect.State
+                     , Control.Monad.Effect.StateRW
+                     , Control.Monad.Effect.Trace
+                     , Control.Monad.Effect.Writer
+                     , Control.Monad.Effect.NonDetEff
                      , Data.FTCQueue
                      , Data.Open.Union
   build-depends:       base >=4.7 && <5
@@ -64,7 +64,7 @@ executable examples
                      , Teletype
                      , Trace
   build-depends:       base >=4.7 && <5
-                     , freer
+                     , effects
   hs-source-dirs:      examples/src
   ghc-options:         -Wall
   default-language:    Haskell2010
@@ -83,7 +83,7 @@ test-suite test
                      , Tests.State
                      , Tests.StateRW
   build-depends:    base
-                  , freer
+                  , effects
                   , tasty
                   , tasty-hunit
                   , tasty-quickcheck
@@ -97,7 +97,7 @@ benchmark core
   hs-source-dirs:   bench
   main-is:          Core.hs
   build-depends:    base
-                  , freer
+                  , effects
                   , criterion
                   , mtl
                   , free

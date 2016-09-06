@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeOperators #-}
 {-|
-Module      : Control.Monad.Freer
+Module      : Control.Monad.Effect
 Description : Freer - an extensible effects library
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
@@ -9,7 +9,7 @@ Stability   : experimental
 Portability : POSIX
 
 -}
-module Control.Monad.Freer (
+module Control.Monad.Effect (
   -- * Running and Sending Effects
   Eff,
   run,
@@ -19,4 +19,4 @@ module Control.Monad.Freer (
   type(:<:)
 ) where
 
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect.Internal

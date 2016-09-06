@@ -4,7 +4,7 @@
 {-# LANGUAGE DataKinds #-}
 
 {-|
-Module      : Control.Monad.Freer.Writer
+Module      : Control.Monad.Effect.Writer
 Description : Composable Writer effects -
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
@@ -18,13 +18,13 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Freer.Writer (
+module Control.Monad.Effect.Writer (
   Writer(..),
   tell,
   runWriter
 ) where
 
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect.Internal
 
 -- | Writer effects - send outputs to an effect environment
 data Writer o x where
@@ -36,5 +36,5 @@ tell o = send $ Writer o
 
 -- | Simple handler for Writer effects
 runWriter :: Monoid o => Eff (Writer o ': r) a -> Eff r (a,o)
-runWriter = handleRelay (\x -> return (x,mempty))
+runWriter = relay (\x -> return (x,mempty))
                   (\ (Writer o) k -> k () >>= \ (x,l) -> return (x,o `mappend` l))

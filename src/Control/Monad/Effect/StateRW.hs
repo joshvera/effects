@@ -4,7 +4,7 @@
 {-# LANGUAGE GADTs #-}
 
 {-|
-Module      : Control.Monad.Freer.StateRW
+Module      : Control.Monad.Effect.StateRW
 Description : State effects in terms of Reader/Writer
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
@@ -20,7 +20,7 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Freer.StateRW (
+module Control.Monad.Effect.StateRW (
   runStateR,
   Reader,
   Writer,
@@ -28,19 +28,19 @@ module Control.Monad.Freer.StateRW (
   ask
 ) where
 
-import Control.Monad.Freer.Reader
-import Control.Monad.Freer.Writer
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect.Reader
+import Control.Monad.Effect.Writer
+import Control.Monad.Effect.Internal
 
 -- | State handler, using Reader/Writer effects
-runStateR :: Eff (Writer s ': Reader s ': effs) a -> s -> Eff effs (a, s)
+runStateR :: Eff (Writer s ': Reader s ': e) a -> s -> Eff e (a, s)
 runStateR m s = loop s m
  where
-   loop :: s -> Eff (Writer s ': Reader s ': effs) a -> Eff effs (a, s)
-   loop s' (Val x) = return (x,s')
+   loop :: s -> Eff (Writer s ': Reader s ': e) a -> Eff e (a, s)
+   loop s' (Val x) = pure (x,s')
    loop s' (E u q) = case decomp u of
      Right (Writer o) -> k o ()
      Left  u'  -> case decomp u' of
        Right Reader -> k s' s'
        Left u'' -> E u'' (tsingleton (k s'))
-    where k s'' = composeEffs q (loop s'')
+    where k s'' = q >>> (loop s'')

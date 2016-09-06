@@ -3,7 +3,7 @@
 {-# LANGUAGE DataKinds #-}
 
 {-|
-Module      : Control.Monad.Freer.Cut
+Module      : Control.Monad.Effect.Cut
 Description : An implementation of logical Cut
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
@@ -18,15 +18,15 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Freer.Cut (
+module Control.Monad.Effect.Cut (
   CutFalse,
   cutFalse,
   -- call
 ) where
 
 -- import Control.Monad
-import Control.Monad.Freer.Exception
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect.Exception
+import Control.Monad.Effect.Internal
 
 data CutFalse = CutFalse
 -- data Choose a b = Choose [a] b

@@ -5,7 +5,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 {-|
-Module      : Control.Monad.Freer.State
+Module      : Control.Monad.Effect.State
 Description : State effects, for state-carrying computations.
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
@@ -19,7 +19,7 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Freer.State (
+module Control.Monad.Effect.State (
   State,
   get,
   put,
@@ -29,7 +29,7 @@ module Control.Monad.Freer.State (
   transactionState
 ) where
 
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect.Internal
 import Data.Proxy
 
 --------------------------------------------------------------------------------
@@ -42,39 +42,40 @@ data State s v where
   Put :: !s -> State s ()
 
 -- | Retrieve state
-get :: (State s :< effs) => Eff effs s
+get :: (State s :< e) => Eff e s
 get = send Get
 
 -- | Store state
-put :: (State s :< effs) => s -> Eff effs ()
+put :: (State s :< e) => s -> Eff e ()
 put s = send (Put s)
 
 -- | Modify state
-modify :: (State s :< effs) => (s -> s) -> Eff effs ()
+modify :: (State s :< e) => (s -> s) -> Eff e ()
 modify f = fmap f get >>= put
 
 -- | Handler for State effects
-runState :: Eff (State s ': effs) w -> s -> Eff effs (w, s)
-runState (Val x) s = return (x,s)
+runState :: Eff (State s ': e) w -> s -> Eff e (w, s)
+runState (Val x) s = pure (x,s)
 runState (E u q) s = case decomp u of
-  Right Get      -> runState (applyEffs q s) s
-  Right (Put s') -> runState (applyEffs q ()) s'
-  Left  u'       -> E u' (tsingleton (\x -> runState (applyEffs q x) s))
+  Right Get      -> runState (apply q s) s
+  Right (Put s') -> runState (apply q ()) s'
+  Left  u'       -> E u' (tsingleton (\x -> runState (apply q x) s))
 
 
 -- |
 -- An encapsulated State handler, for transactional semantics
 -- The global state is updated only if the transactionState finished
 -- successfully
-transactionState :: forall s effs w. (State s :< effs)
+transactionState :: forall s e a. (State s :< e)
                     => Proxy s
-                    -> Eff effs w
-                    -> Eff effs w
+                    -> Eff e a
+                    -> Eff e a
 transactionState _ m = do s <- get; loop s m
  where
-   loop :: s -> Eff effs w -> Eff effs w
-   loop s (Val x) = put s >> return x
-   loop s (E (u :: Union effs b) q) = case prj u :: Maybe (State s b) of
-     Just Get      -> loop s (applyEffs q s)
-     Just (Put s') -> loop s'(applyEffs q ())
-     _             -> E u (tsingleton k) where k = composeEffs q (loop s)
+   loop :: s -> Eff e a -> Eff e a
+   loop s (Val x) = put s >> pure x
+   loop s (E (u :: Union e b) q) = case prj u :: Maybe (State s b) of
+     Just Get      -> loop s (apply q s)
+     Just (Put s') -> loop s'(apply q ())
+     _             -> E u (tsingleton k)
+      where k = q >>> (loop s)

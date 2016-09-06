@@ -4,7 +4,7 @@
 {-# LANGUAGE DataKinds #-}
 
 {-|
-Module      : Control.Monad.Freer.Coroutine
+Module      : Control.Monad.Effect.Coroutine
 Description : Composable coroutine effects layer.
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
@@ -18,14 +18,14 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Freer.Coroutine (
+module Control.Monad.Effect.Coroutine (
   Yield,
   yield,
   Status(..),
   runC
 ) where
 
-import Control.Monad.Freer.Internal
+import Control.Monad.Effect.Internal
 
 -- | A type representing a yielding of control
 -- a: The current type
@@ -35,17 +35,17 @@ data Yield a b v = Yield a (b -> v)
     deriving (Functor)
 
 -- | Lifts a value and a function into the Coroutine effect
-yield :: ((Yield a b) :< r) => a -> (b -> c) -> Eff r c
+yield :: ((Yield a b) :< e) => a -> (b -> c) -> Eff e c
 yield x f = send (Yield x f)
 
 -- |
 -- Status of a thread: done or reporting the value of the type a and
 -- resuming with the value of type b
-data Status r a b = Done | Continue a (b -> Eff r (Status r a b))
+data Status e a b = Done | Continue a (b -> Eff e (Status e a b))
 
 -- | Launch a thread and report its status
-runC :: Eff (Yield a b ': r) w -> Eff r (Status r a b)
-runC = handleRelay (\_ -> return Done) handler
+runC :: Eff (Yield a b ': e) w -> Eff e (Status e a b)
+runC = relay (\_ -> pure Done) bind
   where
-    handler :: Yield a b v -> Arrow r v (Status r a b) -> Eff r (Status r a b)
-    handler (Yield a k) arr = return $ Continue a (arr . k)
+    bind :: Yield a b v -> Arrow e v (Status e a b) -> Eff e (Status e a b)
+    bind (Yield a k) arr = pure $ Continue a (arr . k)
