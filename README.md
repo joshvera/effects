@@ -57,7 +57,7 @@ exitSuccess' = send ExitSuccess
 --------------------------------------------------------------------------------
 runTeletype :: Eff '[Teletype] w -> IO w
 runTeletype (Val x) = return x
-runTeletype (E u q) = case decomp u of
+runTeletype (E u q) = case decompose u of
               Right (PutStrLn msg) -> putStrLn msg  >> runTeletype (qApp q ())
               Right GetLine        -> getLine      >>= \s -> runTeletype (qApp q s)
               Right ExitSuccess    -> exitSuccess
@@ -71,7 +71,7 @@ runTeletypePure inputs req = reverse (go inputs req [])
   where go :: [String] -> Eff '[Teletype] w -> [String] -> [String]
         go _      (Val _) acc = acc
         go []     _       acc = acc
-        go (x:xs) (E u q) acc = case decomp u of
+        go (x:xs) (E u q) acc = case decompose u of
           Right (PutStrLn msg) -> go (x:xs) (qApp q ()) (msg:acc)
           Right GetLine        -> go xs     (qApp q x) acc
           Right ExitSuccess    -> go xs     (Val ())   acc
