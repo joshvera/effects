@@ -54,12 +54,12 @@ modify :: (State s :< e) => (s -> s) -> Eff e ()
 modify f = fmap f get >>= put
 
 -- | Handler for State effects
-runState :: Eff (State s ': e) w -> s -> Eff e (w, s)
-runState (Val x) s = pure (x,s)
+runState :: Eff (State s ': e) b -> s -> Eff e (b, s)
+runState (Val b) s = pure (b, s)
 runState (E u q) s = case decomp u of
   Right Get      -> runState (apply q s) s
   Right (Put s') -> runState (apply q ()) s'
-  Left  u'       -> E u' (tsingleton (\x -> runState (apply q x) s))
+  Left  u'       -> E u' (tsingleton (\a -> runState (apply q a) s))
 
 
 -- |
