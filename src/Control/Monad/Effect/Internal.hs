@@ -2,8 +2,9 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, PolyKinds #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
 -- The following is needed to define MonadPlus instance. It is decidable
@@ -13,7 +14,8 @@
 
 module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
-  Eff(..),
+  Eff,
+  Eff'(..),
   send,
   -- * Decomposing Unions
   type(:<),
@@ -44,18 +46,23 @@ import Data.Open.Union
 import Data.FTCQueue
 
 -- | An effectful computation that returns 'b' and performs 'effects'.
-data Eff effects b
-  -- | Done with the value of type b.
-  = Val b
-  -- | Send a request of type 'Union e a' with the 'Arrs e a b' queue.
-  | forall a. E (Union effects a) (Arrows effects a b)
+type Eff effects = Eff' Union effects
 
 -- | A queue of 'effects' from 'a' to 'b'.
-type Arrows effects a b = FTCQueue (Eff effects) a b
+type Arrows effects a b = Arrows' Union effects a b
 
 -- | An effectful function from 'a' to 'b'
 --   that also performs 'effects'.
 type Arrow effects a b = a -> Eff effects b
+
+-- | An effectful computation that returns 'b' and performs 'effects'.
+data Eff' m effects b
+  -- | Done with the value of type b.
+  = Val b
+  -- | Send a request of type 'Union e a' with the 'Arrs e a b' queue.
+  | forall a. E (m effects a) (Arrows' m effects a b)
+
+type Arrows' m effects a b = FTCQueue (Eff' m effects) a b
 
 -- * Composing and Applying Effects
 
@@ -158,12 +165,12 @@ interpose ret h = loop
 
 -- * Effect Instances
 
-instance Functor (Eff e) where
+instance Functor (Eff' m e) where
   fmap f (Val x) = Val (f x)
   fmap f (E u q) = E u (q |> (Val . f))
   {-# INLINE fmap #-}
 
-instance Applicative (Eff e) where
+instance Applicative (Eff' m e) where
   pure = Val
   {-# INLINE pure #-}
 
@@ -173,7 +180,7 @@ instance Applicative (Eff e) where
   E u q <*> m     = E u (q |> (`fmap` m))
   {-# INLINE (<*>) #-}
 
-instance Monad (Eff e) where
+instance Monad (Eff' m e) where
   return = Val
   {-# INLINE return #-}
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators, GADTs, FlexibleContexts, UndecidableInstances, DataKinds #-}
+{-# LANGUAGE TypeOperators, GADTs, FlexibleContexts, FlexibleInstances, UndecidableInstances, DataKinds #-}
 module Control.Monad.Effect.NonDetEff (
   NonDetEff(..),
   makeChoiceA,
@@ -21,7 +21,7 @@ instance (NonDetEff :< e) => Alternative (Eff e) where
   empty = mzero
   (<|>) = mplus
 
-instance (NonDetEff :< a) => MonadPlus (Eff a) where
+instance (NonDetEff :< e) => MonadPlus (Eff e) where
   mzero       = send MZero
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
 
