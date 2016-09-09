@@ -21,13 +21,13 @@ module Control.Monad.Effect.Internal (
   -- | Inserts multiple effects into 'E'.
   inj,
   prj,
-  -- * Constructing and Decomposing Arrows
+  -- * Constructing and Decomposing Queues
   decomp,
   Arrow,
   tsingleton,
-  Arrows,
+  Queue,
   Union,
-  -- * Composing and Applying Arrows
+  -- * Composing and Applying Queues
   apply,
   (<<<),
   (>>>),
@@ -48,10 +48,10 @@ data Eff effects b
   -- | Done with the value of type b.
   = Val b
   -- | Send a request of type 'Union e a' with the 'Arrs e a b' queue.
-  | forall a. E (Union effects a) (Arrows effects a b)
+  | forall a. E (Union effects a) (Queue effects a b)
 
 -- | A queue of 'effects' from 'a' to 'b'.
-type Arrows effects a b = FTCQueue (Eff effects) a b
+type Queue effects a b = FTCQueue (Eff effects) a b
 
 -- | An effectful function from 'a' to 'b'
 --   that also performs 'effects'.
@@ -60,7 +60,7 @@ type Arrow effects a b = a -> Eff effects b
 -- * Composing and Applying Effects
 
 -- | Returns an effect by applying a given value to a queue of effects.
-apply :: Arrows effects a b -> a -> Eff effects b
+apply :: Queue effects a b -> a -> Eff effects b
 apply q' x =
    case tviewl q' of
    TOne k  -> k x
@@ -68,16 +68,16 @@ apply q' x =
      Val y -> t `apply` y
      E u q -> E u (q >< t)
 
--- | Compose left to right.
-(>>>) :: Arrows effects a b
-           -> (Eff effects b -> Eff effects' c) -- ^ An function to compose.
-           -> Arrow effects' a c
+-- | Compose queues left to right.
+(>>>) :: Queue effects a b
+      -> (Eff effects b -> Eff effects' c) -- ^ An function to compose.
+      -> Arrow effects' a c
 (>>>) arrows f = f . apply arrows
 
--- | Compose right to left.
+-- | Compose queues right to left.
 (<<<) :: (Eff effects b -> Eff effects' c) -- ^ An function to compose.
-           -> Arrows effects a b
-           -> Arrow effects' a c
+      -> Queue effects  a b
+      -> Arrow effects' a c
 (<<<) f arrows  = f . apply arrows
 
 -- * Sending and Running Effects
