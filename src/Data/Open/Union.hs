@@ -38,7 +38,7 @@ The data constructors of Union are not exported.
 
 module Data.Open.Union (
   Union,
-  decomp,
+  decompose,
   weaken,
   inj,
   prj,
@@ -98,18 +98,18 @@ instance (FindElem t r) => t :< r where
   prj = prj' (unP (elemNo :: P t r))
 
 
-decomp :: Union (t ': r) v -> Either (Union r v) (t v)
-decomp (Union 0 v) = Right $ unsafeCoerce v
-decomp (Union n v) = Left  $ Union (n-1) v
-{-# INLINE [2] decomp #-}
+decompose :: Union (t ': r) v -> Either (Union r v) (t v)
+decompose (Union 0 v) = Right $ unsafeCoerce v
+decompose (Union n v) = Left  $ Union (n-1) v
+{-# INLINE [2] decompose #-}
 
 
--- | Specialized version of 'decomp'.
-decomp0 :: Union '[t] v -> Either (Union '[] v) (t v)
-decomp0 (Union _ v) = Right $ unsafeCoerce v
+-- | Specialized version of 'decompose'.
+decompose0 :: Union '[t] v -> Either (Union '[] v) (t v)
+decompose0 (Union _ v) = Right $ unsafeCoerce v
 -- No other case is possible
-{-# RULES "decomp/singleton"  decomp = decomp0 #-}
-{-# INLINE decomp0 #-}
+{-# RULES "decompose/singleton"  decompose = decompose0 #-}
+{-# INLINE decompose0 #-}
 
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v

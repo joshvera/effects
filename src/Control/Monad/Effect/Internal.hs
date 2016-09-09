@@ -22,7 +22,7 @@ module Control.Monad.Effect.Internal (
   inj,
   prj,
   -- * Constructing and Decomposing Queues
-  decomp,
+  decompose,
   Arrow,
   tsingleton,
   Queue,
@@ -106,7 +106,7 @@ run _       = error "Internal:run - This (E) should never happen"
 -- This is useful for plugging in traditional transformer stacks.
 runM :: Monad m => Eff '[m] a -> m a
 runM (Val x) = pure x
-runM (E u q) = case decomp u of
+runM (E u q) = case decompose u of
   Right m -> m >>= runM . (apply q)
   Left _   -> error "Internal:runM - This (Left) should never happen"
 
@@ -121,7 +121,7 @@ relay :: Arrow e a b -- ^ An 'pure' effectful arrow.
 relay pure' bind = loop
  where
   loop (Val x)  = pure' x
-  loop (E u' q)  = case decomp u' of
+  loop (E u' q)  = case decompose u' of
     Right x -> bind x k
     Left  u -> E u (tsingleton k)
    where k = q >>> loop
@@ -137,7 +137,7 @@ relayState :: s
 relayState s' pure' bind = loop s'
   where
     loop s (Val x)  = pure' s x
-    loop s (E u' q)  = case decomp u' of
+    loop s (E u' q)  = case decompose u' of
       Right x -> bind s x k
       Left  u -> E u (tsingleton (k s))
      where k s'' x = loop s'' $ q `apply` x
