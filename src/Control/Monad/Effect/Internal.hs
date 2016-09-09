@@ -72,13 +72,13 @@ apply q' x =
 (>>>) :: Queue effects a b
       -> (Eff effects b -> Eff effects' c) -- ^ An function to compose.
       -> Arrow effects' a c
-(>>>) arrows f = f . apply arrows
+(>>>) queue f = f . apply queue
 
 -- | Compose queues right to left.
 (<<<) :: (Eff effects b -> Eff effects' c) -- ^ An function to compose.
       -> Queue effects  a b
       -> Arrow effects' a c
-(<<<) f arrows  = f . apply arrows
+(<<<) f queue  = f . apply queue
 
 -- * Sending and Running Effects
 
