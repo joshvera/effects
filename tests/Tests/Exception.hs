@@ -25,7 +25,7 @@ import Tests.Common
 
 testExceptionTakesPriority :: Int -> Int -> Either Int Int
 testExceptionTakesPriority x y = run $ runError (go x y)
-  where go a b = return a `add` throwError b
+  where go a b = pure a `add` throwError b
 
 -- The following won't type: unhandled exception!
 -- ex2rw = run et2
@@ -50,7 +50,7 @@ ter2 :: Either String (String, Int)
 ter2 = run $ runError (runState tes1 (1::Int))
 
 teCatch :: (Exc String :< r) => Eff r a -> Eff r String
-teCatch m = catchError (m >> return "done") (\e -> return (e::String))
+teCatch m = catchError (m >> pure "done") (\e -> pure (e::String))
 
 ter3 :: (Either String String, Int)
 ter3 = run $ runState (runError (teCatch tes1)) (1::Int)
@@ -65,7 +65,7 @@ ex2 :: (Exc TooBig :< r) => Eff r Int -> Eff r Int
 ex2 m = do
   v <- m
   if v > 5 then throwError (TooBig v)
-     else return v
+     else pure v
 
 -- specialization to tell the type of the exception
 runErrBig :: Eff (Exc TooBig ': r) a -> Eff r (Either TooBig a)
