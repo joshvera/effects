@@ -70,12 +70,12 @@ post' = send . Post
 get' :: (Http :< r) => Eff r String
 get' = send Get
 
-runHttp :: Eff (Http ': r) w -> Eff r w
-runHttp (Val x) = pure x
-runHttp (E u q) = case decomp u of
+runHttp :: Eff (Http ': e) b -> Eff e b
+runHttp (Val b) = pure b
+runHttp (E u q) = case decompose u of
   Right (Open _) -> runHttp (q `apply` ())
   Right Close    -> runHttp (q `apply` ())
-  Right (Post d) -> runHttp (q `apply` d)
+  Right (Post a) -> runHttp (q `apply` a)
   Right Get      -> runHttp (q `apply` "")
   Left u'        -> E u' $ tsingleton (runHttp . apply q)
 
