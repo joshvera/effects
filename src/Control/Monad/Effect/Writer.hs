@@ -5,7 +5,7 @@
 
 {-|
 Module      : Control.Monad.Effect.Writer
-Description : Composable Writer effects -
+Description : Composable Writer effects
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
 Maintainer  : cpp.cabrera@gmail.com

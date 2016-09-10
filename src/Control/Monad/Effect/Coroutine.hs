@@ -5,7 +5,7 @@
 
 {-|
 Module      : Control.Monad.Effect.Coroutine
-Description : Composable coroutine effects layer.
+Description : Composable Coroutine effects
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
 Maintainer  : cpp.cabrera@gmail.com

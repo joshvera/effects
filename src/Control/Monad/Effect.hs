@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-|
 Module      : Control.Monad.Effect
-Description : Freer - an extensible effects library
+Description : Effects - an extensible effects library
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
 Maintainer  : cpp.cabrera@gmail.com

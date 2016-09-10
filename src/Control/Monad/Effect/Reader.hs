@@ -6,7 +6,7 @@
 
 {-|
 Module      : Control.Monad.Effect.Reader
-Description : Reader effects, for encapsulating an environment
+Description : Reader effects for computations that carry an environment
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
 Maintainer  : cpp.cabrera@gmail.com

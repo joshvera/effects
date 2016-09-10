@@ -6,7 +6,7 @@
 
 {-|
 Module      : Control.Monad.Effect.State
-Description : State effects, for state-carrying computations.
+Description : State effects for computations that carry state
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
 Maintainer  : cpp.cabrera@gmail.com

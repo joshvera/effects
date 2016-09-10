@@ -1,4 +1,16 @@
 {-# LANGUAGE TypeOperators, GADTs, FlexibleContexts, UndecidableInstances, DataKinds #-}
+
+{-|
+Module      : Control.Monad.Effect.NonDetEff
+Description : Nondeterministic Choice effects
+Copyright   : Alej Cabrera 2015
+License     : BSD-3
+Maintainer  : cpp.cabrera@gmail.com
+Stability   : experimental
+Portability : POSIX
+-}
+
+
 module Control.Monad.Effect.NonDetEff (
   NonDetEff(..),
   makeChoiceA,
