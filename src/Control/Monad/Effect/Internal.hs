@@ -21,13 +21,13 @@ module Control.Monad.Effect.Internal (
   -- | Inserts multiple effects into 'E'.
   inj,
   prj,
-  -- * Constructing and Decomposing Queues
+  -- * Constructing and Decomposing Queues of Effects
   decompose,
-  Arrow,
-  tsingleton,
   Queue,
+  tsingleton,
+  Arrow,
   Union,
-  -- * Composing and Applying Queues
+  -- * Composing and Applying Effects
   apply,
   (<<<),
   (>>>),
@@ -43,18 +43,18 @@ module Control.Monad.Effect.Internal (
 import Data.Open.Union
 import Data.FTCQueue
 
--- | An effectful computation that returns 'b' and performs 'effects'.
+-- | An effectful computation that returns 'b' and sends a list of 'effects'.
 data Eff effects b
-  -- | Done with the value of type b.
+  -- | Done with the value of type `b`.
   = Val b
-  -- | Send a request of type 'Union e a' with the 'Arrs e a b' queue.
+  -- | Send an union of 'effects' and 'eff a' to handle, and a queues of effects to apply from 'a' to 'b'.
   | forall a. E (Union effects a) (Queue effects a b)
 
--- | A queue of 'effects' from 'a' to 'b'.
+-- | A queue of effects to apply from 'a' to 'b'.
 type Queue effects a b = FTCQueue (Eff effects) a b
 
 -- | An effectful function from 'a' to 'b'
---   that also performs 'effects'.
+--   that also performs a list of 'effects'.
 type Arrow effects a b = a -> Eff effects b
 
 -- * Composing and Applying Effects
@@ -82,7 +82,7 @@ apply q' x =
 
 -- * Sending and Running Effects
 
--- | Send a request and wait for a reply.
+-- | Send a effect and wait for a reply.
 send :: (eff :< e) => eff b -> Eff e b
 send t = E (inj t) (tsingleton Val)
 
