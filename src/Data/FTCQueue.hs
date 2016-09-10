@@ -39,30 +39,30 @@ data FTCQueue m a b where
   Leaf :: (a -> m b) -> FTCQueue m a b
   Node :: FTCQueue m a x -> FTCQueue m x b -> FTCQueue m a b
 
-{-# INLINE tsingleton #-}
 -- | Build a leaf from a single operation [O(1)]
 tsingleton :: (a -> m b) -> FTCQueue m a b
 tsingleton = Leaf
+{-# INLINE tsingleton #-}
 
-{-# INLINE (|>) #-}
 -- | Append an operation to the right of the tree [O(1)]
 (|>) :: FTCQueue m a x -> (x -> m b) -> FTCQueue m a b
 t |> r = Node t (Leaf r)
+{-# INLINE (|>) #-}
 
-{-# INLINE snoc #-}
 -- | An alias for '(|>)'
 snoc :: FTCQueue m a x -> (x -> m b) -> FTCQueue m a b
 snoc = (|>)
+{-# INLINE snoc #-}
 
-{-# INLINE (><) #-}
 -- | Append two trees of operations [O(1)]
 (><)   :: FTCQueue m a x -> FTCQueue m x b -> FTCQueue m a b
 t1 >< t2 = Node t1 t2
+{-# INLINE (><) #-}
 
-{-# INLINE append #-}
 -- | An alias for '(><)'
 append :: FTCQueue m a x -> FTCQueue m x b -> FTCQueue m a b
 append = (><)
+{-# INLINE append #-}
 
 -- | Left view deconstruction data structure
 data ViewL m a b where
