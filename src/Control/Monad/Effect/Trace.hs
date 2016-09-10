@@ -38,6 +38,6 @@ trace = send . Trace
 -- | An IO handler for Trace effects
 runTrace :: Eff '[Trace] a -> IO a
 runTrace (Val x) = return x
-runTrace (E u q) = case decomp u of
+runTrace (E u q) = case decompose u of
      Right (Trace s) -> putStrLn s >> runTrace (apply q ())
      Left _          -> error "runTrace:Left - This should never happen"

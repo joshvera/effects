@@ -6,7 +6,7 @@
 
 {-|
 Module      : Control.Monad.Effect.State
-Description : State effects, for state-carrying computations.
+Description : State effects for computations that carry state
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
 Maintainer  : cpp.cabrera@gmail.com
@@ -36,6 +36,15 @@ import Data.Proxy
                          -- State, strict --
 --------------------------------------------------------------------------------
 
+-- | Run a 'State s' effect given an effect and an initial state.
+runState :: Eff (State s ': e) b -> s -> Eff e (b, s)
+runState (Val b) s = pure (b, s)
+runState (E u q) s = case decompose u of
+  Left  u'       -> E u' $ tsingleton (flip runState s . apply q)
+  Right Get      -> runState (apply q s) s
+  Right (Put s') -> runState (apply q ()) s'
+
+
 -- | Strict State effects: one can either Get values or Put them
 data State s v where
   Get :: State s s
@@ -52,15 +61,6 @@ put s = send (Put s)
 -- | Modify state
 modify :: (State s :< e) => (s -> s) -> Eff e ()
 modify f = fmap f get >>= put
-
--- | Handler for State effects
-runState :: Eff (State s ': e) w -> s -> Eff e (w, s)
-runState (Val x) s = pure (x,s)
-runState (E u q) s = case decomp u of
-  Right Get      -> runState (apply q s) s
-  Right (Put s') -> runState (apply q ()) s'
-  Left  u'       -> E u' (tsingleton (\x -> runState (apply q x) s))
-
 
 -- |
 -- An encapsulated State handler, for transactional semantics

@@ -28,7 +28,7 @@ exitSuccess' = send ExitSuccess
 -- Runs a Teletype effect b and returns IO b.
 run :: Eff '[Teletype] a -> IO a
 run (Val x) = pure x
-run (E u q) = case decomp u of
+run (E u q) = case decompose u of
   Right (PutStrLn msg) -> putStrLn msg  >> Teletype.run (apply q ())
   Right GetLine        -> getLine      >>= \s -> Teletype.run (apply q s)
   Right ExitSuccess    -> exitSuccess
@@ -41,11 +41,11 @@ runPure inputs req = reverse (go inputs req [])
   where go :: [String] -> Eff '[Teletype] w -> [String] -> [String]
         go _  (Val _) acc = acc
         go xs (E u q) acc = case xs of
-          (x:xs') -> case decomp u of
+          (x:xs') -> case decompose u of
             Right (PutStrLn msg) -> go (x:xs') (apply q ()) (msg:acc)
             Right GetLine        -> go xs'     (apply q x) acc
             Right ExitSuccess    -> go xs'     (Val ())   acc
             Left _               -> go xs'     (Val ())   acc
-          _      -> case decomp u of
+          _      -> case decompose u of
             Right (PutStrLn msg) -> go xs (apply q ()) (msg:acc)
             _                    -> go xs     (Val ())   acc

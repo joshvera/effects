@@ -21,13 +21,13 @@ module Control.Monad.Effect.Internal (
   -- | Inserts multiple effects into 'E'.
   inj,
   prj,
-  -- * Constructing and Decomposing Arrows
-  decomp,
-  Arrow,
+  -- * Constructing and Decomposing Queues of Effects
+  decompose,
+  Queue,
   tsingleton,
-  Arrows,
+  Arrow,
   Union,
-  -- * Composing and Applying Arrows
+  -- * Composing and Applying Effects
   apply,
   (<<<),
   (>>>),
@@ -40,27 +40,27 @@ module Control.Monad.Effect.Internal (
   interpose,
 ) where
 
-import Data.Open.Union
+import Data.Union
 import Data.FTCQueue
 
--- | An effectful computation that returns 'b' and performs 'effects'.
+-- | An effectful computation that returns 'b' and sends a list of 'effects'.
 data Eff effects b
-  -- | Done with the value of type b.
+  -- | Done with the value of type `b`.
   = Val b
-  -- | Send a request of type 'Union e a' with the 'Arrs e a b' queue.
-  | forall a. E (Union effects a) (Arrows effects a b)
+  -- | Send an union of 'effects' and 'eff a' to handle, and a queues of effects to apply from 'a' to 'b'.
+  | forall a. E (Union effects a) (Queue effects a b)
 
--- | A queue of 'effects' from 'a' to 'b'.
-type Arrows effects a b = FTCQueue (Eff effects) a b
+-- | A queue of effects to apply from 'a' to 'b'.
+type Queue effects a b = FTCQueue (Eff effects) a b
 
 -- | An effectful function from 'a' to 'b'
---   that also performs 'effects'.
+--   that also performs a list of 'effects'.
 type Arrow effects a b = a -> Eff effects b
 
 -- * Composing and Applying Effects
 
 -- | Returns an effect by applying a given value to a queue of effects.
-apply :: Arrows effects a b -> a -> Eff effects b
+apply :: Queue effects a b -> a -> Eff effects b
 apply q' x =
    case tviewl q' of
    TOne k  -> k x
@@ -68,21 +68,21 @@ apply q' x =
      Val y -> t `apply` y
      E u q -> E u (q >< t)
 
--- | Compose left to right.
-(>>>) :: Arrows effects a b
-           -> (Eff effects b -> Eff effects' c) -- ^ An function to compose.
-           -> Arrow effects' a c
-(>>>) arrows f = f . apply arrows
+-- | Compose queues left to right.
+(>>>) :: Queue effects a b
+      -> (Eff effects b -> Eff effects' c) -- ^ An function to compose.
+      -> Arrow effects' a c
+(>>>) queue f = f . apply queue
 
--- | Compose right to left.
+-- | Compose queues right to left.
 (<<<) :: (Eff effects b -> Eff effects' c) -- ^ An function to compose.
-           -> Arrows effects a b
-           -> Arrow effects' a c
-(<<<) f arrows  = f . apply arrows
+      -> Queue effects  a b
+      -> Arrow effects' a c
+(<<<) f queue  = f . apply queue
 
 -- * Sending and Running Effects
 
--- | Send a request and wait for a reply.
+-- | Send a effect and wait for a reply.
 send :: (eff :< e) => eff b -> Eff e b
 send t = E (inj t) (tsingleton Val)
 
@@ -106,7 +106,7 @@ run _       = error "Internal:run - This (E) should never happen"
 -- This is useful for plugging in traditional transformer stacks.
 runM :: Monad m => Eff '[m] a -> m a
 runM (Val x) = pure x
-runM (E u q) = case decomp u of
+runM (E u q) = case decompose u of
   Right m -> m >>= runM . (apply q)
   Left _   -> error "Internal:runM - This (Left) should never happen"
 
@@ -121,7 +121,7 @@ relay :: Arrow e a b -- ^ An 'pure' effectful arrow.
 relay pure' bind = loop
  where
   loop (Val x)  = pure' x
-  loop (E u' q)  = case decomp u' of
+  loop (E u' q)  = case decompose u' of
     Right x -> bind x k
     Left  u -> E u (tsingleton k)
    where k = q >>> loop
@@ -137,7 +137,7 @@ relayState :: s
 relayState s' pure' bind = loop s'
   where
     loop s (Val x)  = pure' s x
-    loop s (E u' q)  = case decomp u' of
+    loop s (E u' q)  = case decompose u' of
       Right x -> bind s x k
       Left  u -> E u (tsingleton (k s))
      where k s'' x = loop s'' $ q `apply` x

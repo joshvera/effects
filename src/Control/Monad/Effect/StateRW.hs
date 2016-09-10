@@ -38,9 +38,9 @@ runStateR m s = loop s m
  where
    loop :: s -> Eff (Writer s ': Reader s ': e) a -> Eff e (a, s)
    loop s' (Val x) = pure (x,s')
-   loop s' (E u q) = case decomp u of
+   loop s' (E u q) = case decompose u of
      Right (Writer o) -> k o ()
-     Left  u'  -> case decomp u' of
+     Left  u'  -> case decompose u' of
        Right Reader -> k s' s'
        Left u'' -> E u'' (tsingleton (k s'))
     where k s'' = q >>> (loop s'')
