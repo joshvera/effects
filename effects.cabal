@@ -48,7 +48,7 @@ library
                      , Control.Monad.Effect.Writer
                      , Control.Monad.Effect.NonDetEff
                      , Data.FTCQueue
-                     , Data.Open.Union
+                     , Data.Union
   build-depends:       base >=4.7 && <5
   hs-source-dirs:      src
   ghc-options:         -Wall

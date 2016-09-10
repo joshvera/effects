@@ -10,7 +10,7 @@
 {-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
 
 {-|
-Module      : Data.Open.Union
+Module      : Data.Union
 Description : Open unions (type-indexed co-products) for extensible effects.
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
@@ -36,7 +36,7 @@ universe.
 The data constructors of Union are not exported.
 -}
 
-module Data.Open.Union (
+module Data.Union (
   Union,
   decompose,
   weaken,

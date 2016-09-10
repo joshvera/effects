@@ -113,7 +113,7 @@ LICENSE file for more details.
 This package would not be possible without the paper and the reference
 implementation. In particular:
 
-* Data.Open.Union maps to [OpenUnion51.hs](http://okmij.org/ftp/Haskell/extensible/OpenUnion51.hs)
+* Data.Union maps to [OpenUnion51.hs](http://okmij.org/ftp/Haskell/extensible/OpenUnion51.hs)
 * Data.FTCQueue maps to [FTCQueue1](http://okmij.org/ftp/Haskell/extensible/FTCQueue1.hs)
 * Control.Monad.Effect* maps to [Eff1.hs](http://okmij.org/ftp/Haskell/extensible/Eff1.hs)
 

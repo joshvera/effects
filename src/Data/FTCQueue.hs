@@ -2,7 +2,7 @@
 
 {-|
 Module      : Data.FTCQueue
-Description : Fast type-aligned queue optimized to effectful functions.
+Description : Fast type-aligned concatable queue optimized to effectful functions.
 Copyright   : Alej Cabrera 2015
 License     : BSD-3
 Maintainer  : cpp.cabrera@gmail.com

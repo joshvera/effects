@@ -40,7 +40,7 @@ module Control.Monad.Effect.Internal (
   interpose,
 ) where
 
-import Data.Open.Union
+import Data.Union
 import Data.FTCQueue
 
 -- | An effectful computation that returns 'b' and sends a list of 'effects'.
