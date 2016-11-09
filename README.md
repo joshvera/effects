@@ -58,8 +58,8 @@ exitSuccess' = send ExitSuccess
 runTeletype :: Eff '[Teletype] w -> IO w
 runTeletype (Val x) = return x
 runTeletype (E u q) = case decompose u of
-              Right (PutStrLn msg) -> putStrLn msg  >> runTeletype (qApp q ())
-              Right GetLine        -> getLine      >>= \s -> runTeletype (qApp q s)
+              Right (PutStrLn msg) -> putStrLn msg  >> runTeletype (apply q ())
+              Right GetLine        -> getLine      >>= \s -> runTeletype (apply q s)
               Right ExitSuccess    -> exitSuccess
               Left  _              -> error "This cannot happen"
 
@@ -72,8 +72,8 @@ runTeletypePure inputs req = reverse (go inputs req [])
         go _      (Val _) acc = acc
         go []     _       acc = acc
         go (x:xs) (E u q) acc = case decompose u of
-          Right (PutStrLn msg) -> go (x:xs) (qApp q ()) (msg:acc)
-          Right GetLine        -> go xs     (qApp q x) acc
+          Right (PutStrLn msg) -> go (x:xs) (apply q ()) (msg:acc)
+          Right GetLine        -> go xs     (apply q x) acc
           Right ExitSuccess    -> go xs     (Val ())   acc
           Left _               -> go xs     (Val ())   acc
 ```
