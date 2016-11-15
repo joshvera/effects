@@ -6,9 +6,9 @@
 {-|
 Module      : Control.Monad.Effect.Coroutine
 Description : Composable Coroutine effects
-Copyright   : Alej Cabrera 2015
+Copyright   : Allele Dev 2015
 License     : BSD-3
-Maintainer  : cpp.cabrera@gmail.com
+Maintainer  : allele.dev@gmail.com
 Stability   : broken
 Portability : POSIX
 
