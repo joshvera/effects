@@ -3,7 +3,7 @@
 {-|
 Module      : Data.FTCQueue
 Description : Fast type-aligned concatable queue optimized to effectful functions.
-Copyright   : Alej Cabrera 2015
+Copyright   : Allele Dev 2016
 License     : BSD-3
 Maintainer  : cpp.cabrera@gmail.com
 Stability   : experimental

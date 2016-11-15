@@ -3,7 +3,7 @@
 {-|
 Module      : Control.Monad.Effect.NonDetEff
 Description : Nondeterministic Choice effects
-Copyright   : Alej Cabrera 2015
+Copyright   : Allele Dev 2016
 License     : BSD-3
 Maintainer  : cpp.cabrera@gmail.com
 Stability   : experimental

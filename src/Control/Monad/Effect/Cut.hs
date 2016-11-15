@@ -5,7 +5,7 @@
 {-|
 Module      : Control.Monad.Effect.Cut
 Description : An implementation of logical Cut
-Copyright   : Alej Cabrera 2015
+Copyright   : Allele Dev 2016
 License     : BSD-3
 Maintainer  : cpp.cabrera@gmail.com
 Stability   : broken
