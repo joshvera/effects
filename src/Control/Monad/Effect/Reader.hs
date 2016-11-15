@@ -7,9 +7,9 @@
 {-|
 Module      : Control.Monad.Effect.Reader
 Description : Reader effects for computations that carry an environment
-Copyright   : Allele Dev 2016
+Copyright   : Allele Dev 2015
 License     : BSD-3
-Maintainer  : cpp.cabrera@gmail.com
+Maintainer  : allele.dev@gmail.com
 Stability   : experimental
 Portability : POSIX
 

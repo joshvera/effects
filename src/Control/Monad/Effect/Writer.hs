@@ -6,9 +6,9 @@
 {-|
 Module      : Control.Monad.Effect.Writer
 Description : Composable Writer effects
-Copyright   : Allele Dev 2016
+Copyright   : Allele Dev 2015
 License     : BSD-3
-Maintainer  : cpp.cabrera@gmail.com
+Maintainer  : allele.dev@gmail.com
 Stability   : experimental
 Portability : POSIX
 

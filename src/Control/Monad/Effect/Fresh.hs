@@ -6,9 +6,9 @@
 {-|
 Module      : Control.Monad.Effect.Fresh
 Description : Generation of fresh integers as an effect.
-Copyright   : Allele Dev 2016
+Copyright   : Allele Dev 2015
 License     : BSD-3
-Maintainer  : cpp.cabrera@gmail.com
+Maintainer  : allele.dev@gmail.com
 Stability   : broken
 Portability : POSIX
 

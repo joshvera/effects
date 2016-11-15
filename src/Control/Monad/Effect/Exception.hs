@@ -5,9 +5,9 @@
 {-|
 Module      : Control.Monad.Effect.Exception
 Description : An Exception effect and handler.
-Copyright   : Allele Dev 2016
+Copyright   : Allele Dev 2015
 License     : BSD-3
-Maintainer  : cpp.cabrera@gmail.com
+Maintainer  : allele.dev@gmail.com
 Stability   : experimental
 Portability : POSIX
 
