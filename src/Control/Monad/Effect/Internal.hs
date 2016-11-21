@@ -169,7 +169,6 @@ instance Applicative (Eff e) where
 
   Val f <*> Val x = Val $ f x
   Val f <*> E u q = E u (q |> (Val . f))
-  E u q <*> Val x = E u (q |> (Val . ($ x)))
   E u q <*> m     = E u (q |> (`fmap` m))
   {-# INLINE (<*>) #-}
 
