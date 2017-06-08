@@ -47,6 +47,7 @@ module Data.Union (
   MemberU2
 ) where
 
+import Data.Functor.Classes (Eq1(..))
 import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
 
@@ -181,3 +182,11 @@ instance (Show (f a), Show (Union fs a)) => Show (Union (f ': fs) a) where
 
 instance Show (Union '[] a) where
   showsPrec _ _ = id
+
+instance (Eq1 f, Eq1 (Union fs)) => Eq1 (Union (f ': fs)) where
+  liftEq eq u1 u2 = case (decompose u1, decompose u2) of
+    (Left u1', Left u2') -> liftEq eq u1' u2'
+    (Right r1, Right r2) -> liftEq eq r1 r2
+
+instance Eq1 (Union '[]) where
+  liftEq _ _ _ = False
