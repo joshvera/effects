@@ -140,3 +140,11 @@ class (t :< r) =>
 instance MemberU' 'True tag (tag e) (tag e ': r)
 instance (t :< (t' ': r), MemberU2 tag t r) =>
            MemberU' 'False tag t (t' ': r)
+
+instance (Foldable f, Foldable (Union fs)) => Foldable (Union (f ': fs)) where
+  foldMap f u = case decompose u of
+    Left u' -> foldMap f u'
+    Right r -> foldMap f r
+
+instance Foldable (Union '[]) where
+  foldMap _ _ = mempty
