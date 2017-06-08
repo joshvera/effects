@@ -47,6 +47,7 @@ module Data.Union (
   MemberU2
 ) where
 
+import Data.Functor.Classes (Eq1(..), Show1(..))
 import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
 
@@ -140,3 +141,60 @@ class (t :< r) =>
 instance MemberU' 'True tag (tag e) (tag e ': r)
 instance (t :< (t' ': r), MemberU2 tag t r) =>
            MemberU' 'False tag t (t' ': r)
+
+instance (Foldable f, Foldable (Union fs)) => Foldable (Union (f ': fs)) where
+  foldMap f u = case decompose u of
+    Left u' -> foldMap f u'
+    Right r -> foldMap f r
+
+instance Foldable (Union '[]) where
+  foldMap _ _ = mempty
+
+instance (Functor f, Functor (Union fs)) => Functor (Union (f ': fs)) where
+  fmap f u = case decompose u of
+    Left u' -> weaken (fmap f u')
+    Right r -> inj (fmap f r)
+
+instance Functor (Union '[]) where
+  fmap _ _ = error "fmap over an empty Union"
+
+instance (Traversable f, Traversable (Union fs)) => Traversable (Union (f ': fs)) where
+  traverse f u = case decompose u of
+    Left u' -> weaken <$> traverse f u'
+    Right r -> inj <$> traverse f r
+
+instance Traversable (Union '[]) where
+  traverse _ _ = error "traverse over an empty Union"
+
+instance (Eq (f a), Eq (Union fs a)) => Eq (Union (f ': fs) a) where
+  u1 == u2 = case (decompose u1, decompose u2) of
+    (Left u1', Left u2') -> u1' == u2'
+    (Right r1, Right r2) -> r1 == r2
+    _ -> False
+
+instance Eq (Union '[] a) where
+  _ == _ = False
+
+instance (Show (f a), Show (Union fs a)) => Show (Union (f ': fs) a) where
+  showsPrec d u = case decompose u of
+    Left u' -> showsPrec d u'
+    Right r -> showsPrec d r
+
+instance Show (Union '[] a) where
+  showsPrec _ _ = id
+
+instance (Eq1 f, Eq1 (Union fs)) => Eq1 (Union (f ': fs)) where
+  liftEq eq u1 u2 = case (decompose u1, decompose u2) of
+    (Left u1', Left u2') -> liftEq eq u1' u2'
+    (Right r1, Right r2) -> liftEq eq r1 r2
+
+instance Eq1 (Union '[]) where
+  liftEq _ _ _ = False
+
+instance (Show1 f, Show1 (Union fs)) => Show1 (Union (f ': fs)) where
+  liftShowsPrec sp sl d u = case decompose u of
+    Left u' -> liftShowsPrec sp sl d u'
+    Right r -> liftShowsPrec sp sl d r
+
+instance Show1 (Union '[]) where
+  liftShowsPrec _ _ _ _ = id
