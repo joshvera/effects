@@ -148,3 +148,11 @@ instance (Foldable f, Foldable (Union fs)) => Foldable (Union (f ': fs)) where
 
 instance Foldable (Union '[]) where
   foldMap _ _ = mempty
+
+instance (Functor f, Functor (Union fs)) => Functor (Union (f ': fs)) where
+  fmap f u = case decompose u of
+    Left u' -> weaken (fmap f u')
+    Right r -> inj (fmap f r)
+
+instance Functor (Union '[]) where
+  fmap _ _ = error "fmap over an empty Union"
