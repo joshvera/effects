@@ -173,3 +173,11 @@ instance (Eq (f a), Eq (Union fs a)) => Eq (Union (f ': fs) a) where
 
 instance Eq (Union '[] a) where
   _ == _ = False
+
+instance (Show (f a), Show (Union fs a)) => Show (Union (f ': fs) a) where
+  showsPrec d u = case decompose u of
+    Left u' -> showsPrec d u'
+    Right r -> showsPrec d r
+
+instance Show (Union '[] a) where
+  showsPrec _ _ = id
