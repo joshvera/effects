@@ -164,3 +164,12 @@ instance (Traversable f, Traversable (Union fs)) => Traversable (Union (f ': fs)
 
 instance Traversable (Union '[]) where
   traverse _ _ = error "traverse over an empty Union"
+
+instance (Eq (f a), Eq (Union fs a)) => Eq (Union (f ': fs) a) where
+  u1 == u2 = case (decompose u1, decompose u2) of
+    (Left u1', Left u2') -> u1' == u2'
+    (Right r1, Right r2) -> r1 == r2
+    _ -> False
+
+instance Eq (Union '[] a) where
+  _ == _ = False
