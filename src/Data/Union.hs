@@ -156,3 +156,11 @@ instance (Functor f, Functor (Union fs)) => Functor (Union (f ': fs)) where
 
 instance Functor (Union '[]) where
   fmap _ _ = error "fmap over an empty Union"
+
+instance (Traversable f, Traversable (Union fs)) => Traversable (Union (f ': fs)) where
+  traverse f u = case decompose u of
+    Left u' -> weaken <$> traverse f u'
+    Right r -> inj <$> traverse f r
+
+instance Traversable (Union '[]) where
+  traverse _ _ = error "traverse over an empty Union"
