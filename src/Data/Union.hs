@@ -194,10 +194,5 @@ instance (Eq1 f, Eq1 (Union fs)) => Eq1 (Union (f ': fs)) where
 instance Eq1 (Union '[]) where
   liftEq _ _ _ = False
 
-instance (Show1 f, Show1 (Union fs)) => Show1 (Union (f ': fs)) where
-  liftShowsPrec sp sl d u = case decompose u of
-    Left u' -> liftShowsPrec sp sl d u'
-    Right r -> liftShowsPrec sp sl d r
-
-instance Show1 (Union '[]) where
-  liftShowsPrec _ _ _ _ = id
+instance Apply Show1 fs => Show1 (Union fs) where
+  liftShowsPrec sp sl d (Union n r) = apply (Proxy :: Proxy Show1) (Proxy :: Proxy fs) n (liftShowsPrec sp sl d) r
