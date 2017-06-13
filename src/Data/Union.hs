@@ -5,6 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE RankNTypes #-}
 
 -- Only for MemberU below, when emulating Monad Transformers
 {-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
@@ -48,6 +49,7 @@ module Data.Union (
 ) where
 
 import Data.Functor.Classes (Eq1(..), Show1(..))
+import Data.Proxy
 import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
 
@@ -125,6 +127,10 @@ instance {-# OVERLAPPING #-} FindElem t (t ': r) where
 
 instance {-# OVERLAPPING #-} FindElem t r => FindElem t (t' ': r) where
   elemNo = P $ 1 + unP (elemNo :: P t r)
+
+
+class Apply (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
+  apply :: Proxy c -> Proxy fs -> Int -> (forall g . c g => g a -> b) -> t a -> b
 
 
 type family EQU (a :: k) (b :: k) :: Bool where
