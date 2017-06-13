@@ -129,6 +129,7 @@ instance {-# OVERLAPPING #-} FindElem t r => FindElem t (t' ': r) where
   elemNo = P $ 1 + unP (elemNo :: P t r)
 
 
+-- | Helper to apply a function to a functor of the nth type in a type list.
 class Apply (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
   apply :: Proxy c -> Proxy fs -> Int -> (forall g . c g => g a -> b) -> t a -> b
 
