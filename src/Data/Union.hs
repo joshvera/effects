@@ -63,7 +63,7 @@ class (FindElem e r) => (e :: * -> *) :< r where
 -- t is can be a GADT and hence not necessarily a Functor.
 -- Int is the index of t in the list r; that is, the index of t in the
 -- universe r.
-data Union (r :: [ * -> * ]) v where
+data Union (r :: [ k -> * ]) (v :: k) where
   Union :: {-# UNPACK #-} !Int -> t v -> Union r v
 
 {-# INLINE prj' #-}
