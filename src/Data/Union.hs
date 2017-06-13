@@ -178,14 +178,9 @@ instance (Apply1 Foldable fs, Apply1 Functor fs, Apply1 Traversable fs) => Trave
     where withTypeOf :: (a -> f b) -> t a -> f (t b) -> f (t b)
           withTypeOf _ _ = id
 
-instance (Eq (f a), Eq (Union fs a)) => Eq (Union (f ': fs) a) where
-  u1 == u2 = case (decompose u1, decompose u2) of
-    (Left u1', Left u2') -> u1' == u2'
-    (Right r1, Right r2) -> r1 == r2
-    _ -> False
-
-instance Eq (Union '[] a) where
-  _ == _ = False
+instance Apply0 Eq fs a => Eq (Union fs a) where
+  Union n1 r1 == Union n2 r2 | n1 == n2  = apply0 (Proxy :: Proxy Eq) (Proxy :: Proxy fs) n1 (== unsafeCoerce r2) r1
+                             | otherwise = False
 
 instance Apply0 Show fs a => Show (Union fs a) where
   showsPrec d (Union n r) = apply0 (Proxy :: Proxy Show) (Proxy :: Proxy fs) n (showsPrec d) r
