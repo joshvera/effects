@@ -163,13 +163,10 @@ instance Apply Functor fs => Functor (Union fs) where
     where withTypeOf :: (a -> b) -> t a -> t b -> t b
           withTypeOf _ _ = id
 
-instance (Traversable f, Traversable (Union fs), Apply Foldable (f ': fs), Apply Functor (f ': fs)) => Traversable (Union (f ': fs)) where
-  traverse f u = case decompose u of
-    Left u' -> weaken <$> traverse f u'
-    Right r -> inj <$> traverse f r
-
-instance Traversable (Union '[]) where
-  traverse _ _ = error "traverse over an empty Union"
+instance (Apply Foldable fs, Apply Functor fs, Apply Traversable fs) => Traversable (Union fs) where
+  traverse f (Union n r) = Union n <$> apply (Proxy :: Proxy Traversable) (Proxy :: Proxy fs) n (withTypeOf f r . unsafeCoerce . traverse f) r
+    where withTypeOf :: (a -> f b) -> t a -> f (t b) -> f (t b)
+          withTypeOf _ _ = id
 
 instance (Eq (f a), Eq (Union fs a)) => Eq (Union (f ': fs) a) where
   u1 == u2 = case (decompose u1, decompose u2) of
