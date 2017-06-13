@@ -5,6 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE RankNTypes #-}
 
 -- Only for MemberU below, when emulating Monad Transformers
 {-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
@@ -48,6 +49,7 @@ module Data.Union (
 ) where
 
 import Data.Functor.Classes (Eq1(..), Show1(..))
+import Data.Proxy
 import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
 
@@ -63,7 +65,7 @@ class (FindElem e r) => (e :: * -> *) :< r where
 -- t is can be a GADT and hence not necessarily a Functor.
 -- Int is the index of t in the list r; that is, the index of t in the
 -- universe r.
-data Union (r :: [ * -> * ]) v where
+data Union (r :: [ k -> * ]) (v :: k) where
   Union :: {-# UNPACK #-} !Int -> t v -> Union r v
 
 {-# INLINE prj' #-}
@@ -127,6 +129,27 @@ instance {-# OVERLAPPING #-} FindElem t r => FindElem t (t' ': r) where
   elemNo = P $ 1 + unP (elemNo :: P t r)
 
 
+-- | Helper to apply a function to a functor of the nth type in a type list.
+class Apply0 (c :: * -> Constraint) (fs :: [k -> *]) (a :: k) where
+  apply0 :: Proxy c -> Proxy fs -> Int -> (forall g . c (g a) => g a -> b) -> t a -> b
+
+class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
+  apply1 :: Proxy c -> Proxy fs -> Int -> (forall g . c g => g a -> b) -> t a -> b
+
+instance (c f, Apply1 c fs) => Apply1 c (f ': fs) where
+  apply1 proxy _ n f r | n == 0    = f (unsafeCoerce r :: f a)
+                       | otherwise = apply1 proxy (Proxy :: Proxy fs) (pred n) f r
+
+instance Apply1 c '[] where
+  apply1 _ _ _ _ _ = error "apply over empty Union"
+
+instance (c (f a), Apply0 c fs a) => Apply0 c (f ': fs) a where
+  apply0 proxy _ n f r | n == 0    = f (unsafeCoerce r :: f a)
+                       | otherwise = apply0 proxy (Proxy :: Proxy fs) (pred n) f r
+
+instance Apply0 c '[] a where
+  apply0 _ _ _ _ _ = error "apply over empty Union"
+
 type family EQU (a :: k) (b :: k) :: Bool where
   EQU a a = 'True
   EQU a b = 'False
@@ -142,59 +165,30 @@ instance MemberU' 'True tag (tag e) (tag e ': r)
 instance (t :< (t' ': r), MemberU2 tag t r) =>
            MemberU' 'False tag t (t' ': r)
 
-instance (Foldable f, Foldable (Union fs)) => Foldable (Union (f ': fs)) where
-  foldMap f u = case decompose u of
-    Left u' -> foldMap f u'
-    Right r -> foldMap f r
+instance Apply1 Foldable fs => Foldable (Union fs) where
+  foldMap f (Union n r) = apply1 (Proxy :: Proxy Foldable) (Proxy :: Proxy fs) n (foldMap f) r
 
-instance Foldable (Union '[]) where
-  foldMap _ _ = mempty
+instance Apply1 Functor fs => Functor (Union fs) where
+  fmap f (Union n r) = Union n (apply1 (Proxy :: Proxy Functor) (Proxy :: Proxy fs) n (withTypeOf f r . unsafeCoerce . fmap f) r)
+    where withTypeOf :: (a -> b) -> t a -> t b -> t b
+          withTypeOf _ _ = id
 
-instance (Functor f, Functor (Union fs)) => Functor (Union (f ': fs)) where
-  fmap f u = case decompose u of
-    Left u' -> weaken (fmap f u')
-    Right r -> inj (fmap f r)
+instance (Apply1 Foldable fs, Apply1 Functor fs, Apply1 Traversable fs) => Traversable (Union fs) where
+  traverse f (Union n r) = Union n <$> apply1 (Proxy :: Proxy Traversable) (Proxy :: Proxy fs) n (withTypeOf f r . unsafeCoerce . traverse f) r
+    where withTypeOf :: (a -> f b) -> t a -> f (t b) -> f (t b)
+          withTypeOf _ _ = id
 
-instance Functor (Union '[]) where
-  fmap _ _ = error "fmap over an empty Union"
+instance Apply0 Eq fs a => Eq (Union fs a) where
+  Union n1 r1 == Union n2 r2 | n1 == n2  = apply0 (Proxy :: Proxy Eq) (Proxy :: Proxy fs) n1 (== unsafeCoerce r2) r1
+                             | otherwise = False
 
-instance (Traversable f, Traversable (Union fs)) => Traversable (Union (f ': fs)) where
-  traverse f u = case decompose u of
-    Left u' -> weaken <$> traverse f u'
-    Right r -> inj <$> traverse f r
+instance Apply0 Show fs a => Show (Union fs a) where
+  showsPrec d (Union n r) = apply0 (Proxy :: Proxy Show) (Proxy :: Proxy fs) n (showsPrec d) r
 
-instance Traversable (Union '[]) where
-  traverse _ _ = error "traverse over an empty Union"
+instance Apply1 Eq1 fs => Eq1 (Union fs) where
+  liftEq eq (Union n1 r1) (Union n2 r2) | n1 == n2  = apply1 (Proxy :: Proxy Eq1) (Proxy :: Proxy fs) n1 (flip (liftEq eq) (unsafeCoerce r2)) r1
+                                        | otherwise = False
 
-instance (Eq (f a), Eq (Union fs a)) => Eq (Union (f ': fs) a) where
-  u1 == u2 = case (decompose u1, decompose u2) of
-    (Left u1', Left u2') -> u1' == u2'
-    (Right r1, Right r2) -> r1 == r2
-    _ -> False
 
-instance Eq (Union '[] a) where
-  _ == _ = False
-
-instance (Show (f a), Show (Union fs a)) => Show (Union (f ': fs) a) where
-  showsPrec d u = case decompose u of
-    Left u' -> showsPrec d u'
-    Right r -> showsPrec d r
-
-instance Show (Union '[] a) where
-  showsPrec _ _ = id
-
-instance (Eq1 f, Eq1 (Union fs)) => Eq1 (Union (f ': fs)) where
-  liftEq eq u1 u2 = case (decompose u1, decompose u2) of
-    (Left u1', Left u2') -> liftEq eq u1' u2'
-    (Right r1, Right r2) -> liftEq eq r1 r2
-
-instance Eq1 (Union '[]) where
-  liftEq _ _ _ = False
-
-instance (Show1 f, Show1 (Union fs)) => Show1 (Union (f ': fs)) where
-  liftShowsPrec sp sl d u = case decompose u of
-    Left u' -> liftShowsPrec sp sl d u'
-    Right r -> liftShowsPrec sp sl d r
-
-instance Show1 (Union '[]) where
-  liftShowsPrec _ _ _ _ = id
+instance Apply1 Show1 fs => Show1 (Union fs) where
+  liftShowsPrec sp sl d (Union n r) = apply1 (Proxy :: Proxy Show1) (Proxy :: Proxy fs) n (liftShowsPrec sp sl d) r
