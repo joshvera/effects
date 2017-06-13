@@ -132,6 +132,13 @@ instance {-# OVERLAPPING #-} FindElem t r => FindElem t (t' ': r) where
 class Apply (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
   apply :: Proxy c -> Proxy fs -> Int -> (forall g . c g => g a -> b) -> t a -> b
 
+instance (c f, Apply c fs) => Apply c (f ': fs) where
+  apply proxy _ n f r | n == 0    = f (unsafeCoerce r :: f a)
+                      | otherwise = apply proxy (Proxy :: Proxy fs) (pred n) f r
+
+instance Apply c '[] where
+  apply _ _ _ _ _ = error "apply over empty Union"
+
 
 type family EQU (a :: k) (b :: k) :: Bool where
   EQU a a = 'True
