@@ -155,10 +155,8 @@ instance MemberU' 'True tag (tag e) (tag e ': r)
 instance (t :< (t' ': r), MemberU2 tag t r) =>
            MemberU' 'False tag t (t' ': r)
 
-instance (Foldable f, Foldable (Union fs)) => Foldable (Union (f ': fs)) where
-  foldMap f u = case decompose u of
-    Left u' -> foldMap f u'
-    Right r -> foldMap f r
+instance Apply Foldable (f ': fs) => Foldable (Union (f ': fs)) where
+  foldMap f (Union n r) = apply (Proxy :: Proxy Foldable) (Proxy :: Proxy (f ': fs)) n (foldMap f) r
 
 instance Foldable (Union '[]) where
   foldMap _ _ = mempty
@@ -171,7 +169,7 @@ instance (Functor f, Functor (Union fs)) => Functor (Union (f ': fs)) where
 instance Functor (Union '[]) where
   fmap _ _ = error "fmap over an empty Union"
 
-instance (Traversable f, Traversable (Union fs)) => Traversable (Union (f ': fs)) where
+instance (Traversable f, Traversable (Union fs), Apply Foldable (f ': fs)) => Traversable (Union (f ': fs)) where
   traverse f u = case decompose u of
     Left u' -> weaken <$> traverse f u'
     Right r -> inj <$> traverse f r
