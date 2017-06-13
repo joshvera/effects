@@ -130,6 +130,9 @@ instance {-# OVERLAPPING #-} FindElem t r => FindElem t (t' ': r) where
 
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
+class Apply0 (c :: * -> Constraint) (fs :: [k -> *]) (a :: k) where
+  apply0 :: Proxy c -> Proxy fs -> Int -> (forall g . c (g a) => g a -> b) -> t a -> b
+
 class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
   apply1 :: Proxy c -> Proxy fs -> Int -> (forall g . c g => g a -> b) -> t a -> b
 
@@ -140,6 +143,12 @@ instance (c f, Apply1 c fs) => Apply1 c (f ': fs) where
 instance Apply1 c '[] where
   apply1 _ _ _ _ _ = error "apply over empty Union"
 
+instance (c (f a), Apply0 c fs a) => Apply0 c (f ': fs) a where
+  apply0 proxy _ n f r | n == 0    = f (unsafeCoerce r :: f a)
+                       | otherwise = apply0 proxy (Proxy :: Proxy fs) (pred n) f r
+
+instance Apply0 c '[] a where
+  apply0 _ _ _ _ _ = error "apply over empty Union"
 
 type family EQU (a :: k) (b :: k) :: Bool where
   EQU a a = 'True
