@@ -158,15 +158,12 @@ instance (t :< (t' ': r), MemberU2 tag t r) =>
 instance Apply Foldable fs => Foldable (Union fs) where
   foldMap f (Union n r) = apply (Proxy :: Proxy Foldable) (Proxy :: Proxy fs) n (foldMap f) r
 
-instance (Functor f, Functor (Union fs)) => Functor (Union (f ': fs)) where
-  fmap f u = case decompose u of
-    Left u' -> weaken (fmap f u')
-    Right r -> inj (fmap f r)
+instance Apply Functor fs => Functor (Union fs) where
+  fmap f (Union n r) = Union n (apply (Proxy :: Proxy Functor) (Proxy :: Proxy fs) n (withTypeOf f r . unsafeCoerce . fmap f) r)
+    where withTypeOf :: (a -> b) -> t a -> t b -> t b
+          withTypeOf _ _ = id
 
-instance Functor (Union '[]) where
-  fmap _ _ = error "fmap over an empty Union"
-
-instance (Traversable f, Traversable (Union fs), Apply Foldable (f ': fs)) => Traversable (Union (f ': fs)) where
+instance (Traversable f, Traversable (Union fs), Apply Foldable (f ': fs), Apply Functor (f ': fs)) => Traversable (Union (f ': fs)) where
   traverse f u = case decompose u of
     Left u' -> weaken <$> traverse f u'
     Right r -> inj <$> traverse f r
