@@ -56,12 +56,6 @@ import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
 
 infixr 5 :<
--- | Find an functor in a record.
-class (FindElem e r) => (e :: * -> *) :< r where
-  -- | Inject a functor into a type-aligned union.
-  inj :: e v -> Union r v
-  -- | Maybe project a functor out of a type-aligned union.
-  prj :: Union r v -> Maybe (e v)
 
 -- Strong Sum (Existential with the evidence) is an open union
 -- t is can be a GADT and hence not necessarily a Functor.
@@ -96,11 +90,15 @@ instance (t :< '[t]) where
   prj (Union _ x) = Just (unsafeCoerce x)
 -}
 
-instance (FindElem t r) => t :< r where
-  {-# INLINE inj #-}
-  {-# INLINE prj #-}
-  inj = inj' (unP (elemNo :: P t r))
-  prj = prj' (unP (elemNo :: P t r))
+-- | Inject a functor into a type-aligned union.
+inj :: forall e r v. e :< r => e v -> Union r v
+inj = inj' (unP (elemNo :: P e r))
+{-# INLINE inj #-}
+
+-- | Maybe project a functor out of a type-aligned union.
+prj :: forall e r v. e :< r => Union r v -> Maybe (e v)
+prj = prj' (unP (elemNo :: P e r))
+{-# INLINE prj #-}
 
 
 decompose :: Union (t ': r) v -> Either (Union r v) (t v)
@@ -121,13 +119,13 @@ weaken (Union n v) = Union (n+1) v
 
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
-class FindElem (t :: * -> *) r where
+class (t :: * -> *) :< r where
   elemNo :: P t r
 
-instance {-# OVERLAPPING #-} FindElem t (t ': r) where
+instance {-# OVERLAPPING #-} t :< (t ': r) where
   elemNo = P 0
 
-instance {-# OVERLAPPING #-} FindElem t r => FindElem t (t' ': r) where
+instance {-# OVERLAPPING #-} t :< r => t :< (t' ': r) where
   elemNo = P $ 1 + unP (elemNo :: P t r)
 
 
@@ -158,7 +156,7 @@ type family EQU (a :: k) (b :: k) :: Bool where
 
 -- This class is used for emulating monad transformers
 class (t :< r) => MemberU2 (tag :: k -> * -> *) (t :: * -> *) r | tag r -> t
-instance (MemberU' (EQU t1 t2) tag t1 (t2 ': r)) => MemberU2 tag t1 (t2 ': r)
+instance (t1 :< r, MemberU' (EQU t1 t2) tag t1 (t2 ': r)) => MemberU2 tag t1 (t2 ': r)
 
 class (t :< r) =>
       MemberU' (f::Bool) (tag :: k -> * -> *) (t :: * -> *) r | tag r -> t
