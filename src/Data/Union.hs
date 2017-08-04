@@ -45,7 +45,9 @@ module Data.Union (
   prj,
   type(:<),
   type(:<:),
-  MemberU2
+  MemberU2,
+  Apply0(..),
+  Apply1(..)
 ) where
 
 import Data.Functor.Classes (Eq1(..), Show1(..))
