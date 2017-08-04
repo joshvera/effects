@@ -169,9 +169,7 @@ instance Apply1 Foldable fs => Foldable (Union fs) where
   foldMap f (Union n r) = apply1 (Proxy :: Proxy Foldable) (Proxy :: Proxy fs) n (foldMap f) r
 
 instance Apply1 Functor fs => Functor (Union fs) where
-  fmap f (Union n r) = Union n (apply1 (Proxy :: Proxy Functor) (Proxy :: Proxy fs) n (withTypeOf f r . unsafeCoerce . fmap f) r)
-    where withTypeOf :: (a -> b) -> t a -> t b -> t b
-          withTypeOf _ _ = id
+  fmap f (Union n r) = apply1 (Proxy :: Proxy Functor) (Proxy :: Proxy fs) n (Union n . fmap f) r
 
 instance (Apply1 Foldable fs, Apply1 Functor fs, Apply1 Traversable fs) => Traversable (Union fs) where
   traverse f (Union n r) = Union n <$> apply1 (Proxy :: Proxy Traversable) (Proxy :: Proxy fs) n (withTypeOf f r . unsafeCoerce . traverse f) r
