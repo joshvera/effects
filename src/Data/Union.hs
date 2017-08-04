@@ -199,8 +199,7 @@ instance Apply0 Show fs a => Show (Union fs a) where
   showsPrec d u = apply0 (Proxy :: Proxy Show) (showsPrec d) u
 
 instance Apply1 Eq1 fs => Eq1 (Union fs) where
-  liftEq eq u1@(Union n1 _) (Union n2 r2) | n1 == n2  = apply1 (Proxy :: Proxy Eq1) (flip (liftEq eq) (unsafeCoerce r2)) u1
-                                          | otherwise = False
+  liftEq eq u1 u2 = fromMaybe False (apply1_2 (Proxy :: Proxy Eq1) (liftEq eq) u1 u2)
 
 
 instance Apply1 Show1 fs => Show1 (Union fs) where
