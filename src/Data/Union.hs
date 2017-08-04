@@ -51,6 +51,7 @@ module Data.Union (
 ) where
 
 import Data.Functor.Classes (Eq1(..), Show1(..))
+import Data.Maybe (fromMaybe)
 import Data.Proxy
 import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
@@ -192,8 +193,7 @@ instance (Apply1 Foldable fs, Apply1 Functor fs, Apply1 Traversable fs) => Trave
   traverse f u@(Union n _) = apply1 (Proxy :: Proxy Traversable) (fmap (Union n) . traverse f) u
 
 instance Apply0 Eq fs a => Eq (Union fs a) where
-  u1@(Union n1 _) == Union n2 r2 | n1 == n2  = apply0 (Proxy :: Proxy Eq) (== unsafeCoerce r2) u1
-                                 | otherwise = False
+  u1 == u2 = fromMaybe False (apply0_2 (Proxy :: Proxy Eq) (==) u1 u2)
 
 instance Apply0 Show fs a => Show (Union fs a) where
   showsPrec d u = apply0 (Proxy :: Proxy Show) (showsPrec d) u
