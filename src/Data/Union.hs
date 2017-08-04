@@ -134,24 +134,25 @@ instance {-# OVERLAPPING #-} t :< r => t :< (t' ': r) where
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
 class Apply0 (c :: * -> Constraint) (fs :: [k -> *]) (a :: k) where
-  apply0 :: proxy1 c -> proxy2 fs -> Int -> (forall g . c (g a) => g a -> b) -> t a -> b
+  apply0 :: proxy c -> (forall g . c (g a) => g a -> b) -> Union fs a -> b
 
 class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
-  apply1 :: proxy1 c -> proxy2 fs -> Int -> (forall g . c g => g a -> b) -> t a -> b
+  apply1 :: proxy c -> (forall g . c g => g a -> b) -> Union fs a -> b
 
 instance (c f, Apply1 c fs) => Apply1 c (f ': fs) where
-  apply1 proxy _ n f r | n == 0    = f (unsafeCoerce r :: f a)
-                       | otherwise = apply1 proxy (Proxy :: Proxy fs) (pred n) f r
+  apply1 proxy f u@(Union n r) | n == 0    = f (unsafeCoerce r :: f a)
+                               | otherwise = apply1 proxy f (Union (pred n) r `asStrongerUnionTypeOf` u)
+
 
 instance Apply1 c '[] where
-  apply1 _ _ _ _ _ = error "apply over empty Union"
+  apply1 _ _ _ = error "apply over empty Union"
 
 instance (c (f a), Apply0 c fs a) => Apply0 c (f ': fs) a where
-  apply0 proxy _ n f r | n == 0    = f (unsafeCoerce r :: f a)
-                       | otherwise = apply0 proxy (Proxy :: Proxy fs) (pred n) f r
+  apply0 proxy f u@(Union n r) | n == 0    = f (unsafeCoerce r :: f a)
+                               | otherwise = apply0 proxy f (Union (pred n) r `asStrongerUnionTypeOf` u)
 
 instance Apply0 c '[] a where
-  apply0 _ _ _ _ _ = error "apply over empty Union"
+  apply0 _ _ _ = error "apply over empty Union"
 
 type family EQU (a :: k) (b :: k) :: Bool where
   EQU a a = 'True
@@ -169,25 +170,25 @@ instance (t :< (t' ': r), MemberU2 tag t r) =>
            MemberU' 'False tag t (t' ': r)
 
 instance Apply1 Foldable fs => Foldable (Union fs) where
-  foldMap f (Union n r) = apply1 (Proxy :: Proxy Foldable) (Proxy :: Proxy fs) n (foldMap f) r
+  foldMap f u = apply1 (Proxy :: Proxy Foldable) (foldMap f) u
 
 instance Apply1 Functor fs => Functor (Union fs) where
-  fmap f (Union n r) = apply1 (Proxy :: Proxy Functor) (Proxy :: Proxy fs) n (Union n . fmap f) r
+  fmap f u@(Union n _) = apply1 (Proxy :: Proxy Functor) (Union n . fmap f) u
 
 instance (Apply1 Foldable fs, Apply1 Functor fs, Apply1 Traversable fs) => Traversable (Union fs) where
-  traverse f (Union n r) = apply1 (Proxy :: Proxy Traversable) (Proxy :: Proxy fs) n (fmap (Union n) . traverse f) r
+  traverse f u@(Union n _) = apply1 (Proxy :: Proxy Traversable) (fmap (Union n) . traverse f) u
 
 instance Apply0 Eq fs a => Eq (Union fs a) where
-  Union n1 r1 == Union n2 r2 | n1 == n2  = apply0 (Proxy :: Proxy Eq) (Proxy :: Proxy fs) n1 (== unsafeCoerce r2) r1
-                             | otherwise = False
+  u1@(Union n1 _) == Union n2 r2 | n1 == n2  = apply0 (Proxy :: Proxy Eq) (== unsafeCoerce r2) u1
+                                 | otherwise = False
 
 instance Apply0 Show fs a => Show (Union fs a) where
-  showsPrec d (Union n r) = apply0 (Proxy :: Proxy Show) (Proxy :: Proxy fs) n (showsPrec d) r
+  showsPrec d u = apply0 (Proxy :: Proxy Show) (showsPrec d) u
 
 instance Apply1 Eq1 fs => Eq1 (Union fs) where
-  liftEq eq (Union n1 r1) (Union n2 r2) | n1 == n2  = apply1 (Proxy :: Proxy Eq1) (Proxy :: Proxy fs) n1 (flip (liftEq eq) (unsafeCoerce r2)) r1
-                                        | otherwise = False
+  liftEq eq u1@(Union n1 _) (Union n2 r2) | n1 == n2  = apply1 (Proxy :: Proxy Eq1) (flip (liftEq eq) (unsafeCoerce r2)) u1
+                                          | otherwise = False
 
 
 instance Apply1 Show1 fs => Show1 (Union fs) where
-  liftShowsPrec sp sl d (Union n r) = apply1 (Proxy :: Proxy Show1) (Proxy :: Proxy fs) n (liftShowsPrec sp sl d) r
+  liftShowsPrec sp sl d u = apply1 (Proxy :: Proxy Show1) (liftShowsPrec sp sl d) u
