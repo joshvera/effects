@@ -193,7 +193,7 @@ instance Apply1 Foldable fs => Foldable (Union fs) where
   foldMap f u = apply1 (Proxy :: Proxy Foldable) (foldMap f) u
 
 instance Apply1 Functor fs => Functor (Union fs) where
-  fmap f u@(Union n _) = apply1 (Proxy :: Proxy Functor) (Union n . fmap f) u
+  fmap f u = apply1' (Proxy :: Proxy Functor) ((. fmap f)) u
 
 instance (Apply1 Foldable fs, Apply1 Functor fs, Apply1 Traversable fs) => Traversable (Union fs) where
   traverse f u@(Union n _) = apply1 (Proxy :: Proxy Traversable) (fmap (Union n) . traverse f) u
