@@ -131,10 +131,10 @@ instance {-# OVERLAPPING #-} FindElem t r => FindElem t (t' ': r) where
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
 class Apply0 (c :: * -> Constraint) (fs :: [k -> *]) (a :: k) where
-  apply0 :: Proxy c -> Proxy fs -> Int -> (forall g . c (g a) => g a -> b) -> t a -> b
+  apply0 :: proxy1 c -> proxy2 fs -> Int -> (forall g . c (g a) => g a -> b) -> t a -> b
 
 class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
-  apply1 :: Proxy c -> Proxy fs -> Int -> (forall g . c g => g a -> b) -> t a -> b
+  apply1 :: proxy1 c -> proxy2 fs -> Int -> (forall g . c g => g a -> b) -> t a -> b
 
 instance (c f, Apply1 c fs) => Apply1 c (f ': fs) where
   apply1 proxy _ n f r | n == 0    = f (unsafeCoerce r :: f a)
