@@ -141,13 +141,19 @@ class Apply0 (c :: * -> Constraint) (fs :: [k -> *]) (a :: k) where
 class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
   apply1 :: proxy c -> (forall g . c g => g a -> b) -> Union fs a -> b
 
+  apply1_2 :: proxy c -> (forall g . c g => g a -> g a -> b) -> Union fs a -> Union fs a -> Maybe b
+
 instance (c f, Apply1 c fs) => Apply1 c (f ': fs) where
   apply1 proxy f u@(Union n r) | n == 0    = f (unsafeCoerce r :: f a)
                                | otherwise = apply1 proxy f (Union (pred n) r `asStrongerUnionTypeOf` u)
 
+  apply1_2 proxy f u1@(Union n1 r1) u2@(Union n2 r2) | n1 /= n2  = Nothing
+                                                     | n1 == 0   = Just (f (unsafeCoerce r1 :: f a) (unsafeCoerce r2 :: f a))
+                                                     | otherwise = apply1_2 proxy f (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
 
 instance Apply1 c '[] where
-  apply1 _ _ _ = error "apply over empty Union"
+  apply1 _ _ _ = error "apply1 over empty Union"
+  apply1_2 _ _ _ _ = error "apply1_2 over empty Union"
 
 instance (c (f a), Apply0 c fs a) => Apply0 c (f ': fs) a where
   apply0 proxy f u@(Union n r) | n == 0    = f (unsafeCoerce r :: f a)
