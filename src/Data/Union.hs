@@ -196,7 +196,7 @@ instance Apply1 Functor fs => Functor (Union fs) where
   fmap f u = apply1' (Proxy :: Proxy Functor) ((. fmap f)) u
 
 instance (Apply1 Foldable fs, Apply1 Functor fs, Apply1 Traversable fs) => Traversable (Union fs) where
-  traverse f u@(Union n _) = apply1 (Proxy :: Proxy Traversable) (fmap (Union n) . traverse f) u
+  traverse f u = apply1' (Proxy :: Proxy Traversable) ((. traverse f) . fmap) u
 
 instance Apply0 Eq fs a => Eq (Union fs a) where
   u1 == u2 = fromMaybe False (apply0_2 (Proxy :: Proxy Eq) (==) u1 u2)
