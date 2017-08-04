@@ -141,15 +141,12 @@ class Apply0 (c :: * -> Constraint) (fs :: [k -> *]) (a :: k) where
 
 class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
   apply1 :: proxy c -> (forall g . c g => g a -> b) -> Union fs a -> b
-
   apply1' :: proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> b) -> Union fs a -> b
 
   apply1_2 :: proxy c -> (forall g . c g => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 
 instance (c f, Apply1 c fs) => Apply1 c (f ': fs) where
-  apply1 proxy f u@(Union n r) | n == 0    = f (unsafeCoerce r :: f a)
-                               | otherwise = apply1 proxy f (Union (pred n) r `asStrongerUnionTypeOf` u)
-
+  apply1 proxy f = apply1' proxy (const f)
   apply1' proxy f u@(Union n r) | n == 0    = f (Union n) (unsafeCoerce r :: f a)
                                 | otherwise = apply1' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
