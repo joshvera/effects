@@ -153,9 +153,9 @@ class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
   apply1_2' :: proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 
 instance (c f0) => Apply1 c '[f0] where
-  apply1' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
+  apply1' _ f (Union _ r) = f (Union 0) (unsafeCoerce r :: f0 a)
 
-  apply1_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
+  apply1_2' _ f (Union _ r1) (Union _ r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
 
 instance (c f0, c f1) => Apply1 c '[f0, f1] where
   apply1' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
