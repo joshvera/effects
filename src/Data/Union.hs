@@ -141,16 +141,16 @@ class Apply0 (c :: * -> Constraint) (fs :: [k -> *]) (a :: k) where
 
   apply0_2 :: proxy c -> (forall g . c (g a) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 
+class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
+  apply1' :: proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> b) -> Union fs a -> b
+
+  apply1_2' :: proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
+
 apply1 :: Apply1 c fs => proxy c -> (forall g . c g => g a -> b) -> Union fs a -> b
 apply1 proxy f = apply1' proxy (const f)
 
 apply1_2 :: Apply1 c fs => proxy c -> (forall g . c g => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 apply1_2 proxy f = apply1_2' proxy (const f)
-
-class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
-  apply1' :: proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> b) -> Union fs a -> b
-
-  apply1_2' :: proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 
 instance (c f0) => Apply1 c '[f0] where
   apply1' _ f (Union _ r) = f (Union 0) (unsafeCoerce r :: f0 a)
