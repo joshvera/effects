@@ -1,6 +1,7 @@
 module Main where
 
 import Control.Monad.Effect
+import Data.Monoid (Sum(..))
 
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -134,6 +135,9 @@ unionTests = testGroup "Union tests"
   , testProperty "unary traverse equivalence" (\ n -> traverse Just (testUnaryUnion n) == Just (testUnaryUnion n))
   , testProperty "binary traverse equivalence 0" (\ n -> traverse Just (testBinaryUnion0 n) == Just (testBinaryUnion0 n))
   , testProperty "binary traverse equivalence 1" (\ s -> traverse Just (testBinaryUnion1 s) == Just (testBinaryUnion1 s))
+  , testProperty "unary foldMap equivalence" (\ n -> foldMap Sum (testUnaryUnion n) == Sum n)
+  , testProperty "binary foldMap equivalence 0" (\ n -> foldMap Sum (testBinaryUnion0 n) == Sum n)
+  , testProperty "binary foldMap equivalence 1" (\ s -> foldMap Sum (testBinaryUnion1 s) == mempty)
   ]
 
 --------------------------------------------------------------------------------
