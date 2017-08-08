@@ -142,6 +142,8 @@ unionTests = testGroup "Union tests"
   , testProperty "unary lifted equality" (\ n -> liftEq (==) (testUnaryUnion n) (testUnaryUnion n))
   , testProperty "binary lifted equality 0" (\ n -> liftEq (==) (testBinaryUnion0 n) (testBinaryUnion0 n))
   , testProperty "binary lifted equality 1" (\ s -> liftEq (==) (testBinaryUnion1 s) (testBinaryUnion1 s))
+  , testProperty "binary lifted inequality 0" (\ n s -> not (liftEq (==) (testBinaryUnion0 n) (testBinaryUnion1 s)))
+  , testProperty "binary lifted inequality 1" (\ s n -> not (liftEq (==) (testBinaryUnion1 s) (testBinaryUnion0 n)))
   ]
 
 --------------------------------------------------------------------------------
