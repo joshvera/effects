@@ -157,350 +157,450 @@ instance (c (f0 a), c (f1 a)) => Apply0 c '[f0, f1] a where
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a)) => Apply0 c '[f0, f1, f2] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a)) => Apply0 c '[f0, f1, f2, f3] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a)) => Apply0 c '[f0, f1, f2, f3, f4] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a), c (f37 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f37] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a), c (f37 a), c (f38 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f37, f38] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a), c (f37 a), c (f38 a), c (f39 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f37, f38, f39] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a), c (f37 a), c (f38 a), c (f39 a), c (f40 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f37, f38, f39, f40] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a), c (f37 a), c (f38 a), c (f39 a), c (f40 a), c (f41 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f37, f38, f39, f40, f41] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a), c (f37 a), c (f38 a), c (f39 a), c (f40 a), c (f41 a), c (f42 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f37, f38, f39, f40, f41, f42] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a), c (f37 a), c (f38 a), c (f39 a), c (f40 a), c (f41 a), c (f42 a), c (f43 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f37, f38, f39, f40, f41, f42, f43] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a), c (f37 a), c (f38 a), c (f39 a), c (f40 a), c (f41 a), c (f42 a), c (f43 a), c (f44 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f37, f38, f39, f40, f41, f42, f43, f44] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a), c (f37 a), c (f38 a), c (f39 a), c (f40 a), c (f41 a), c (f42 a), c (f43 a), c (f44 a), c (f45 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f37, f38, f39, f40, f41, f42, f43, f44, f45] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a), c (f37 a), c (f38 a), c (f39 a), c (f40 a), c (f41 a), c (f42 a), c (f43 a), c (f44 a), c (f45 a), c (f46 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f37, f38, f39, f40, f41, f42, f43, f44, f45, f46] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a), c (f37 a), c (f38 a), c (f39 a), c (f40 a), c (f41 a), c (f42 a), c (f43 a), c (f44 a), c (f45 a), c (f46 a), c (f47 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f37, f38, f39, f40, f41, f42, f43, f44, f45, f46, f47] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a), c (f37 a), c (f38 a), c (f39 a), c (f40 a), c (f41 a), c (f42 a), c (f43 a), c (f44 a), c (f45 a), c (f46 a), c (f47 a), c (f48 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f37, f38, f39, f40, f41, f42, f43, f44, f45, f46, f47, f48] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a), c (f37 a), c (f38 a), c (f39 a), c (f40 a), c (f41 a), c (f42 a), c (f43 a), c (f44 a), c (f45 a), c (f46 a), c (f47 a), c (f48 a), c (f49 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f37, f38, f39, f40, f41, f42, f43, f44, f45, f46, f47, f48, f49] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 instance (c (f0 a), c (f1 a), c (f2 a), c (f3 a), c (f4 a), c (f5 a), c (f6 a), c (f7 a), c (f8 a), c (f9 a), c (f10 a), c (f11 a), c (f12 a), c (f13 a), c (f14 a), c (f15 a), c (f16 a), c (f17 a), c (f18 a), c (f19 a), c (f20 a), c (f21 a), c (f22 a), c (f23 a), c (f24 a), c (f25 a), c (f26 a), c (f27 a), c (f28 a), c (f29 a), c (f30 a), c (f31 a), c (f32 a), c (f33 a), c (f34 a), c (f35 a), c (f36 a), c (f37 a), c (f38 a), c (f39 a), c (f40 a), c (f41 a), c (f42 a), c (f43 a), c (f44 a), c (f45 a), c (f46 a), c (f47 a), c (f48 a), c (f49 a), c (f50 a)) => Apply0 c '[f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f37, f38, f39, f40, f41, f42, f43, f44, f45, f46, f47, f48, f49, f50] a where
   apply0' _ f (Union 0 r) = f (Union 0) (unsafeCoerce r :: f0 a)
   apply0' proxy f u@(Union n r) = apply0' proxy (\ toU -> f (weaken . toU)) (Union (pred n) r `asStrongerUnionTypeOf` u)
 
   apply0_2' _ f (Union 0 r1) (Union 0 r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2) = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+  apply0_2' proxy f u1@(Union n1 r1) u2@(Union n2 r2)
+    | n1 == n2  = apply0_2' proxy (\ toU -> f (weaken . toU)) (Union (pred n1) r1 `asStrongerUnionTypeOf` u1) (Union (pred n2) r2 `asStrongerUnionTypeOf` u2)
+    | otherwise = Nothing
 
 
 class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
