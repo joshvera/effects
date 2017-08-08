@@ -131,6 +131,9 @@ unionTests = testGroup "Union tests"
   [ testProperty "unary fmap equivalence" (\ n -> fmap succ (testUnaryUnion n) == testUnaryUnion (succ n))
   , testProperty "binary fmap equivalence 0" (\ n -> fmap succ (testBinaryUnion0 n) == testBinaryUnion0 (succ n))
   , testProperty "binary fmap equivalence 1" (\ s -> fmap succ (testBinaryUnion1 s) == testBinaryUnion1 s)
+  , testProperty "unary traverse equivalence" (\ n -> traverse Just (testUnaryUnion n) == Just (testUnaryUnion n))
+  , testProperty "binary traverse equivalence 0" (\ n -> traverse Just (testBinaryUnion0 n) == Just (testBinaryUnion0 n))
+  , testProperty "binary traverse equivalence 1" (\ s -> traverse Just (testBinaryUnion1 s) == Just (testBinaryUnion1 s))
   ]
 
 --------------------------------------------------------------------------------
