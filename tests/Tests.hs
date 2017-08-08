@@ -1,6 +1,7 @@
 module Main where
 
 import Control.Monad.Effect
+import Data.Functor.Classes (Eq1(..))
 import Data.Monoid (Sum(..))
 
 import Test.Tasty
@@ -138,6 +139,9 @@ unionTests = testGroup "Union tests"
   , testProperty "unary foldMap equivalence" (\ n -> foldMap Sum (testUnaryUnion n) == Sum n)
   , testProperty "binary foldMap equivalence 0" (\ n -> foldMap Sum (testBinaryUnion0 n) == Sum n)
   , testProperty "binary foldMap equivalence 1" (\ s -> foldMap Sum (testBinaryUnion1 s) == mempty)
+  , testProperty "unary lifted equality" (\ n -> liftEq (==) (testUnaryUnion n) (testUnaryUnion n))
+  , testProperty "binary lifted equality 0" (\ n -> liftEq (==) (testBinaryUnion0 n) (testBinaryUnion0 n))
+  , testProperty "binary lifted equality 1" (\ s -> liftEq (==) (testBinaryUnion1 s) (testBinaryUnion1 s))
   ]
 
 --------------------------------------------------------------------------------
