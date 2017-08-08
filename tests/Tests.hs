@@ -128,7 +128,7 @@ stateTests = testGroup "State tests"
 --------------------------------------------------------------------------------
 unionTests :: TestTree
 unionTests = testGroup "Union tests"
-  [ testProperty "fmap equivalence" (\ n -> fmap succ (testUnion n) == testUnion (succ n))
+  [ testProperty "unary fmap equivalence" (\ n -> fmap succ (testUnion n) == testUnion (succ n))
   ]
 
 --------------------------------------------------------------------------------
