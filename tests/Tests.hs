@@ -13,6 +13,7 @@ import Tests.NonDetEff
 import Tests.Reader
 import Tests.State
 import Tests.StateRW
+import Tests.Union
 
 import qualified Data.List
 
@@ -123,6 +124,14 @@ stateTests = testGroup "State tests"
   ]
 
 --------------------------------------------------------------------------------
+                     -- Union instance Tests --
+--------------------------------------------------------------------------------
+unionTests :: TestTree
+unionTests = testGroup "Union tests"
+  [ testProperty "fmap equivalence" (\ n -> fmap succ (testUnion n) == testUnion (succ n))
+  ]
+
+--------------------------------------------------------------------------------
                              -- Runner --
 --------------------------------------------------------------------------------
 main :: IO ()
@@ -134,4 +143,5 @@ main = defaultMain $ testGroup "Tests"
   , nonDetEffTests
   , readerTests
   , stateTests
+  , unionTests
   ]
