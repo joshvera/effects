@@ -82,6 +82,7 @@ test-suite test
                      , Tests.Reader
                      , Tests.State
                      , Tests.StateRW
+                     , Tests.Union
   build-depends:    base
                   , effects
                   , tasty
