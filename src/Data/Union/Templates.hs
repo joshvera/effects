@@ -1,5 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Data.Union.Templates where
+module Data.Union.Templates
+( mkApply1Instance
+, mkApply1Instances
+) where
 
 import Control.Monad
 import Language.Haskell.TH
