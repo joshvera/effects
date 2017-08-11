@@ -16,7 +16,7 @@ mkApply1Instance paramN = do
   [c, f, n, n1, n2, r, r1, r2, a, u, u1, u2, proxy] <- traverse newName ["c", "f", "n", "n1", "n2", "r", "r1", "r2", "a", "u", "u1", "u2", "proxy"]
   params <- replicateM paramN (newName "f")
   pure
-    [ InstanceD Nothing (AppT (VarT c) . VarT <$> params) (AppT (AppT (ConT (mkName "Apply1")) (VarT c)) (foldr (AppT . AppT PromotedConsT . VarT) PromotedNilT params))
+    [ InstanceD Nothing (AppT (VarT c) . VarT <$> params) (AppT (AppT (ConT apply1) (VarT c)) (foldr (AppT . AppT PromotedConsT . VarT) PromotedNilT params))
       [ FunD apply1'
         [ Clause
           [ WildP, VarP f, ConP union [ LitP (IntegerL 0), VarP r ] ]
@@ -43,6 +43,7 @@ mkApply1Instance paramN = do
       ]
     ]
   where union = mkName "Union"
+        apply1 = mkName "Apply1"
         apply1' = mkName "apply1'"
         apply1_2' = mkName "apply1_2'"
         asStrongerUnionTypeOf = mkName "asStrongerUnionTypeOf"
