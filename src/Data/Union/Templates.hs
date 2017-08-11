@@ -10,8 +10,8 @@ import Control.Monad
 import Language.Haskell.TH
 import Unsafe.Coerce (unsafeCoerce)
 
-mkApply0Instances :: Int -> Q [Dec]
-mkApply0Instances n = concat <$> traverse mkApply0Instance [2..n]
+mkApply0Instances :: [Int] -> Q [Dec]
+mkApply0Instances = fmap concat . traverse mkApply0Instance
 
 mkApply0Instance :: Int -> Q [Dec]
 mkApply0Instance paramN = do
@@ -48,8 +48,8 @@ mkApply0Instance paramN = do
         apply0' = mkName "apply0'"
         apply0_2' = mkName "apply0_2'"
 
-mkApply1Instances :: Int -> Q [Dec]
-mkApply1Instances n = concat <$> traverse mkApply1Instance [2..n]
+mkApply1Instances :: [Int] -> Q [Dec]
+mkApply1Instances = fmap concat . traverse mkApply1Instance
 
 mkApply1Instance :: Int -> Q [Dec]
 mkApply1Instance paramN = do
