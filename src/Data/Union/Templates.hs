@@ -42,8 +42,12 @@ mkApply1Instance paramN = do
         ]
       ]
     ]
-  where union = mkName "Union"
-        apply1 = mkName "Apply1"
+  where apply1 = mkName "Apply1"
         apply1' = mkName "apply1'"
         apply1_2' = mkName "apply1_2'"
-        asStrongerUnionTypeOf = mkName "asStrongerUnionTypeOf"
+
+union :: Name
+union = mkName "Union"
+
+asStrongerUnionTypeOf :: Name
+asStrongerUnionTypeOf = mkName "asStrongerUnionTypeOf"
