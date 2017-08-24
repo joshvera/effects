@@ -154,7 +154,7 @@ instance (c (f0 a)) => Apply0 c '[f0] a where
 
   apply0_2' _ f (Union _ r1) (Union _ r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
 
-mkApply0Instances [2..100]
+mkApply0Instances [2..150]
 
 
 class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
@@ -174,7 +174,7 @@ instance (c f0) => Apply1 c '[f0] where
 
   apply1_2' _ f (Union _ r1) (Union _ r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
 
-mkApply1Instances [2..100]
+mkApply1Instances [2..150]
 
 
 type family EQU (a :: k) (b :: k) :: Bool where
