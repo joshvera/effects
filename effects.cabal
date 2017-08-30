@@ -39,6 +39,7 @@ library
                      , Control.Monad.Effect.Coroutine
                      , Control.Monad.Effect.Cut
                      , Control.Monad.Effect.Exception
+                     , Control.Monad.Effect.Fail
                      , Control.Monad.Effect.Fresh
                      , Control.Monad.Effect.Internal
                      , Control.Monad.Effect.Reader
