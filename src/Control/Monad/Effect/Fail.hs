@@ -3,6 +3,7 @@
 module Control.Monad.Effect.Fail
 ( Fail
 , runFail
+, MonadFail(..)
 ) where
 
 import Control.Monad.Effect
