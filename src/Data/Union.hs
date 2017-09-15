@@ -122,9 +122,6 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
 
-asStrongerUnionTypeOf :: Union fs a -> Union (f ': fs) a -> Union fs a
-asStrongerUnionTypeOf = const
-
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
 class (t :: * -> *) :< r where
