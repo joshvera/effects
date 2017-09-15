@@ -146,7 +146,6 @@ class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
 
   apply1_2 :: proxy c -> (forall g . (c g, g :< fs) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 
-
 mkApply1Instances [1..150]
 
 
