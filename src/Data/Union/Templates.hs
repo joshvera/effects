@@ -26,12 +26,12 @@ mkApplyInstance paramN = do
 mkApplyFunction :: [Name] -> Q [Dec]
 mkApplyFunction paramNames = do
   [f, n, r, a] <- traverse newName ["f", "n", "r", "a"]
-  let mkGuarded n' = (PatG [BindS (LitP (IntegerL n')) (VarE n)], AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r)) (AppT (VarT (paramNames !! fromIntegral n')) (VarT a))))
+  let mkMatch n' = (Match (LitP (IntegerL n')) (NormalB (AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r)) (AppT (VarT (paramNames !! fromIntegral n')) (VarT a))))) [])
   pure
     [ FunD apply
       [ Clause
         [ WildP, VarP f, ConP union [ VarP n, VarP r ] ]
-        (GuardedB (mkGuarded <$> [0..pred (fromIntegral (length paramNames))]))
+        (NormalB (CaseE (VarE n) (mkMatch <$> [0..pred (fromIntegral (length paramNames))])))
         []
       ]
     ]
