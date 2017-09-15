@@ -134,9 +134,9 @@ instance {-# OVERLAPPING #-} t :< r => t :< (t' ': r) where
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
 class Apply0 (c :: * -> Constraint) (fs :: [k -> *]) (a :: k) where
-  apply0 :: proxy c -> (forall g . c (g a) => g a -> b) -> Union fs a -> b
+  apply0 :: proxy c -> (forall g . (c (g a), g :< fs) => g a -> b) -> Union fs a -> b
 
-  apply0_2 :: proxy c -> (forall g . c (g a) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
+  apply0_2 :: proxy c -> (forall g . (c (g a), g :< fs) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 
 mkApply0Instances [1..150]
 
