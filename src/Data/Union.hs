@@ -173,11 +173,11 @@ instance Apply1 Functor fs => Functor (Union fs) where
 instance (Apply1 Foldable fs, Apply1 Functor fs, Apply1 Traversable fs) => Traversable (Union fs) where
   traverse f u = apply1 (Proxy :: Proxy Traversable) (fmap inj . traverse f) u
 
-instance Apply0 Eq fs a => Eq (Union fs a) where
-  u1 == u2 = fromMaybe False (apply0_2 (Proxy :: Proxy Eq) (==) u1 u2)
+instance (Apply1 Eq1 fs, Eq a) => Eq (Union fs a) where
+  u1 == u2 = fromMaybe False (apply1_2 (Proxy :: Proxy Eq1) (liftEq (==)) u1 u2)
 
-instance Apply0 Show fs a => Show (Union fs a) where
-  showsPrec d u = apply0 (Proxy :: Proxy Show) (showsPrec d) u
+instance (Apply1 Show1 fs, Show a) => Show (Union fs a) where
+  showsPrec d u = apply1 (Proxy :: Proxy Show1) (liftShowsPrec showsPrec showList d) u
 
 instance Apply1 Eq1 fs => Eq1 (Union fs) where
   liftEq eq u1 u2 = fromMaybe False (apply1_2 (Proxy :: Proxy Eq1) (liftEq eq) u1 u2)
