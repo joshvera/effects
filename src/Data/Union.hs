@@ -48,8 +48,6 @@ module Data.Union (
   type(:<:),
   MemberU2,
   Apply0(..),
-  apply1,
-  apply1_2,
   Apply1(..)
 ) where
 
@@ -155,21 +153,15 @@ mkApply0Instances [2..55]
 
 
 class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
-  apply1' :: proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> b) -> Union fs a -> b
+  apply1 :: proxy c -> (forall g . (c g, g :< fs) => g a -> b) -> Union fs a -> b
 
-  apply1_2' :: proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
-
-apply1 :: Apply1 c fs => proxy c -> (forall g . c g => g a -> b) -> Union fs a -> b
-apply1 proxy f = apply1' proxy (const f)
-
-apply1_2 :: Apply1 c fs => proxy c -> (forall g . c g => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
-apply1_2 proxy f = apply1_2' proxy (const f)
+  apply1_2 :: proxy c -> (forall g . (c g, g :< fs) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 
 
 instance (c f0) => Apply1 c '[f0] where
-  apply1' _ f (Union _ r) = f (Union 0) (unsafeCoerce r :: f0 a)
+  apply1 _ f (Union _ r) = f (unsafeCoerce r :: f0 a)
 
-  apply1_2' _ f (Union _ r1) (Union _ r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
+  apply1_2 _ f (Union _ r1) (Union _ r2) = Just (f (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
 
 mkApply1Instances [2..55]
 
@@ -193,10 +185,10 @@ instance Apply1 Foldable fs => Foldable (Union fs) where
   foldMap f u = apply1 (Proxy :: Proxy Foldable) (foldMap f) u
 
 instance Apply1 Functor fs => Functor (Union fs) where
-  fmap f u = apply1' (Proxy :: Proxy Functor) ((. fmap f)) u
+  fmap f u = apply1 (Proxy :: Proxy Functor) (inj . fmap f) u
 
 instance (Apply1 Foldable fs, Apply1 Functor fs, Apply1 Traversable fs) => Traversable (Union fs) where
-  traverse f u = apply1' (Proxy :: Proxy Traversable) ((. traverse f) . fmap) u
+  traverse f u = apply1 (Proxy :: Proxy Traversable) (fmap inj . traverse f) u
 
 instance Apply0 Eq fs a => Eq (Union fs a) where
   u1 == u2 = fromMaybe False (apply0_2 (Proxy :: Proxy Eq) (==) u1 u2)
