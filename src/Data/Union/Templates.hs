@@ -1,36 +1,36 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Data.Union.Templates
-( mkApply1Instance
-, mkApply1Instances
+( mkApplyInstance
+, mkApplyInstances
 ) where
 
 import Control.Monad
 import Language.Haskell.TH
 import Unsafe.Coerce (unsafeCoerce)
 
-mkApply1Instances :: [Integer] -> Q [Dec]
-mkApply1Instances = fmap concat . traverse mkApply1Instance
+mkApplyInstances :: [Integer] -> Q [Dec]
+mkApplyInstances = fmap concat . traverse mkApplyInstance
 
-mkApply1Instance :: Integer -> Q [Dec]
-mkApply1Instance paramN = do
+mkApplyInstance :: Integer -> Q [Dec]
+mkApplyInstance paramN = do
   c <- newName "c"
   params <- replicateM (fromIntegral paramN) (newName "f")
-  apply1D <- mkApply1Function params
-  apply1_2D <- mkApply1_2Function params
+  applyD <- mkApplyFunction params
+  apply2D <- mkApply2Function params
   pure
-    [ InstanceD Nothing (AppT (VarT c) . VarT <$> params) (AppT (AppT (ConT apply1) (VarT c)) (foldr (AppT . AppT PromotedConsT . VarT) PromotedNilT params))
-      (apply1D ++ apply1_2D)
+    [ InstanceD Nothing (AppT (VarT c) . VarT <$> params) (AppT (AppT (ConT apply) (VarT c)) (foldr (AppT . AppT PromotedConsT . VarT) PromotedNilT params))
+      (applyD ++ apply2D)
     ]
-  where apply1 = mkName "Apply1"
+  where apply = mkName "Apply"
 
-mkApply1Function :: [Name] -> Q [Dec]
-mkApply1Function paramNames = do
-  clauses <- traverse (mkApply1Clause paramNames) [0..pred (fromIntegral (length paramNames))]
-  pure [ FunD apply1 (concat clauses) ]
-  where apply1 = mkName "apply1"
+mkApplyFunction :: [Name] -> Q [Dec]
+mkApplyFunction paramNames = do
+  clauses <- traverse (mkApplyClause paramNames) [0..pred (fromIntegral (length paramNames))]
+  pure [ FunD apply (concat clauses) ]
+  where apply = mkName "apply"
 
-mkApply1Clause :: [Name] -> Integer -> Q [Clause]
-mkApply1Clause paramNames n = do
+mkApplyClause :: [Name] -> Integer -> Q [Clause]
+mkApplyClause paramNames n = do
   [f, r, a] <- traverse newName ["f", "r", "a"]
   pure
     [ Clause
@@ -39,14 +39,14 @@ mkApply1Clause paramNames n = do
       []
     ]
 
-mkApply1_2Function :: [Name] -> Q [Dec]
-mkApply1_2Function paramNames  = do
-  clauses <- traverse (mkApply1_2Clause paramNames) [0..pred (fromIntegral (length paramNames))]
-  pure [ FunD apply1_2 (concat clauses ++ [ Clause [ WildP, WildP, WildP, WildP ] (NormalB (ConE 'Nothing)) [] ]) ]
-  where apply1_2 = mkName "apply1_2"
+mkApply2Function :: [Name] -> Q [Dec]
+mkApply2Function paramNames  = do
+  clauses <- traverse (mkApply2Clause paramNames) [0..pred (fromIntegral (length paramNames))]
+  pure [ FunD apply2 (concat clauses ++ [ Clause [ WildP, WildP, WildP, WildP ] (NormalB (ConE 'Nothing)) [] ]) ]
+  where apply2 = mkName "apply2"
 
-mkApply1_2Clause :: [Name] -> Integer -> Q [Clause]
-mkApply1_2Clause paramNames n = do
+mkApply2Clause :: [Name] -> Integer -> Q [Clause]
+mkApply2Clause paramNames n = do
   [f, r1, r2, a] <- traverse newName ["f", "r1", "r2", "a"]
   pure
     [ Clause

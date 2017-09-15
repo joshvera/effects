@@ -47,7 +47,7 @@ module Data.Union (
   type(:<),
   type(:<:),
   MemberU2,
-  Apply1(..)
+  Apply(..)
 ) where
 
 import Data.Functor.Classes (Eq1(..), Show1(..))
@@ -132,12 +132,12 @@ instance {-# OVERLAPPING #-} t :< r => t :< (t' ': r) where
 
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
-class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
-  apply1 :: proxy c -> (forall g . (c g, g :< fs) => g a -> b) -> Union fs a -> b
+class Apply (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
+  apply :: proxy c -> (forall g . (c g, g :< fs) => g a -> b) -> Union fs a -> b
 
-  apply1_2 :: proxy c -> (forall g . (c g, g :< fs) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
+  apply2 :: proxy c -> (forall g . (c g, g :< fs) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 
-mkApply1Instances [1..150]
+mkApplyInstances [1..150]
 
 
 type family EQU (a :: k) (b :: k) :: Bool where
@@ -155,24 +155,24 @@ instance MemberU' 'True tag (tag e) (tag e ': r)
 instance (t :< (t' ': r), MemberU2 tag t r) =>
            MemberU' 'False tag t (t' ': r)
 
-instance Apply1 Foldable fs => Foldable (Union fs) where
-  foldMap f u = apply1 (Proxy :: Proxy Foldable) (foldMap f) u
+instance Apply Foldable fs => Foldable (Union fs) where
+  foldMap f u = apply (Proxy :: Proxy Foldable) (foldMap f) u
 
-instance Apply1 Functor fs => Functor (Union fs) where
-  fmap f u = apply1 (Proxy :: Proxy Functor) (inj . fmap f) u
+instance Apply Functor fs => Functor (Union fs) where
+  fmap f u = apply (Proxy :: Proxy Functor) (inj . fmap f) u
 
-instance (Apply1 Foldable fs, Apply1 Functor fs, Apply1 Traversable fs) => Traversable (Union fs) where
-  traverse f u = apply1 (Proxy :: Proxy Traversable) (fmap inj . traverse f) u
+instance (Apply Foldable fs, Apply Functor fs, Apply Traversable fs) => Traversable (Union fs) where
+  traverse f u = apply (Proxy :: Proxy Traversable) (fmap inj . traverse f) u
 
-instance (Apply1 Eq1 fs, Eq a) => Eq (Union fs a) where
-  u1 == u2 = fromMaybe False (apply1_2 (Proxy :: Proxy Eq1) (liftEq (==)) u1 u2)
+instance (Apply Eq1 fs, Eq a) => Eq (Union fs a) where
+  u1 == u2 = fromMaybe False (apply2 (Proxy :: Proxy Eq1) (liftEq (==)) u1 u2)
 
-instance (Apply1 Show1 fs, Show a) => Show (Union fs a) where
-  showsPrec d u = apply1 (Proxy :: Proxy Show1) (liftShowsPrec showsPrec showList d) u
+instance (Apply Show1 fs, Show a) => Show (Union fs a) where
+  showsPrec d u = apply (Proxy :: Proxy Show1) (liftShowsPrec showsPrec showList d) u
 
-instance Apply1 Eq1 fs => Eq1 (Union fs) where
-  liftEq eq u1 u2 = fromMaybe False (apply1_2 (Proxy :: Proxy Eq1) (liftEq eq) u1 u2)
+instance Apply Eq1 fs => Eq1 (Union fs) where
+  liftEq eq u1 u2 = fromMaybe False (apply2 (Proxy :: Proxy Eq1) (liftEq eq) u1 u2)
 
 
-instance Apply1 Show1 fs => Show1 (Union fs) where
-  liftShowsPrec sp sl d u = apply1 (Proxy :: Proxy Show1) (liftShowsPrec sp sl d) u
+instance Apply Show1 fs => Show1 (Union fs) where
+  liftShowsPrec sp sl d u = apply (Proxy :: Proxy Show1) (liftShowsPrec sp sl d) u
