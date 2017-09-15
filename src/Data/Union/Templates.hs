@@ -40,19 +40,17 @@ mkApplyFunction paramNames = do
 
 mkApply2Function :: [Name] -> Q [Dec]
 mkApply2Function paramNames  = do
-  clauses <- traverse (mkApply2Clause paramNames) [0..pred (fromIntegral (length paramNames))]
-  pure [ FunD apply2 (concat clauses ++ [ Clause [ WildP, WildP, WildP, WildP ] (NormalB (ConE 'Nothing)) [] ]) ]
-  where apply2 = mkName "apply2"
-
-mkApply2Clause :: [Name] -> Integer -> Q [Clause]
-mkApply2Clause paramNames n = do
-  [f, r1, r2, a] <- traverse newName ["f", "r1", "r2", "a"]
+  [f, n1, n2, r1, r2, a] <- traverse newName ["f", "n1", "n2", "r1", "r2", "a"]
+  let mkGuarded n = (PatG [BindS (LitP (IntegerL n)) (VarE n1), BindS (LitP (IntegerL n)) (VarE n2)], (AppE (ConE 'Just) (AppE (AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r1)) (AppT (VarT (paramNames !! fromIntegral n)) (VarT a)))) (AppE (VarE 'unsafeCoerce) (VarE r2)))))
   pure
-    [ Clause
-      [ WildP, VarP f, ConP union [ LitP (IntegerL n), VarP r1 ], ConP union [ LitP (IntegerL n), VarP r2 ] ]
-      (NormalB (AppE (ConE 'Just) (AppE (AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r1)) (AppT (VarT (paramNames !! fromIntegral n)) (VarT a)))) (AppE (VarE 'unsafeCoerce) (VarE r2)))))
-      []
+    [ FunD apply2
+      [ Clause
+        [ WildP, VarP f, ConP union [ VarP n1, VarP r1 ], ConP union [ VarP n2, VarP r2 ] ]
+        (GuardedB ((mkGuarded <$> [0..pred (fromIntegral (length paramNames))]) ++ [ (NormalG (VarE 'otherwise), ConE 'Nothing) ]))
+        []
+      ]
     ]
+  where apply2 = mkName "apply2"
 
 union :: Name
 union = mkName "Union"
