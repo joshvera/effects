@@ -55,7 +55,7 @@ mkApply1Instance :: Integer -> Q [Dec]
 mkApply1Instance paramN = do
   [c, f, n1, n2, r1, r2, a, u1, u2, proxy] <- traverse newName ["c", "f", "n1", "n2", "r1", "r2", "a", "u1", "u2", "proxy"]
   params <- replicateM (fromIntegral paramN) (newName "f")
-  apply1'D <- mkApply1'Function params [0..pred paramN]
+  apply1'D <- mkApply1'Function params
   pure
     [ InstanceD Nothing (AppT (VarT c) . VarT <$> params) (AppT (AppT (ConT apply1) (VarT c)) (foldr (AppT . AppT PromotedConsT . VarT) PromotedNilT params))
       (apply1'D ++
@@ -77,9 +77,9 @@ mkApply1Instance paramN = do
   where apply1 = mkName "Apply1"
         apply1_2' = mkName "apply1_2'"
 
-mkApply1'Function :: [Name] -> [Integer] -> Q [Dec]
-mkApply1'Function paramNames paramN = do
-  clauses <- traverse (mkApply1'Clause paramNames) paramN
+mkApply1'Function :: [Name] -> Q [Dec]
+mkApply1'Function paramNames = do
+  clauses <- traverse (mkApply1'Clause paramNames) [0..pred (fromIntegral (length paramNames))]
   pure [ FunD apply1' (concat clauses) ]
   where apply1' = mkName "apply1'"
 
