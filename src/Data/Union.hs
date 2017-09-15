@@ -124,7 +124,7 @@ weaken (Union n v) = Union (n+1) v
 
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
-class (t :: * -> *) :< r where
+class (t :: k -> *) :< (r :: [k -> *]) where
   elemNo :: P t r
 
 instance {-# OVERLAPPING #-} t :< (t ': r) where
