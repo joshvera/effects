@@ -25,19 +25,18 @@ mkApplyInstance paramN = do
 
 mkApplyFunction :: [Name] -> Q [Dec]
 mkApplyFunction paramNames = do
-  clauses <- traverse (mkApplyClause paramNames) [0..pred (fromIntegral (length paramNames))]
-  pure [ FunD apply (concat clauses) ]
+  [f, n, r, a] <- traverse newName ["f", "n", "r", "a"]
+  let mkGuarded n' = (PatG [BindS (LitP (IntegerL n')) (VarE n)], AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r)) (AppT (VarT (paramNames !! fromIntegral n')) (VarT a))))
+  pure
+    [ FunD apply
+      [ Clause
+        [ WildP, VarP f, ConP union [ VarP n, VarP r ] ]
+        (GuardedB (mkGuarded <$> [0..pred (fromIntegral (length paramNames))]))
+        []
+      ]
+    ]
   where apply = mkName "apply"
 
-mkApplyClause :: [Name] -> Integer -> Q [Clause]
-mkApplyClause paramNames n = do
-  [f, r, a] <- traverse newName ["f", "r", "a"]
-  pure
-    [ Clause
-      [ WildP, VarP f, ConP union [ LitP (IntegerL n), VarP r ] ]
-      (NormalB (AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r)) (AppT (VarT (paramNames !! fromIntegral n)) (VarT a)))))
-      []
-    ]
 
 mkApply2Function :: [Name] -> Q [Dec]
 mkApply2Function paramNames  = do
