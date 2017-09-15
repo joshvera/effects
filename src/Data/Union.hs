@@ -144,12 +144,7 @@ apply0 proxy f = apply0' proxy (const f)
 apply0_2 :: Apply0 c fs a => proxy c -> (forall g . c (g a) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 apply0_2 proxy f = apply0_2' proxy (const f)
 
-instance (c (f0 a)) => Apply0 c '[f0] a where
-  apply0' _ f (Union _ r) = f (Union 0) (unsafeCoerce r :: f0 a)
-
-  apply0_2' _ f (Union _ r1) (Union _ r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-
-mkApply0Instances [2..55]
+mkApply0Instances [1..55]
 
 
 class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
