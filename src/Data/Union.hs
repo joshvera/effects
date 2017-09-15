@@ -158,12 +158,7 @@ class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
   apply1_2 :: proxy c -> (forall g . (c g, g :< fs) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 
 
-instance (c f0) => Apply1 c '[f0] where
-  apply1 _ f (Union _ r) = f (unsafeCoerce r :: f0 a)
-
-  apply1_2 _ f (Union _ r1) (Union _ r2) = Just (f (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-
-mkApply1Instances [2..55]
+mkApply1Instances [1..55]
 
 
 type family EQU (a :: k) (b :: k) :: Bool where
