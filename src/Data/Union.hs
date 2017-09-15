@@ -138,7 +138,7 @@ class Apply0 (c :: * -> Constraint) (fs :: [k -> *]) (a :: k) where
 
   apply0_2 :: proxy c -> (forall g . c (g a) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 
-mkApply0Instances [1..55]
+mkApply0Instances [1..150]
 
 
 class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
@@ -147,7 +147,7 @@ class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
   apply1_2 :: proxy c -> (forall g . (c g, g :< fs) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 
 
-mkApply1Instances [1..55]
+mkApply1Instances [1..150]
 
 
 type family EQU (a :: k) (b :: k) :: Bool where
