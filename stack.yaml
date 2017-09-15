@@ -3,4 +3,4 @@ extra-package-dbs: []
 packages:
 - '.'
 extra-deps: []
-resolver: lts-6.10
+resolver: nightly-2017-09-10
