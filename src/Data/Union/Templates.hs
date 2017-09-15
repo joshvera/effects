@@ -45,7 +45,7 @@ mkApply0'Clause paramNames n = do
 mkApply0_2'Function :: [Name] -> Q [Dec]
 mkApply0_2'Function paramNames  = do
   clauses <- traverse (mkApply0_2'Clause paramNames) [0..pred (fromIntegral (length paramNames))]
-  pure [ FunD apply0_2' (concat clauses) ]
+  pure [ FunD apply0_2' (concat clauses ++ [ Clause [ WildP, WildP, WildP, WildP ] (NormalB (ConE 'Nothing)) [] ]) ]
   where apply0_2' = mkName "apply0_2'"
 
 mkApply0_2'Clause :: [Name] -> Integer -> Q [Clause]
@@ -93,7 +93,7 @@ mkApply1'Clause paramNames n = do
 mkApply1_2'Function :: [Name] -> Q [Dec]
 mkApply1_2'Function paramNames  = do
   clauses <- traverse (mkApply1_2'Clause paramNames) [0..pred (fromIntegral (length paramNames))]
-  pure [ FunD apply1_2' (concat clauses) ]
+  pure [ FunD apply1_2' (concat clauses ++ [ Clause [ WildP, WildP, WildP, WildP ] (NormalB (ConE 'Nothing)) [] ]) ]
   where apply1_2' = mkName "apply1_2'"
 
 mkApply1_2'Clause :: [Name] -> Integer -> Q [Clause]
