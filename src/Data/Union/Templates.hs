@@ -48,26 +48,18 @@ mkApply0Instance paramN = do
         apply0' = mkName "apply0'"
         apply0_2' = mkName "apply0_2'"
 
-mkApply1Instances :: [Int] -> Q [Dec]
+mkApply1Instances :: [Integer] -> Q [Dec]
 mkApply1Instances = fmap concat . traverse mkApply1Instance
 
-mkApply1Instance :: Int -> Q [Dec]
+mkApply1Instance :: Integer -> Q [Dec]
 mkApply1Instance paramN = do
-  [c, f, n, n1, n2, r, r1, r2, a, u, u1, u2, proxy] <- traverse newName ["c", "f", "n", "n1", "n2", "r", "r1", "r2", "a", "u", "u1", "u2", "proxy"]
-  params <- replicateM paramN (newName "f")
+  [c, f, n1, n2, r1, r2, a, u1, u2, proxy] <- traverse newName ["c", "f", "n1", "n2", "r1", "r2", "a", "u1", "u2", "proxy"]
+  params <- replicateM (fromIntegral paramN) (newName "f")
+  apply1'D <- mkApply1Function params [0..pred paramN]
   pure
     [ InstanceD Nothing (AppT (VarT c) . VarT <$> params) (AppT (AppT (ConT apply1) (VarT c)) (foldr (AppT . AppT PromotedConsT . VarT) PromotedNilT params))
-      [ FunD apply1'
-        [ Clause
-          [ WildP, VarP f, ConP union [ LitP (IntegerL 0), VarP r ] ]
-          (NormalB (AppE (AppE (VarE f) (AppE (ConE union) (LitE (IntegerL 0)))) (SigE (AppE (VarE 'unsafeCoerce) (VarE r)) (AppT (VarT (head params)) (VarT a)))))
-          []
-        , Clause
-          [ VarP proxy, VarP f, AsP u (ConP union [ VarP n, VarP r ]) ]
-          (NormalB (AppE (AppE (AppE (VarE apply1') (VarE proxy)) (LamE [WildP] (AppE (VarE f) (AppE (ConE union) (VarE n))))) (AppE (AppE (VarE asStrongerUnionTypeOf) (AppE (AppE (ConE union) (AppE (VarE 'pred) (VarE n))) (VarE r))) (VarE u))))
-          []
-        ]
-      , FunD apply1_2'
+      (apply1'D ++
+      [ FunD apply1_2'
         [ Clause
           [ WildP, VarP f, ConP union [ LitP (IntegerL 0), VarP r1 ], ConP union [ LitP (IntegerL 0), VarP r2 ] ]
           (NormalB (AppE (ConE 'Just) (AppE (AppE (AppE (VarE f) (AppE (ConE union) (LitE (IntegerL 0)))) (SigE (AppE (VarE 'unsafeCoerce) (VarE r1)) (AppT (VarT (head params)) (VarT a)))) (AppE (VarE 'unsafeCoerce) (VarE r2)))))
@@ -80,11 +72,26 @@ mkApply1Instance paramN = do
             ])
           []
         ]
-      ]
+      ])
     ]
   where apply1 = mkName "Apply1"
-        apply1' = mkName "apply1'"
         apply1_2' = mkName "apply1_2'"
+
+mkApply1Function :: [Name] -> [Integer] -> Q [Dec]
+mkApply1Function paramNames paramN = do
+  clauses <- traverse (mkApply1Clause paramNames) paramN
+  pure [ FunD apply1' (concat clauses) ]
+  where apply1' = mkName "apply1'"
+
+mkApply1Clause :: [Name] -> Integer -> Q [Clause]
+mkApply1Clause paramNames n = do
+  [f, r, a] <- traverse newName ["f", "r", "a"]
+  pure
+    [ Clause
+      [ WildP, VarP f, ConP union [ LitP (IntegerL n), VarP r ] ]
+      (NormalB (AppE (AppE (VarE f) (AppE (ConE union) (LitE (IntegerL n)))) (SigE (AppE (VarE 'unsafeCoerce) (VarE r)) (AppT (VarT (paramNames !! fromIntegral n)) (VarT a)))))
+      []
+    ]
 
 union :: Name
 union = mkName "Union"
