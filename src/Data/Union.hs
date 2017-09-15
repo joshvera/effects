@@ -50,7 +50,7 @@ module Data.Union (
   Apply(..)
 ) where
 
-import Data.Functor.Classes (Eq1(..), Show1(..))
+import Data.Functor.Classes (Eq1(..), eq1, Show1(..), showsPrec1)
 import Data.Maybe (fromMaybe)
 import Data.Proxy
 import Data.Union.Templates
@@ -164,15 +164,16 @@ instance Apply Functor fs => Functor (Union fs) where
 instance (Apply Foldable fs, Apply Functor fs, Apply Traversable fs) => Traversable (Union fs) where
   traverse f u = apply (Proxy :: Proxy Traversable) (fmap inj . traverse f) u
 
-instance (Apply Eq1 fs, Eq a) => Eq (Union fs a) where
-  u1 == u2 = fromMaybe False (apply2 (Proxy :: Proxy Eq1) (liftEq (==)) u1 u2)
-
-instance (Apply Show1 fs, Show a) => Show (Union fs a) where
-  showsPrec d u = apply (Proxy :: Proxy Show1) (liftShowsPrec showsPrec showList d) u
 
 instance Apply Eq1 fs => Eq1 (Union fs) where
   liftEq eq u1 u2 = fromMaybe False (apply2 (Proxy :: Proxy Eq1) (liftEq eq) u1 u2)
 
+instance (Apply Eq1 fs, Eq a) => Eq (Union fs a) where
+  (==) = eq1
+
 
 instance Apply Show1 fs => Show1 (Union fs) where
   liftShowsPrec sp sl d u = apply (Proxy :: Proxy Show1) (liftShowsPrec sp sl d) u
+
+instance (Apply Show1 fs, Show a) => Show (Union fs a) where
+  showsPrec = showsPrec1
