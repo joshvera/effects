@@ -19,7 +19,7 @@ mkApplyFunction typeParams =
   FunD apply
     [ Clause
       [ WildP, VarP f, ConP union [ VarP n, VarP r ] ]
-      (NormalB (CaseE (VarE n) (zipWith mkMatch [0..] typeParams)))
+      (NormalB (CaseE (VarE n) (zipWith mkMatch [0..] typeParams ++ [ Match WildP (NormalB (AppE (VarE 'error) (InfixE (Just (LitE (StringL "index "))) (VarE '(++)) (Just (InfixE (Just (AppE (VarE 'show) (VarE n))) (VarE '(++)) (Just (LitE (StringL (" out of union bounds (" ++ show (length typeParams) ++ ")"))))))))) [] ])))
       []
     ]
   where mkMatch i nthType = Match (LitP (IntegerL i)) (NormalB (AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r)) (AppT nthType (VarT a))))) []
