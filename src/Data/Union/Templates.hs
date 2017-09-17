@@ -24,7 +24,7 @@ mkApplyInstance paramN = do
   where apply = mkName "Apply"
 
 mkApplyFunction :: [Type] -> Q [Dec]
-mkApplyFunction typeParams = do
+mkApplyFunction typeParams =
   pure
     [ FunD apply
       [ Clause
