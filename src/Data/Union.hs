@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ConstraintKinds, DataKinds, PolyKinds #-}
+{-# LANGUAGE ConstraintKinds, DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
@@ -62,7 +62,7 @@ infixr 5 :<
 -- t is can be a GADT and hence not necessarily a Functor.
 -- Int is the index of t in the list r; that is, the index of t in the
 -- universe r.
-data Union (r :: [ k -> * ]) (v :: k) where
+data Union (r :: [ * -> * ]) (v :: *) where
   Union :: {-# UNPACK #-} !Int -> t v -> Union r v
 
 {-# INLINE prj' #-}
@@ -131,7 +131,7 @@ instance {-# OVERLAPPING #-} t :< r => t :< (t' ': r) where
 
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
-class Apply (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
+class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
   apply :: proxy c -> (forall g . (c g, g :< fs) => g a -> b) -> Union fs a -> b
 
   apply2 :: proxy c -> (forall g . (c g, g :< fs) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
@@ -139,16 +139,16 @@ class Apply (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
 mkApplyInstances [1..150]
 
 
-type family EQU (a :: k) (b :: k) :: Bool where
+type family EQU (a :: * -> *) (b :: * -> *) :: Bool where
   EQU a a = 'True
   EQU a b = 'False
 
 -- This class is used for emulating monad transformers
-class (t :< r) => MemberU2 (tag :: k -> * -> *) (t :: * -> *) r | tag r -> t
+class (t :< r) => MemberU2 (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
 instance (t1 :< r, MemberU' (EQU t1 t2) tag t1 (t2 ': r)) => MemberU2 tag t1 (t2 ': r)
 
 class (t :< r) =>
-      MemberU' (f::Bool) (tag :: k -> * -> *) (t :: * -> *) r | tag r -> t
+      MemberU' (f::Bool) (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
 
 instance MemberU' 'True tag (tag e) (tag e ': r)
 instance (t :< (t' ': r), MemberU2 tag t r) =>
