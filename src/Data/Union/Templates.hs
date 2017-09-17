@@ -4,7 +4,6 @@ module Data.Union.Templates
 , mkApplyInstances
 ) where
 
-import Control.Monad
 import Language.Haskell.TH
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -12,14 +11,13 @@ mkApplyInstances :: [Integer] -> Q [Dec]
 mkApplyInstances = fmap concat . traverse mkApplyInstance
 
 mkApplyInstance :: Integer -> Q [Dec]
-mkApplyInstance paramN = do
-  c <- newName "c"
-  typeParams <- map VarT <$> replicateM (fromIntegral paramN) (newName "f")
+mkApplyInstance paramN =
   pure
-    [ InstanceD Nothing (AppT (VarT c) <$> typeParams) (AppT (AppT (ConT apply) (VarT c)) (foldr (AppT . AppT PromotedConsT) PromotedNilT typeParams))
+    [ InstanceD Nothing (AppT (VarT constraint) <$> typeParams) (AppT (AppT (ConT apply) (VarT constraint)) (foldr (AppT . AppT PromotedConsT) PromotedNilT typeParams))
       [mkApplyFunction typeParams, mkApply2Function typeParams]
     ]
-  where apply = mkName "Apply"
+  where (apply, constraint) = (mkName "Apply", mkName "constraint")
+        typeParams = VarT . mkName . ('f' :) . show <$> [0..pred paramN]
 
 mkApplyFunction :: [Type] -> Dec
 mkApplyFunction typeParams =
