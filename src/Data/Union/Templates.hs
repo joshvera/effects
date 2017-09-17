@@ -26,7 +26,7 @@ mkApplyInstance paramN = do
 mkApplyFunction :: [Name] -> Q [Dec]
 mkApplyFunction paramNames = do
   [f, n, r, a] <- traverse newName ["f", "n", "r", "a"]
-  let mkMatch n' = (Match (LitP (IntegerL n')) (NormalB (AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r)) (AppT (VarT (paramNames !! fromIntegral n')) (VarT a))))) [])
+  let mkMatch n' = Match (LitP (IntegerL n')) (NormalB (AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r)) (AppT (VarT (paramNames !! fromIntegral n')) (VarT a))))) []
   pure
     [ FunD apply
       [ Clause
@@ -41,7 +41,7 @@ mkApplyFunction paramNames = do
 mkApply2Function :: [Name] -> Q [Dec]
 mkApply2Function paramNames  = do
   [f, n1, n2, r1, r2, a] <- traverse newName ["f", "n1", "n2", "r1", "r2", "a"]
-  let mkMatch n = (Match (TupP [LitP (IntegerL n), LitP (IntegerL n)]) (NormalB (AppE (ConE 'Just) (AppE (AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r1)) (AppT (VarT (paramNames !! fromIntegral n)) (VarT a)))) (AppE (VarE 'unsafeCoerce) (VarE r2))))) [])
+  let mkMatch n = Match (TupP [LitP (IntegerL n), LitP (IntegerL n)]) (NormalB (AppE (ConE 'Just) (AppE (AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r1)) (AppT (VarT (paramNames !! fromIntegral n)) (VarT a)))) (AppE (VarE 'unsafeCoerce) (VarE r2))))) []
   pure
     [ FunD apply2
       [ Clause
