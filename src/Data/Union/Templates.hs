@@ -11,7 +11,7 @@ mkApplyInstance paramN =
   InstanceD Nothing (AppT constraint <$> typeParams) (AppT (AppT (ConT applyC) constraint) (foldr (AppT . AppT PromotedConsT) PromotedNilT typeParams))
     [ FunD apply (zipWith mkClause [0..] typeParams) ]
   where typeParams = VarT . mkName . ('f' :) . show <$> [0..pred paramN]
-        [applyC, apply, f, r, union] = mkName <$> ["Apply", "apply", "f", "r", "union"]
+        [applyC, apply, f, r, union] = mkName <$> ["Apply", "apply", "f", "r", "Union"]
         [constraint, a] = VarT . mkName <$> ["constraint", "a"]
         mkClause i nthType = Clause
           [ WildP, VarP f, ConP union [ LitP (IntegerL i), VarP r ] ]
