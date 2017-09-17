@@ -38,17 +38,17 @@ mkApplyFunction typeParams =
 
 
 mkApply2Function :: [Type] -> Q [Dec]
-mkApply2Function typeParams  = do
-  let mkMatch n = Match (TupP [LitP (IntegerL n), LitP (IntegerL n)]) (NormalB (AppE (ConE 'Just) (AppE (AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r1)) (AppT (typeParams !! fromIntegral n) (VarT a)))) (AppE (VarE 'unsafeCoerce) (VarE r2))))) []
+mkApply2Function typeParams =
   pure
     [ FunD apply2
       [ Clause
         [ WildP, VarP f, ConP union [ VarP n1, VarP r1 ], ConP union [ VarP n2, VarP r2 ] ]
-        (NormalB (CaseE (TupE [ VarE n1, VarE n2 ]) ((mkMatch <$> [0..pred (fromIntegral (length typeParams))]) ++ [ Match WildP (NormalB (ConE 'Nothing)) [] ])))
+        (NormalB (CaseE (TupE [ VarE n1, VarE n2 ]) ((zipWith mkMatch [0..] typeParams) ++ [ Match WildP (NormalB (ConE 'Nothing)) [] ])))
         []
       ]
     ]
-  where [apply2, f, n1, n2, r1, r2, a] = mkName <$> ["apply2", "f", "n1", "n2", "r1", "r2", "a"]
+  where mkMatch i nthType = Match (TupP [LitP (IntegerL i), LitP (IntegerL i)]) (NormalB (AppE (ConE 'Just) (AppE (AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r1)) (AppT nthType (VarT a)))) (AppE (VarE 'unsafeCoerce) (VarE r2))))) []
+        [apply2, f, n1, n2, r1, r2, a] = mkName <$> ["apply2", "f", "n1", "n2", "r1", "r2", "a"]
 
 union :: Name
 union = mkName "Union"
