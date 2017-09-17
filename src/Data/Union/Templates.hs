@@ -33,9 +33,8 @@ mkApplyFunction typeParams = do
         []
       ]
     ]
-  where apply = mkName "apply"
-        mkMatch i nthType = Match (LitP (IntegerL i)) (NormalB (AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r)) (AppT nthType (VarT a))))) []
-        (f, n, r, a) = (mkName "f", mkName "n", mkName "r", mkName "a")
+  where mkMatch i nthType = Match (LitP (IntegerL i)) (NormalB (AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r)) (AppT nthType (VarT a))))) []
+        [apply, f, n, r, a] = mkName <$> ["apply", "f", "n", "r", "a"]
 
 
 mkApply2Function :: [Type] -> Q [Dec]
