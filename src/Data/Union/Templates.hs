@@ -29,7 +29,7 @@ mkApplyFunction typeParams = do
     [ FunD apply
       [ Clause
         [ WildP, VarP f, ConP union [ VarP n, VarP r ] ]
-        (NormalB (CaseE (VarE n) (uncurry mkMatch <$> zip [0..] typeParams)))
+        (NormalB (CaseE (VarE n) (zipWith mkMatch [0..] typeParams)))
         []
       ]
     ]
