@@ -39,7 +39,6 @@ mkApplyFunction typeParams = do
 
 mkApply2Function :: [Type] -> Q [Dec]
 mkApply2Function typeParams  = do
-  [f, n1, n2, r1, r2, a] <- traverse newName ["f", "n1", "n2", "r1", "r2", "a"]
   let mkMatch n = Match (TupP [LitP (IntegerL n), LitP (IntegerL n)]) (NormalB (AppE (ConE 'Just) (AppE (AppE (VarE f) (SigE (AppE (VarE 'unsafeCoerce) (VarE r1)) (AppT (typeParams !! fromIntegral n) (VarT a)))) (AppE (VarE 'unsafeCoerce) (VarE r2))))) []
   pure
     [ FunD apply2
@@ -49,7 +48,7 @@ mkApply2Function typeParams  = do
         []
       ]
     ]
-  where apply2 = mkName "apply2"
+  where [apply2, f, n1, n2, r1, r2, a] = mkName <$> ["apply2", "f", "n1", "n2", "r1", "r2", "a"]
 
 union :: Name
 union = mkName "Union"
