@@ -1,21 +1,16 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Data.Union.Templates
 ( mkApplyInstance
-, mkApplyInstances
 ) where
 
 import Language.Haskell.TH
 import Unsafe.Coerce (unsafeCoerce)
 
-mkApplyInstances :: [Integer] -> Q [Dec]
-mkApplyInstances = fmap concat . traverse mkApplyInstance
 
-mkApplyInstance :: Integer -> Q [Dec]
+mkApplyInstance :: Integer -> Dec
 mkApplyInstance paramN =
-  pure
-    [ InstanceD Nothing (AppT (VarT constraint) <$> typeParams) (AppT (AppT (ConT apply) (VarT constraint)) (foldr (AppT . AppT PromotedConsT) PromotedNilT typeParams))
-      [mkApplyFunction typeParams, mkApply2Function typeParams]
-    ]
+  InstanceD Nothing (AppT (VarT constraint) <$> typeParams) (AppT (AppT (ConT apply) (VarT constraint)) (foldr (AppT . AppT PromotedConsT) PromotedNilT typeParams))
+    [mkApplyFunction typeParams, mkApply2Function typeParams]
   where (apply, constraint) = (mkName "Apply", mkName "constraint")
         typeParams = VarT . mkName . ('f' :) . show <$> [0..pred paramN]
 

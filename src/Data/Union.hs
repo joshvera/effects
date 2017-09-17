@@ -136,7 +136,7 @@ class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
 
   apply2 :: proxy c -> (forall g . (c g, g :< fs) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 
-mkApplyInstances [1..150]
+pure (mkApplyInstance <$> [1..150])
 
 
 type family EQU (a :: * -> *) (b :: * -> *) :: Bool where
