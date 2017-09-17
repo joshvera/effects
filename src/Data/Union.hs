@@ -136,7 +136,7 @@ class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
 
 apply2 :: Apply c fs => proxy c -> (forall g . (c g, g :< fs) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 apply2 proxy f u@(Union n1 _) (Union n2 r2)
-  | n1 == n2  = Just (apply proxy (flip f (unsafeCoerce r2)) u)
+  | n1 == n2  = Just (apply proxy (\ r1 -> f r1 (unsafeCoerce r2)) u)
   | otherwise = Nothing
 
 pure (mkApplyInstance <$> [1..150])
