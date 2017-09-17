@@ -74,7 +74,7 @@ prj' :: Int -> Union r v -> Maybe (t v)
 prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
                     | otherwise = Nothing
 
-newtype P t r = P { unP :: Int }
+newtype P (t :: * -> *) (r :: [* -> *]) = P { unP :: Int }
 
 infixr 5 :<:
 -- | Find a list of members 'm' in an open union 'r'.
@@ -120,7 +120,7 @@ weaken (Union n v) = Union (n+1) v
 
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
-class (t :: k -> *) :< (r :: [k -> *]) where
+class (t :: * -> *) :< (r :: [* -> *]) where
   elemNo :: P t r
 
 instance {-# OVERLAPPING #-} t :< (t ': r) where
