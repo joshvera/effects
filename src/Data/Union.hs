@@ -46,7 +46,10 @@ module Data.Union (
   type(:<),
   type(:<:),
   MemberU2,
-  Apply(..)
+  Apply(..),
+  apply',
+  apply2,
+  apply2'
 ) where
 
 import Data.Functor.Classes (Eq1(..), eq1, Show1(..), showsPrec1)
@@ -132,11 +135,19 @@ instance {-# OVERLAPPING #-} t :< r => t :< (t' ': r) where
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
 class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
-  apply :: proxy c -> (forall g . (c g, g :< fs) => g a -> b) -> Union fs a -> b
+  apply :: proxy c -> (forall g . c g => g a -> b) -> Union fs a -> b
 
-apply2 :: Apply c fs => proxy c -> (forall g . (c g, g :< fs) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
+apply' :: Apply c fs => proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> b) -> Union fs a -> b
+apply' proxy f u@(Union n _) = apply proxy (\ r -> f (Union n) r) u
+
+apply2 :: Apply c fs => proxy c -> (forall g . c g => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 apply2 proxy f u@(Union n1 _) (Union n2 r2)
   | n1 == n2  = Just (apply proxy (\ r1 -> f r1 (unsafeCoerce r2)) u)
+  | otherwise = Nothing
+
+apply2' :: Apply c fs => proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
+apply2' proxy f u@(Union n1 _) (Union n2 r2)
+  | n1 == n2  = Just (apply' proxy (\ reinj r1 -> f reinj r1 (unsafeCoerce r2)) u)
   | otherwise = Nothing
 
 pure (mkApplyInstance <$> [1..150])
@@ -161,10 +172,10 @@ instance Apply Foldable fs => Foldable (Union fs) where
   foldMap f u = apply (Proxy :: Proxy Foldable) (foldMap f) u
 
 instance Apply Functor fs => Functor (Union fs) where
-  fmap f u = apply (Proxy :: Proxy Functor) (inj . fmap f) u
+  fmap f u = apply' (Proxy :: Proxy Functor) (\ reinj -> reinj . fmap f) u
 
 instance (Apply Foldable fs, Apply Functor fs, Apply Traversable fs) => Traversable (Union fs) where
-  traverse f u = apply (Proxy :: Proxy Traversable) (fmap inj . traverse f) u
+  traverse f u = apply' (Proxy :: Proxy Traversable) (\ reinj -> fmap reinj . traverse f) u
 
 
 instance Apply Eq1 fs => Eq1 (Union fs) where
