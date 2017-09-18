@@ -1,10 +1,9 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DataKinds, PolyKinds #-}
+{-# LANGUAGE ConstraintKinds, DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
@@ -47,13 +46,13 @@ module Data.Union (
   type(:<),
   type(:<:),
   MemberU2,
-  Apply0(..),
-  apply1,
-  apply1_2,
-  Apply1(..)
+  Apply(..),
+  apply',
+  apply2,
+  apply2'
 ) where
 
-import Data.Functor.Classes (Eq1(..), Show1(..))
+import Data.Functor.Classes (Eq1(..), eq1, Show1(..), showsPrec1)
 import Data.Maybe (fromMaybe)
 import Data.Proxy
 import Data.Union.Templates
@@ -66,7 +65,7 @@ infixr 5 :<
 -- t is can be a GADT and hence not necessarily a Functor.
 -- Int is the index of t in the list r; that is, the index of t in the
 -- universe r.
-data Union (r :: [ k -> * ]) (v :: k) where
+data Union (r :: [ * -> * ]) (v :: *) where
   Union :: {-# UNPACK #-} !Int -> t v -> Union r v
 
 {-# INLINE prj' #-}
@@ -78,7 +77,7 @@ prj' :: Int -> Union r v -> Maybe (t v)
 prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
                     | otherwise = Nothing
 
-newtype P t r = P { unP :: Int }
+newtype P (t :: * -> *) (r :: [* -> *]) = P { unP :: Int }
 
 infixr 5 :<:
 -- | Find a list of members 'm' in an open union 'r'.
@@ -122,12 +121,9 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
 
-asStrongerUnionTypeOf :: Union fs a -> Union (f ': fs) a -> Union fs a
-asStrongerUnionTypeOf = const
-
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
-class (t :: * -> *) :< r where
+class (t :: * -> *) :< (r :: [* -> *]) where
   elemNo :: P t r
 
 instance {-# OVERLAPPING #-} t :< (t ': r) where
@@ -138,78 +134,59 @@ instance {-# OVERLAPPING #-} t :< r => t :< (t' ': r) where
 
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
-class Apply0 (c :: * -> Constraint) (fs :: [k -> *]) (a :: k) where
-  apply0' :: proxy c -> (forall g . c (g a) => (forall x. g x -> Union fs x) -> g a -> b) -> Union fs a -> b
+class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
+  apply :: proxy c -> (forall g . c g => g a -> b) -> Union fs a -> b
 
-  apply0_2' :: proxy c -> (forall g . c (g a) => (forall x. g x -> Union fs x) -> g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
+apply' :: Apply c fs => proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> b) -> Union fs a -> b
+apply' proxy f u@(Union n _) = apply proxy (\ r -> f (Union n) r) u
 
-apply0 :: Apply0 c fs a => proxy c -> (forall g . c (g a) => g a -> b) -> Union fs a -> b
-apply0 proxy f = apply0' proxy (const f)
+apply2 :: Apply c fs => proxy c -> (forall g . c g => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
+apply2 proxy f u@(Union n1 _) (Union n2 r2)
+  | n1 == n2  = Just (apply proxy (\ r1 -> f r1 (unsafeCoerce r2)) u)
+  | otherwise = Nothing
 
-apply0_2 :: Apply0 c fs a => proxy c -> (forall g . c (g a) => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
-apply0_2 proxy f = apply0_2' proxy (const f)
+apply2' :: Apply c fs => proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
+apply2' proxy f u@(Union n1 _) (Union n2 r2)
+  | n1 == n2  = Just (apply' proxy (\ reinj r1 -> f reinj r1 (unsafeCoerce r2)) u)
+  | otherwise = Nothing
 
-instance (c (f0 a)) => Apply0 c '[f0] a where
-  apply0' _ f (Union _ r) = f (Union 0) (unsafeCoerce r :: f0 a)
-
-  apply0_2' _ f (Union _ r1) (Union _ r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-
-mkApply0Instances [2..55]
-
-
-class Apply1 (c :: (k -> *) -> Constraint) (fs :: [k -> *]) where
-  apply1' :: proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> b) -> Union fs a -> b
-
-  apply1_2' :: proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
-
-apply1 :: Apply1 c fs => proxy c -> (forall g . c g => g a -> b) -> Union fs a -> b
-apply1 proxy f = apply1' proxy (const f)
-
-apply1_2 :: Apply1 c fs => proxy c -> (forall g . c g => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
-apply1_2 proxy f = apply1_2' proxy (const f)
+pure (mkApplyInstance <$> [1..150])
 
 
-instance (c f0) => Apply1 c '[f0] where
-  apply1' _ f (Union _ r) = f (Union 0) (unsafeCoerce r :: f0 a)
-
-  apply1_2' _ f (Union _ r1) (Union _ r2) = Just (f (Union 0) (unsafeCoerce r1 :: f0 a) (unsafeCoerce r2))
-
-mkApply1Instances [2..55]
-
-
-type family EQU (a :: k) (b :: k) :: Bool where
+type family EQU (a :: * -> *) (b :: * -> *) :: Bool where
   EQU a a = 'True
   EQU a b = 'False
 
 -- This class is used for emulating monad transformers
-class (t :< r) => MemberU2 (tag :: k -> * -> *) (t :: * -> *) r | tag r -> t
+class (t :< r) => MemberU2 (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
 instance (t1 :< r, MemberU' (EQU t1 t2) tag t1 (t2 ': r)) => MemberU2 tag t1 (t2 ': r)
 
 class (t :< r) =>
-      MemberU' (f::Bool) (tag :: k -> * -> *) (t :: * -> *) r | tag r -> t
+      MemberU' (f::Bool) (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
 
 instance MemberU' 'True tag (tag e) (tag e ': r)
 instance (t :< (t' ': r), MemberU2 tag t r) =>
            MemberU' 'False tag t (t' ': r)
 
-instance Apply1 Foldable fs => Foldable (Union fs) where
-  foldMap f u = apply1 (Proxy :: Proxy Foldable) (foldMap f) u
+instance Apply Foldable fs => Foldable (Union fs) where
+  foldMap f u = apply (Proxy :: Proxy Foldable) (foldMap f) u
 
-instance Apply1 Functor fs => Functor (Union fs) where
-  fmap f u = apply1' (Proxy :: Proxy Functor) ((. fmap f)) u
+instance Apply Functor fs => Functor (Union fs) where
+  fmap f u = apply' (Proxy :: Proxy Functor) (\ reinj -> reinj . fmap f) u
 
-instance (Apply1 Foldable fs, Apply1 Functor fs, Apply1 Traversable fs) => Traversable (Union fs) where
-  traverse f u = apply1' (Proxy :: Proxy Traversable) ((. traverse f) . fmap) u
-
-instance Apply0 Eq fs a => Eq (Union fs a) where
-  u1 == u2 = fromMaybe False (apply0_2 (Proxy :: Proxy Eq) (==) u1 u2)
-
-instance Apply0 Show fs a => Show (Union fs a) where
-  showsPrec d u = apply0 (Proxy :: Proxy Show) (showsPrec d) u
-
-instance Apply1 Eq1 fs => Eq1 (Union fs) where
-  liftEq eq u1 u2 = fromMaybe False (apply1_2 (Proxy :: Proxy Eq1) (liftEq eq) u1 u2)
+instance (Apply Foldable fs, Apply Functor fs, Apply Traversable fs) => Traversable (Union fs) where
+  traverse f u = apply' (Proxy :: Proxy Traversable) (\ reinj -> fmap reinj . traverse f) u
 
 
-instance Apply1 Show1 fs => Show1 (Union fs) where
-  liftShowsPrec sp sl d u = apply1 (Proxy :: Proxy Show1) (liftShowsPrec sp sl d) u
+instance Apply Eq1 fs => Eq1 (Union fs) where
+  liftEq eq u1 u2 = fromMaybe False (apply2 (Proxy :: Proxy Eq1) (liftEq eq) u1 u2)
+
+instance (Apply Eq1 fs, Eq a) => Eq (Union fs a) where
+  (==) = eq1
+
+
+instance Apply Show1 fs => Show1 (Union fs) where
+  liftShowsPrec sp sl d u = apply (Proxy :: Proxy Show1) (liftShowsPrec sp sl d) u
+
+instance (Apply Show1 fs, Show a) => Show (Union fs a) where
+  showsPrec = showsPrec1
