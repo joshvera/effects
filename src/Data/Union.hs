@@ -52,7 +52,7 @@ module Data.Union (
   apply2'
 ) where
 
-import Data.Functor.Classes (Eq1(..), eq1, Show1(..), showsPrec1)
+import Data.Functor.Classes (Eq1(..), eq1, Ord1(..), compare1, Show1(..), showsPrec1)
 import Data.Maybe (fromMaybe)
 import Data.Proxy
 import Data.Union.Templates
@@ -183,6 +183,13 @@ instance Apply Eq1 fs => Eq1 (Union fs) where
 
 instance (Apply Eq1 fs, Eq a) => Eq (Union fs a) where
   (==) = eq1
+
+
+instance (Apply Eq1 fs, Apply Ord1 fs) => Ord1 (Union fs) where
+  liftCompare compareA u1@(Union n1 _) u2@(Union n2 _) = fromMaybe (compare n1 n2) (apply2 (Proxy :: Proxy Ord1) (liftCompare compareA) u1 u2)
+
+instance (Apply Eq1 fs, Apply Ord1 fs, Ord a) => Ord (Union fs a) where
+  compare = compare1
 
 
 instance Apply Show1 fs => Show1 (Union fs) where
