@@ -126,7 +126,11 @@ weaken (Union n v) = Union (n+1) v
 class (t :: * -> *) :< (r :: [* -> *]) where
   elemNo :: P t r
 
-pure ([1..150] >>= mkElemInstances)
+instance {-# OVERLAPPING #-} t :< (t ': r) where
+  elemNo = P 0
+
+instance {-# OVERLAPPING #-} t :< r => t :< (t' ': r) where
+  elemNo = P $ 1 + unP (elemNo :: P t r)
 
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
