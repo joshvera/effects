@@ -141,9 +141,11 @@ elemNo = P (elemNo' (proxy# :: Proxy# (ElemIndex t r)))
 
 data N = Z | S N
 
-type family ElemIndex (t :: * -> *) (ts :: [* -> *]) :: N where
-  ElemIndex t (t ': _) = 'Z
-  ElemIndex t (_ ': ts) = 'S (ElemIndex t ts)
+type ElemIndex t r = ElemIndex' 'Z t r
+
+type family ElemIndex' (n :: N) (t :: * -> *) (ts :: [* -> *]) :: N where
+  ElemIndex' n t (t ': _) = n
+  ElemIndex' n t (_ ': ts) = ElemIndex' ('S n) t ts
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
 class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
