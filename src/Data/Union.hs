@@ -6,6 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE MagicHash #-}
 
 -- Only for MemberU below, when emulating Monad Transformers
 {-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
@@ -58,6 +59,7 @@ import Data.Proxy
 import Data.Union.Templates
 import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
+import GHC.Prim (Proxy#, proxy#)
 import GHC.TypeLits
 
 infixr 5 :<
@@ -124,19 +126,15 @@ weaken (Union n v) = Union (n+1) v
 
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
-class (t :: * -> *) :< (r :: [* -> *]) where
+class KnownNat (ElemIndex t r) => ((t :: * -> *) :< (r :: [* -> *])) where
   elemNo :: P t r
 
-instance {-# OVERLAPPING #-} t :< (t ': r) where
-  elemNo = P 0
-
-instance {-# OVERLAPPING #-} t :< r => t :< (t' ': r) where
-  elemNo = P $ 1 + unP (elemNo :: P t r)
 type family ElemIndex (t :: * -> *) (ts :: [* -> *]) :: Nat where
   ElemIndex t (t ': _) = 0
   ElemIndex t (_ ': ts) = 1 + ElemIndex t ts
 
-
+instance KnownNat (ElemIndex t r) => (t :< r) where
+  elemNo = P (fromIntegral (natVal' (proxy# :: Proxy# (ElemIndex t r))))
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
 class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
@@ -164,7 +162,7 @@ type family EQU (a :: * -> *) (b :: * -> *) :: Bool where
 
 -- This class is used for emulating monad transformers
 class (t :< r) => MemberU2 (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
-instance (t1 :< r, MemberU' (EQU t1 t2) tag t1 (t2 ': r)) => MemberU2 tag t1 (t2 ': r)
+instance (KnownNat (ElemIndex t1 (t2 ': r)), t1 :< r, MemberU' (EQU t1 t2) tag t1 (t2 ': r)) => MemberU2 tag t1 (t2 ': r)
 
 class (t :< r) =>
       MemberU' (f::Bool) (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
