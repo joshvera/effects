@@ -123,21 +123,21 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
 
-type (t :< r) = Elem (ElemIndex t r)
+type (t :< r) = Elem (ElemIndex t r) t r
 
-class Elem (n :: N) where
-  elemNo' :: Proxy# n -> Int
+class Elem (n :: N) (t :: * -> *) (r :: [* -> *]) where
+  elemNo' :: Proxy# n -> P t r
 
-instance Elem 'Z where
-  elemNo' _ = 0
+instance Elem 'Z t (t ': ts) where
+  elemNo' _ = P 0
 
-instance Elem n => Elem ('S n) where
-  elemNo' _ = 1 + elemNo' (proxy# :: Proxy# n)
+instance Elem n t r => Elem ('S n) t (t' : r) where
+  elemNo' _ = P $ 1 + unP (elemNo' (proxy# :: Proxy# n) :: P t r)
 
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
 elemNo :: forall t r. (t :< r) => P t r
-elemNo = P (elemNo' (proxy# :: Proxy# (ElemIndex t r)))
+elemNo = elemNo' (proxy# :: Proxy# (ElemIndex t r))
 
 data N = Z | S N
 
