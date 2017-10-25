@@ -60,7 +60,6 @@ import Data.Union.Templates
 import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
 import GHC.Prim (Proxy#, proxy#)
-import GHC.TypeLits
 
 infixr 5 :<
 
@@ -124,18 +123,27 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
 
-type (t :< r) = KnownNat (ElemIndex t r)
+type (t :< r) = Elem (ElemIndex t r)
+
+class Elem (n :: N) where
+  elemNo' :: Proxy# n -> Int
+
+instance Elem 'Z where
+  elemNo' _ = 0
+
+instance Elem n => Elem ('S n) where
+  elemNo' _ = 1 + elemNo' (proxy# :: Proxy# n)
 
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
 elemNo :: forall t r. (t :< r) => P t r
-elemNo = P (fromIntegral (natVal' (proxy# :: Proxy# (ElemIndex t r))))
+elemNo = P (elemNo' (proxy# :: Proxy# (ElemIndex t r)))
 
-type ElemIndex t ts = ElemIndex' 0 t ts
+data N = Z | S N
 
-type family ElemIndex' (n :: Nat) (t :: * -> *) (ts :: [* -> *]) :: Nat where
-  ElemIndex' n t (t ': _) = n
-  ElemIndex' n t (_ ': ts) = ElemIndex' (1 + n) t ts
+type family ElemIndex (t :: * -> *) (ts :: [* -> *]) :: N where
+  ElemIndex t (t ': _) = 'Z
+  ElemIndex t (_ ': ts) = 'S (ElemIndex t ts)
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
 class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
@@ -163,7 +171,7 @@ type family EQU (a :: * -> *) (b :: * -> *) :: Bool where
 
 -- This class is used for emulating monad transformers
 class (t :< r) => MemberU2 (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
-instance (KnownNat (ElemIndex t1 (t2 ': r)), t1 :< r, MemberU' (EQU t1 t2) tag t1 (t2 ': r)) => MemberU2 tag t1 (t2 ': r)
+instance (t1 :< r, MemberU' (EQU t1 t2) tag t1 (t2 ': r)) => MemberU2 tag t1 (t2 ': r)
 
 class (t :< r) =>
       MemberU' (f::Bool) (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
