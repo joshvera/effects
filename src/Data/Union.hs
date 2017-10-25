@@ -124,16 +124,17 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
 
-type (t :< r) = KnownNat (ElemIndex t r)
-
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
-elemNo :: forall t r. (t :< r) => P t r
-elemNo = P (fromIntegral (natVal' (proxy# :: Proxy# (ElemIndex t r))))
+class KnownNat (ElemIndex t r) => ((t :: * -> *) :< (r :: [* -> *])) where
+  elemNo :: P t r
 
 type family ElemIndex (t :: * -> *) (ts :: [* -> *]) :: Nat where
   ElemIndex t (t ': _) = 0
   ElemIndex t (_ ': ts) = 1 + ElemIndex t ts
+
+instance KnownNat (ElemIndex t r) => (t :< r) where
+  elemNo = P (fromIntegral (natVal' (proxy# :: Proxy# (ElemIndex t r))))
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
 class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
