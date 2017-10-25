@@ -58,7 +58,6 @@ import Data.Proxy
 import Data.Union.Templates
 import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
-import GHC.TypeLits
 
 infixr 5 :<
 
@@ -132,10 +131,6 @@ instance {-# OVERLAPPING #-} t :< (t ': r) where
 
 instance {-# OVERLAPPING #-} t :< r => t :< (t' ': r) where
   elemNo = P $ 1 + unP (elemNo :: P t r)
-type family ElemIndex (t :: * -> *) (ts :: [* -> *]) :: Nat where
-  ElemIndex t (t ': _) = 0
-  ElemIndex t (_ ': ts) = 1 + ElemIndex t ts
-
 
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
