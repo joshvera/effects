@@ -131,9 +131,11 @@ type (t :< r) = KnownNat (ElemIndex t r)
 elemNo :: forall t r. (t :< r) => P t r
 elemNo = P (fromIntegral (natVal' (proxy# :: Proxy# (ElemIndex t r))))
 
-type family ElemIndex (t :: * -> *) (ts :: [* -> *]) :: Nat where
-  ElemIndex t (t ': _) = 0
-  ElemIndex t (_ ': ts) = 1 + ElemIndex t ts
+type ElemIndex t ts = ElemIndex' 0 t ts
+
+type family ElemIndex' (n :: Nat) (t :: * -> *) (ts :: [* -> *]) :: Nat where
+  ElemIndex' n t (t ': _) = n
+  ElemIndex' n t (_ ': ts) = ElemIndex' (1 + n) t ts
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
 class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
