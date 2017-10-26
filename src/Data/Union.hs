@@ -173,30 +173,39 @@ instance (t :< (t' ': r), MemberU2 tag t r) =>
 
 instance Apply Foldable fs => Foldable (Union fs) where
   foldMap f u = apply (Proxy :: Proxy Foldable) (foldMap f) u
+  {-# INLINABLE foldMap #-}
 
 instance Apply Functor fs => Functor (Union fs) where
   fmap f u = apply' (Proxy :: Proxy Functor) (\ reinj -> reinj . fmap f) u
+  {-# INLINABLE fmap #-}
 
 instance (Apply Foldable fs, Apply Functor fs, Apply Traversable fs) => Traversable (Union fs) where
   traverse f u = apply' (Proxy :: Proxy Traversable) (\ reinj -> fmap reinj . traverse f) u
+  {-# INLINABLE traverse #-}
 
 
 instance Apply Eq1 fs => Eq1 (Union fs) where
   liftEq eq u1 u2 = fromMaybe False (apply2 (Proxy :: Proxy Eq1) (liftEq eq) u1 u2)
+  {-# INLINABLE liftEq #-}
 
 instance (Apply Eq1 fs, Eq a) => Eq (Union fs a) where
   (==) = eq1
+  {-# INLINABLE (==) #-}
 
 
 instance (Apply Eq1 fs, Apply Ord1 fs) => Ord1 (Union fs) where
   liftCompare compareA u1@(Union n1 _) u2@(Union n2 _) = fromMaybe (compare n1 n2) (apply2 (Proxy :: Proxy Ord1) (liftCompare compareA) u1 u2)
+  {-# INLINABLE liftCompare #-}
 
 instance (Apply Eq1 fs, Apply Ord1 fs, Ord a) => Ord (Union fs a) where
   compare = compare1
+  {-# INLINABLE compare #-}
 
 
 instance Apply Show1 fs => Show1 (Union fs) where
-  liftShowsPrec sp sl d u = apply (Proxy :: Proxy Show1) (liftShowsPrec sp sl d) u
+  liftShowsPrec sp sl d = apply (Proxy :: Proxy Show1) (liftShowsPrec sp sl d)
+  {-# INLINABLE liftShowsPrec #-}
 
 instance (Apply Show1 fs, Show a) => Show (Union fs a) where
   showsPrec = showsPrec1
+  {-# INLINABLE showsPrec #-}
