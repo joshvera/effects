@@ -186,6 +186,9 @@ instance (Apply Foldable fs, Apply Functor fs, Apply Traversable fs) => Traversa
   traverse f = apply' (Proxy :: Proxy Traversable) (\ reinj a -> reinj <$> traverse f a)
   {-# INLINABLE traverse #-}
 
+  sequenceA = apply' (Proxy :: Proxy Traversable) (\ reinj a -> reinj <$> sequenceA a)
+  {-# INLINABLE sequenceA #-}
+
 
 instance Apply Eq1 fs => Eq1 (Union fs) where
   liftEq eq u1 u2 = fromMaybe False (apply2 (Proxy :: Proxy Eq1) (liftEq eq) u1 u2)
