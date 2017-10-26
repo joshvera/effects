@@ -18,7 +18,9 @@ mkElemIndexTypeFamily paramN =
 mkApplyInstance :: Integer -> Dec
 mkApplyInstance paramN =
   InstanceD Nothing (AppT constraint <$> typeParams) (AppT (AppT (ConT applyC) constraint) (typeListT PromotedNilT typeParams))
-    [ FunD apply (zipWith mkClause [0..] typeParams) ]
+    [ FunD apply (zipWith mkClause [0..] typeParams)
+    , PragmaD (InlineP apply Inlinable FunLike AllPhases)
+    ]
   where typeParams = VarT . mkName . ('f' :) . show <$> [0..pred paramN]
         [applyC, apply, f, r, union] = mkName <$> ["Apply", "apply", "f", "r", "Union"]
         [constraint, a] = VarT . mkName <$> ["constraint", "a"]
