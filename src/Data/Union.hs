@@ -175,6 +175,18 @@ instance Apply Foldable fs => Foldable (Union fs) where
   foldMap f = apply (Proxy :: Proxy Foldable) (foldMap f)
   {-# INLINABLE foldMap #-}
 
+  foldr combine seed = apply (Proxy :: Proxy Foldable) (foldr combine seed)
+  {-# INLINABLE foldr #-}
+
+  foldl combine seed = apply (Proxy :: Proxy Foldable) (foldl combine seed)
+  {-# INLINABLE foldl #-}
+
+  null = apply (Proxy :: Proxy Foldable) null
+  {-# INLINABLE null #-}
+
+  length = apply (Proxy :: Proxy Foldable) length
+  {-# INLINABLE length #-}
+
 instance Apply Functor fs => Functor (Union fs) where
   fmap f = apply' (Proxy :: Proxy Functor) (\ reinj a -> reinj (fmap f a))
   {-# INLINABLE fmap #-}
