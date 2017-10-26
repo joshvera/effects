@@ -179,6 +179,9 @@ instance Apply Functor fs => Functor (Union fs) where
   fmap f = apply' (Proxy :: Proxy Functor) (\ reinj a -> reinj (fmap f a))
   {-# INLINABLE fmap #-}
 
+  (<$) v = apply' (Proxy :: Proxy Functor) (\ reinj a -> reinj (v <$ a))
+  {-# INLINABLE (<$) #-}
+
 instance (Apply Foldable fs, Apply Functor fs, Apply Traversable fs) => Traversable (Union fs) where
   traverse f = apply' (Proxy :: Proxy Traversable) (\ reinj a -> reinj <$> traverse f a)
   {-# INLINABLE traverse #-}
