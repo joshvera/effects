@@ -176,11 +176,11 @@ instance Apply Foldable fs => Foldable (Union fs) where
   {-# INLINABLE foldMap #-}
 
 instance Apply Functor fs => Functor (Union fs) where
-  fmap f = apply' (Proxy :: Proxy Functor) (\ reinj -> reinj . fmap f)
+  fmap f = apply' (Proxy :: Proxy Functor) (\ reinj a -> reinj (fmap f a))
   {-# INLINABLE fmap #-}
 
 instance (Apply Foldable fs, Apply Functor fs, Apply Traversable fs) => Traversable (Union fs) where
-  traverse f = apply' (Proxy :: Proxy Traversable) (\ reinj -> fmap reinj . traverse f)
+  traverse f = apply' (Proxy :: Proxy Traversable) (\ reinj a -> reinj <$> traverse f a)
   {-# INLINABLE traverse #-}
 
 
