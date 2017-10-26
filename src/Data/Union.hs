@@ -6,6 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE MagicHash #-}
 
 -- Only for MemberU below, when emulating Monad Transformers
 {-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
@@ -58,6 +59,10 @@ import Data.Proxy
 import Data.Union.Templates
 import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
+import GHC.Prim (Proxy#, proxy#)
+import GHC.TypeLits
+
+pure [mkElemIndexTypeFamily 150]
 
 infixr 5 :<
 
@@ -121,17 +126,12 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
 
+type (t :< r) = KnownNat (ElemIndex t r)
+
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
-class (t :: * -> *) :< (r :: [* -> *]) where
-  elemNo :: P t r
-
-instance {-# OVERLAPPING #-} t :< (t ': r) where
-  elemNo = P 0
-
-instance {-# OVERLAPPING #-} t :< r => t :< (t' ': r) where
-  elemNo = P $ 1 + unP (elemNo :: P t r)
-
+elemNo :: forall t r . (t :< r) => P t r
+elemNo = P (fromIntegral (natVal' (proxy# :: Proxy# (ElemIndex t r))))
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
 class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
