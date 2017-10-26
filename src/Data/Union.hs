@@ -6,6 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE MagicHash #-}
 
 -- Only for MemberU below, when emulating Monad Transformers
 {-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
@@ -58,6 +59,7 @@ import Data.Proxy
 import Data.Union.Templates
 import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
+import GHC.Prim (Proxy#, proxy#)
 import GHC.TypeLits
 
 infixr 5 :<
@@ -127,7 +129,7 @@ type (t :< r) = KnownNat (ElemIndex t r)
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
 elemNo :: forall t r . (t :< r) => P t r
-elemNo = P (fromIntegral (natVal (undefined :: proxy (ElemIndex t r))))
+elemNo = P (fromIntegral (natVal' (proxy# :: Proxy# (ElemIndex t r))))
 
 type family ElemIndex (t :: * -> *) (r :: [* -> *]) :: Nat where
   ElemIndex t0 (t0 ': _) = 0
