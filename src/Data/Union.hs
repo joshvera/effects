@@ -139,16 +139,19 @@ class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
 
 apply' :: Apply c fs => proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> b) -> Union fs a -> b
 apply' proxy f u@(Union n _) = apply proxy (\ r -> f (Union n) r) u
+{-# INLINABLE apply' #-}
 
 apply2 :: Apply c fs => proxy c -> (forall g . c g => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 apply2 proxy f u@(Union n1 _) (Union n2 r2)
   | n1 == n2  = Just (apply proxy (\ r1 -> f r1 (unsafeCoerce r2)) u)
   | otherwise = Nothing
+{-# INLINABLE apply2 #-}
 
 apply2' :: Apply c fs => proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 apply2' proxy f u@(Union n1 _) (Union n2 r2)
   | n1 == n2  = Just (apply' proxy (\ reinj r1 -> f reinj r1 (unsafeCoerce r2)) u)
   | otherwise = Nothing
+{-# INLINABLE apply2' #-}
 
 pure (mkApplyInstance <$> [1..150])
 
