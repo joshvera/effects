@@ -172,15 +172,15 @@ instance (t :< (t' ': r), MemberU2 tag t r) =>
            MemberU' 'False tag t (t' ': r)
 
 instance Apply Foldable fs => Foldable (Union fs) where
-  foldMap f u = apply (Proxy :: Proxy Foldable) (foldMap f) u
+  foldMap f = apply (Proxy :: Proxy Foldable) (foldMap f)
   {-# INLINABLE foldMap #-}
 
 instance Apply Functor fs => Functor (Union fs) where
-  fmap f u = apply' (Proxy :: Proxy Functor) (\ reinj -> reinj . fmap f) u
+  fmap f = apply' (Proxy :: Proxy Functor) (\ reinj -> reinj . fmap f)
   {-# INLINABLE fmap #-}
 
 instance (Apply Foldable fs, Apply Functor fs, Apply Traversable fs) => Traversable (Union fs) where
-  traverse f u = apply' (Proxy :: Proxy Traversable) (\ reinj -> fmap reinj . traverse f) u
+  traverse f = apply' (Proxy :: Proxy Traversable) (\ reinj -> fmap reinj . traverse f)
   {-# INLINABLE traverse #-}
 
 
