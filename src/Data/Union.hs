@@ -139,16 +139,19 @@ class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
 
 apply' :: Apply c fs => proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> b) -> Union fs a -> b
 apply' proxy f u@(Union n _) = apply proxy (\ r -> f (Union n) r) u
+{-# INLINABLE apply' #-}
 
 apply2 :: Apply c fs => proxy c -> (forall g . c g => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 apply2 proxy f u@(Union n1 _) (Union n2 r2)
   | n1 == n2  = Just (apply proxy (\ r1 -> f r1 (unsafeCoerce r2)) u)
   | otherwise = Nothing
+{-# INLINABLE apply2 #-}
 
 apply2' :: Apply c fs => proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
 apply2' proxy f u@(Union n1 _) (Union n2 r2)
   | n1 == n2  = Just (apply' proxy (\ reinj r1 -> f reinj r1 (unsafeCoerce r2)) u)
   | otherwise = Nothing
+{-# INLINABLE apply2' #-}
 
 pure (mkApplyInstance <$> [1..150])
 
@@ -169,31 +172,58 @@ instance (t :< (t' ': r), MemberU2 tag t r) =>
            MemberU' 'False tag t (t' ': r)
 
 instance Apply Foldable fs => Foldable (Union fs) where
-  foldMap f u = apply (Proxy :: Proxy Foldable) (foldMap f) u
+  foldMap f = apply (Proxy :: Proxy Foldable) (foldMap f)
+  {-# INLINABLE foldMap #-}
+
+  foldr combine seed = apply (Proxy :: Proxy Foldable) (foldr combine seed)
+  {-# INLINABLE foldr #-}
+
+  foldl combine seed = apply (Proxy :: Proxy Foldable) (foldl combine seed)
+  {-# INLINABLE foldl #-}
+
+  null = apply (Proxy :: Proxy Foldable) null
+  {-# INLINABLE null #-}
+
+  length = apply (Proxy :: Proxy Foldable) length
+  {-# INLINABLE length #-}
 
 instance Apply Functor fs => Functor (Union fs) where
-  fmap f u = apply' (Proxy :: Proxy Functor) (\ reinj -> reinj . fmap f) u
+  fmap f = apply' (Proxy :: Proxy Functor) (\ reinj a -> reinj (fmap f a))
+  {-# INLINABLE fmap #-}
+
+  (<$) v = apply' (Proxy :: Proxy Functor) (\ reinj a -> reinj (v <$ a))
+  {-# INLINABLE (<$) #-}
 
 instance (Apply Foldable fs, Apply Functor fs, Apply Traversable fs) => Traversable (Union fs) where
-  traverse f u = apply' (Proxy :: Proxy Traversable) (\ reinj -> fmap reinj . traverse f) u
+  traverse f = apply' (Proxy :: Proxy Traversable) (\ reinj a -> reinj <$> traverse f a)
+  {-# INLINABLE traverse #-}
+
+  sequenceA = apply' (Proxy :: Proxy Traversable) (\ reinj a -> reinj <$> sequenceA a)
+  {-# INLINABLE sequenceA #-}
 
 
 instance Apply Eq1 fs => Eq1 (Union fs) where
   liftEq eq u1 u2 = fromMaybe False (apply2 (Proxy :: Proxy Eq1) (liftEq eq) u1 u2)
+  {-# INLINABLE liftEq #-}
 
 instance (Apply Eq1 fs, Eq a) => Eq (Union fs a) where
   (==) = eq1
+  {-# INLINABLE (==) #-}
 
 
 instance (Apply Eq1 fs, Apply Ord1 fs) => Ord1 (Union fs) where
   liftCompare compareA u1@(Union n1 _) u2@(Union n2 _) = fromMaybe (compare n1 n2) (apply2 (Proxy :: Proxy Ord1) (liftCompare compareA) u1 u2)
+  {-# INLINABLE liftCompare #-}
 
 instance (Apply Eq1 fs, Apply Ord1 fs, Ord a) => Ord (Union fs a) where
   compare = compare1
+  {-# INLINABLE compare #-}
 
 
 instance Apply Show1 fs => Show1 (Union fs) where
-  liftShowsPrec sp sl d u = apply (Proxy :: Proxy Show1) (liftShowsPrec sp sl d) u
+  liftShowsPrec sp sl d = apply (Proxy :: Proxy Show1) (liftShowsPrec sp sl d)
+  {-# INLINABLE liftShowsPrec #-}
 
 instance (Apply Show1 fs, Show a) => Show (Union fs a) where
   showsPrec = showsPrec1
+  {-# INLINABLE showsPrec #-}
