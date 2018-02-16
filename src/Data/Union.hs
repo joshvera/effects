@@ -46,6 +46,8 @@ module Data.Union (
   prj,
   type(:<),
   type(:<:),
+  Member,
+  Members,
   MemberU2,
   Apply(..),
   apply',
