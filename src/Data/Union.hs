@@ -46,6 +46,8 @@ module Data.Union (
   prj,
   type(:<),
   type(:<:),
+  Member,
+  Members,
   MemberU2,
   Apply(..),
   apply',
@@ -85,10 +87,12 @@ prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
 newtype P (t :: * -> *) (r :: [* -> *]) = P { unP :: Int }
 
 infixr 5 :<:
--- | Find a list of members 'm' in an open union 'r'.
-type family m :<: r :: Constraint where
-  (t ': c) :<: r = (t :< r, c :<: r)
-  '[] :<: r = ()
+-- | Find a list of members 'ms' in an open union 'r'.
+type family Members ms r :: Constraint where
+  Members (t ': cs) r = (Member t r, Members cs r)
+  Members '[] r = ()
+
+type (ts :<: r) = Members ts r
 
 {-
 -- Optimized specialized instance
@@ -126,7 +130,8 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
 
-type (t :< r) = KnownNat (ElemIndex t r)
+type (Member t r) = KnownNat (ElemIndex t r)
+type (t :< r) = Member t r
 
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.

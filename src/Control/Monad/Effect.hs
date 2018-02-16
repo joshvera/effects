@@ -11,12 +11,15 @@ Portability : POSIX
 -}
 module Control.Monad.Effect (
   -- * Running and Sending Effects
-  Eff,
-  run,
-  send,
-  -- * Checking a List of Effects
-  type(:<),
-  type(:<:)
+  Eff
+  , run
+  , send
+  -- * Checking a List of Effects#
+  , type(:<)
+  , type(:<:)
+  , Member
+  , Members
+
 ) where
 
 import Control.Monad.Effect.Internal

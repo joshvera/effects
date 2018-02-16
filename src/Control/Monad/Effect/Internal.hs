@@ -13,31 +13,33 @@
 
 module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
-  Eff(..),
-  send,
+  Eff(..)
+  , send
   -- * Decomposing Unions
-  type(:<),
-  type(:<:),
+  , type(:<)
+  , type(:<:)
+  , Member
+  , Members
   -- | Inserts multiple effects into 'E'.
-  inj,
-  prj,
+  , inj
+  , prj
   -- * Constructing and Decomposing Queues of Effects
-  decompose,
-  Queue,
-  tsingleton,
-  Arrow,
-  Union,
+  , decompose
+  , Queue
+  , tsingleton
+  , Arrow
+  , Union
   -- * Composing and Applying Effects
-  apply,
-  (<<<),
-  (>>>),
+  , apply
+  , (<<<)
+  , (>>>)
   -- * Running Effects
-  run,
-  runM,
+  , run
+  , runM
   -- * Relaying and Interposing Effects
-  relay,
-  relayState,
-  interpose,
+  , relay
+  , relayState
+  , interpose
 ) where
 
 import Data.Union hiding (apply)
