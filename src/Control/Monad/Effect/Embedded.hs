@@ -7,8 +7,9 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TemplateHaskell #-}
 
-module Eff.Embedded (
+module Control.Monad.Effect.Embedded (
   Embedded(..),
   Raisable(..),
   embed,
@@ -20,15 +21,14 @@ module Eff.Embedded (
 
 import Control.Concurrent.Async (async)
 import Control.Monad
-
+import Control.Monad.Effect.TH
 import Control.Monad.Effect.Internal
 
 
 data Embedded ms a where
   Embed :: Eff ms () -> Embedded ms ()
 
-embed :: forall ms r. (Member (Embedded ms) r) => Eff ms () -> Eff r ()
-embed = send . Embed
+$(makeEff ''Embedded)
 
 class Raisable (ms :: [* -> *]) r where
   raiseUnion :: Union ms a -> Eff r a
@@ -38,7 +38,7 @@ instance Raisable '[] r where
 
 instance (Member e r, Raisable m r) =>  Raisable (e ': m) r where
   raiseUnion u =
-    case decomp u of
+    case decompose u of
       Right x -> send x
       Left u' -> raiseUnion u'
 
@@ -46,7 +46,7 @@ raiseEmbedded :: Raisable m r => Eff m a -> Eff r a
 raiseEmbedded = loop
   where
     loop (Val x)  = pure x
-    loop (E u' q) = raiseUnion u' >>= qComp q loop
+    loop (E u' q) = raiseUnion u' >>= (q >>> loop)
 
 liftEmbedded :: (Raisable m r) => Eff (Embedded m ': r) a -> Eff r a
 liftEmbedded = runEmbedded void
@@ -55,7 +55,7 @@ runEmbedded :: (Raisable m r)
             => (forall v. Eff r v -> Eff r' ())
             -> Eff (Embedded m ': r') a
             -> Eff r' a
-runEmbedded f = handleRelay pure $ \(Embed e) -> (f (raiseEmbedded e) >>=)
+runEmbedded f = relay pure $ \(Embed e) -> (f (raiseEmbedded e) >>=)
 
 runEmbeddedAsync :: (Raisable m d, Member IO r)
                  => (forall v. Eff d v -> IO v)
