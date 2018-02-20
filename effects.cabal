@@ -46,6 +46,7 @@ library
                      , Control.Monad.Effect.Reader
                      , Control.Monad.Effect.State
                      , Control.Monad.Effect.StateRW
+                     , Control.Monad.Effect.TH
                      , Control.Monad.Effect.Trace
                      , Control.Monad.Effect.Writer
                      , Control.Monad.Effect.NonDetEff
