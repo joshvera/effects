@@ -38,6 +38,7 @@ library
   exposed-modules:     Control.Monad.Effect
                      , Control.Monad.Effect.Coroutine
                      , Control.Monad.Effect.Cut
+                     , Control.Monad.Effect.Embedded
                      , Control.Monad.Effect.Exception
                      , Control.Monad.Effect.Fail
                      , Control.Monad.Effect.Fresh
@@ -45,6 +46,7 @@ library
                      , Control.Monad.Effect.Reader
                      , Control.Monad.Effect.State
                      , Control.Monad.Effect.StateRW
+                     , Control.Monad.Effect.TH
                      , Control.Monad.Effect.Trace
                      , Control.Monad.Effect.Writer
                      , Control.Monad.Effect.NonDetEff
@@ -54,6 +56,7 @@ library
   build-depends:       base >=4.7 && <5
                      , ghc-prim
                      , template-haskell
+                     , async
   hs-source-dirs:      src
   ghc-options:         -Wall
   default-language:    Haskell2010
