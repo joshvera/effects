@@ -3,6 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeApplications #-}
 
 {-|
 Module      : Control.Monad.Effect.State
@@ -25,7 +26,7 @@ module Control.Monad.Effect.State (
   put,
   modify,
   runState,
-
+  localState,
   transactionState
 ) where
 
@@ -79,3 +80,11 @@ transactionState _ m = do s <- get; loop s m
      Just (Put s') -> loop s'(apply q ())
      _             -> E u (tsingleton k)
       where k = q >>> (loop s)
+
+localState :: forall effects a s. Member (State s) effects => s -> Eff effects a -> Eff effects a
+localState s effect = do
+  original <- get @s
+  put s
+  v <- effect
+  put original
+  pure v
