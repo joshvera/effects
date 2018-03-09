@@ -4,7 +4,7 @@ module Tests.NonDetEff where
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Effect
-import Control.Monad.Effect.NonDetEff
+import Control.Monad.Effect.NonDet
 
 ifte :: (NonDetEff :< e)
      => Eff e a

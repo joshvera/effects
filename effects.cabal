@@ -1,5 +1,5 @@
 name:                effects
-version:             0.2.3.0
+version:             0.3.0.0
 synopsis:            Implementation of the Freer Monad
 license:             BSD3
 license-file:        LICENSE
@@ -44,7 +44,6 @@ library
                      , Control.Monad.Effect.Fresh
                      , Control.Monad.Effect.Internal
                      , Control.Monad.Effect.NonDet
-                     , Control.Monad.Effect.NonDetEff
                      , Control.Monad.Effect.Reader
                      , Control.Monad.Effect.State
                      , Control.Monad.Effect.StateRW

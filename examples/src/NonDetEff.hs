@@ -5,7 +5,7 @@ module NonDetEff where
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Effect
-import Control.Monad.Effect.NonDetEff
+import Control.Monad.Effect.NonDet
 
 ifte :: (NonDetEff :< r)
      => Eff r a -> (a -> Eff r b) -> Eff r b -> Eff r b
