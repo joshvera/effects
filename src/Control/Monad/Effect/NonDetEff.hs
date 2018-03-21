@@ -13,6 +13,8 @@ Portability : POSIX
 
 module Control.Monad.Effect.NonDetEff (
   NonDetEff(..),
+  runNonDetEff,
+  gather,
   makeChoiceA,
   msplit
 ) where
@@ -36,6 +38,14 @@ instance (NonDetEff :< e) => Alternative (Eff e) where
 instance (NonDetEff :< a) => MonadPlus (Eff a) where
   mzero       = send MZero
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
+
+runNonDetEff f = relay (pure . f) (\ m k -> case m of
+    MZero -> pure mempty
+    MPlus -> mappend <$> k True <*> k False)
+
+gather f = interpose (pure . f) (\ m k -> case m of
+      MZero -> pure mempty
+      MPlus -> mappend <$> k True <*> k False)
 
 -- | A handler for nondeterminstic effects
 makeChoiceA :: Alternative f
