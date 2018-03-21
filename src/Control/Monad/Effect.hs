@@ -19,15 +19,15 @@ module Control.Monad.Effect (
   , type(:<:)
   , Member
   , Members
-  , Embedded(..)
-  , Exc(..)
+  , Embedded
+  , Exc
   , Fail
-  , NonDetEff(..)
-  , Reader(..)
-  , Resumable(..)
+  , NonDetEff
+  , Reader
+  , Resumable
   , State
   , Trace
-  , Writer(..)
+  , Writer
 ) where
 
 import Control.Monad.Effect.Internal

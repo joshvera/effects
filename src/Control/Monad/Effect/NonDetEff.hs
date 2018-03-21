@@ -43,6 +43,10 @@ runNonDetEff f = relay (pure . f) (\ m k -> case m of
     MZero -> pure mempty
     MPlus -> mappend <$> k True <*> k False)
 
+gather :: (Monoid b, NonDetEff :< e)
+       => (a -> b) -- ^ A function constructing a 'Monoid'al value from a single computed result. This might typically be @unit@ (for @Reducer@s), 'pure' (for 'Applicative's), or some similar singleton constructor.
+       -> Eff e a      -- ^ The computation to run locally-nondeterministically.
+       -> Eff e b
 gather f = interpose (pure . f) (\ m k -> case m of
       MZero -> pure mempty
       MPlus -> mappend <$> k True <*> k False)
