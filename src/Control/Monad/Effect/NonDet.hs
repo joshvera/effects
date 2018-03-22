@@ -39,6 +39,7 @@ instance (NonDet :< a) => MonadPlus (Eff a) where
   mzero       = send MZero
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
 
+runNonDet :: Monoid b => (a -> b) -> Eff (NonDet ': e) a -> Eff e b
 runNonDet f = relay (pure . f) (\ m k -> case m of
     MZero -> pure mempty
     MPlus -> mappend <$> k True <*> k False)
