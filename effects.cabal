@@ -44,12 +44,13 @@ library
                      , Control.Monad.Effect.Fresh
                      , Control.Monad.Effect.Internal
                      , Control.Monad.Effect.Reader
+                     , Control.Monad.Effect.Resumable
                      , Control.Monad.Effect.State
                      , Control.Monad.Effect.StateRW
                      , Control.Monad.Effect.TH
                      , Control.Monad.Effect.Trace
                      , Control.Monad.Effect.Writer
-                     , Control.Monad.Effect.NonDetEff
+                     , Control.Monad.Effect.NonDet
                      , Data.FTCQueue
                      , Data.Union
   other-modules:       Data.Union.Templates
@@ -67,7 +68,7 @@ executable examples
                      , Coroutine
                      , Cut
                      , Fresh
-                     , NonDetEff
+                     , NonDet
                      , Teletype
                      , Trace
   build-depends:       base >=4.7 && <5
@@ -85,7 +86,7 @@ test-suite test
                      , Tests.Coroutine
                      , Tests.Exception
                      , Tests.Fresh
-                     , Tests.NonDetEff
+                     , Tests.NonDet
                      , Tests.Reader
                      , Tests.State
                      , Tests.StateRW

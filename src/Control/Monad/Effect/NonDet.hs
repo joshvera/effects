@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeOperators, GADTs, FlexibleContexts, UndecidableInstances, DataKinds #-}
 
 {-|
-Module      : Control.Monad.Effect.NonDetEff
+Module      : Control.Monad.Effect.NonDet
 Description : Nondeterministic Choice effects
 Copyright   : Allele Dev 2015
 License     : BSD-3
@@ -11,8 +11,10 @@ Portability : POSIX
 -}
 
 
-module Control.Monad.Effect.NonDetEff (
-  NonDetEff(..),
+module Control.Monad.Effect.NonDet (
+  NonDet(..),
+  runNonDet,
+  gather,
   makeChoiceA,
   msplit
 ) where
@@ -25,28 +27,40 @@ import Control.Monad.Effect.Internal
                     -- Nondeterministic Choice --
 --------------------------------------------------------------------------------
 -- | A data type for representing nondeterminstic choice
-data NonDetEff a where
-  MZero :: NonDetEff a
-  MPlus :: NonDetEff Bool
+data NonDet a where
+  MZero :: NonDet a
+  MPlus :: NonDet Bool
 
-instance (NonDetEff :< e) => Alternative (Eff e) where
+instance (NonDet :< e) => Alternative (Eff e) where
   empty = mzero
   (<|>) = mplus
 
-instance (NonDetEff :< a) => MonadPlus (Eff a) where
+instance (NonDet :< a) => MonadPlus (Eff a) where
   mzero       = send MZero
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
 
+runNonDet f = relay (pure . f) (\ m k -> case m of
+    MZero -> pure mempty
+    MPlus -> mappend <$> k True <*> k False)
+
+gather :: (Monoid b, NonDet :< e)
+       => (a -> b) -- ^ A function constructing a 'Monoid'al value from a single computed result. This might typically be @unit@ (for @Reducer@s), 'pure' (for 'Applicative's), or some similar singleton constructor.
+       -> Eff e a      -- ^ The computation to run locally-nondeterministically.
+       -> Eff e b
+gather f = interpose (pure . f) (\ m k -> case m of
+      MZero -> pure mempty
+      MPlus -> mappend <$> k True <*> k False)
+
 -- | A handler for nondeterminstic effects
 makeChoiceA :: Alternative f
-            => Eff (NonDetEff ': e) a -> Eff e (f a)
+            => Eff (NonDet ': e) a -> Eff e (f a)
 makeChoiceA =
   relay (pure . pure) $ \m k ->
     case m of
       MZero -> pure empty
       MPlus -> liftM2 (<|>) (k True) (k False)
 
-msplit :: (NonDetEff :< e)
+msplit :: (NonDet :< e)
        => Eff e a -> Eff e (Maybe (a, Eff e a))
 msplit = loop []
   where loop jq (Val x) = pure (Just (x, msum jq))

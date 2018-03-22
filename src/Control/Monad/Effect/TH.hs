@@ -10,7 +10,7 @@ module Control.Monad.Effect.TH
   ) where
 
 import Control.Monad (forM, unless)
-import Control.Monad.Effect (send, Member, Eff)
+import Control.Monad.Effect.Internal (send, Member, Eff)
 import Data.Char (toLower)
 import Data.List (nub)
 import Data.Maybe (mapMaybe)
