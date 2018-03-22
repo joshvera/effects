@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, TypeOperators, TypeApplications, ScopedTypeVariables, GADTs, FlexibleContexts, DataKinds #-}
+{-# LANGUAGE TypeOperators, TypeApplications, ScopedTypeVariables, GADTs, FlexibleContexts, DataKinds #-}
 module Control.Monad.Effect.Resumable (
     Resumable(..)
   , throwError

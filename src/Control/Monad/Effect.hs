@@ -22,7 +22,7 @@ module Control.Monad.Effect (
   , Embedded
   , Exc
   , Fail
-  , NonDetEff
+  , NonDet
   , Reader
   , Resumable
   , State
@@ -35,7 +35,7 @@ import Control.Monad.Effect.Internal
 import Control.Monad.Effect.Embedded (Embedded(..))
 import Control.Monad.Effect.Exception (Exc(..))
 import Control.Monad.Effect.Fail (Fail)
-import Control.Monad.Effect.NonDetEff (NonDetEff(..))
+import Control.Monad.Effect.NonDet (NonDet(..))
 import Control.Monad.Effect.Reader (Reader(..))
 import Control.Monad.Effect.Resumable (Resumable(..))
 import Control.Monad.Effect.State (State)
