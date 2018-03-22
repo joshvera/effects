@@ -19,7 +19,26 @@ module Control.Monad.Effect (
   , type(:<:)
   , Member
   , Members
-
+  , Embedded
+  , Exc
+  , Fail
+  , NonDet
+  , Reader
+  , Resumable
+  , State
+  , Trace
+  , Writer
 ) where
 
 import Control.Monad.Effect.Internal
+
+import Control.Monad.Effect.Embedded (Embedded(..))
+import Control.Monad.Effect.Exception (Exc(..))
+import Control.Monad.Effect.Fail (Fail)
+import Control.Monad.Effect.NonDet (NonDet(..))
+import Control.Monad.Effect.Reader (Reader(..))
+import Control.Monad.Effect.Resumable (Resumable(..))
+import Control.Monad.Effect.State (State)
+import Control.Monad.Effect.Trace (Trace)
+import Control.Monad.Effect.Writer (Writer(..))
+

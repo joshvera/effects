@@ -6,7 +6,6 @@ module Control.Monad.Effect.Fail
 , MonadFail(..)
 ) where
 
-import Control.Monad.Effect
 import Control.Monad.Effect.Internal
 import Control.Monad.Fail
 

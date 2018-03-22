@@ -1,17 +1,17 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeOperators #-}
-module NonDetEff where
+module NonDet where
 
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Effect
 import Control.Monad.Effect.NonDet
 
-ifte :: (NonDetEff :< r)
+ifte :: (NonDet :< r)
      => Eff r a -> (a -> Eff r b) -> Eff r b -> Eff r b
 ifte t th el = (t >>= th) <|> el
 
-testIfte :: (NonDetEff :< r) => Eff r Int
+testIfte :: (NonDet :< r) => Eff r Int
 testIfte = do
   n <- gen
   ifte (do d <- gen
