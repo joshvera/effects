@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators, GADTs, FlexibleContexts, UndecidableInstances, DataKinds #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, TypeOperators, UndecidableInstances #-}
 
 {-|
 Module      : Control.Monad.Effect.NonDet
@@ -19,8 +19,8 @@ module Control.Monad.Effect.NonDet (
   msplit
 ) where
 
-import Control.Monad
 import Control.Applicative
+import Control.Monad
 import Control.Monad.Effect.Internal
 
 --------------------------------------------------------------------------------
