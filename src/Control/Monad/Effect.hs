@@ -25,6 +25,7 @@ module Control.Monad.Effect (
   , NonDet
   , Reader
   , Resumable
+  , SomeExc(..)
   , State
   , Trace
   , Writer
@@ -32,13 +33,13 @@ module Control.Monad.Effect (
 
 import Control.Monad.Effect.Internal
 
-import Control.Monad.Effect.Embedded (Embedded(..))
-import Control.Monad.Effect.Exception (Exc(..))
+import Control.Monad.Effect.Embedded (Embedded)
+import Control.Monad.Effect.Exception (Exc)
 import Control.Monad.Effect.Fail (Fail)
-import Control.Monad.Effect.NonDet (NonDet(..))
-import Control.Monad.Effect.Reader (Reader(..))
-import Control.Monad.Effect.Resumable (Resumable(..))
+import Control.Monad.Effect.NonDet (NonDet)
+import Control.Monad.Effect.Reader (Reader)
+import Control.Monad.Effect.Resumable (Resumable, SomeExc(..))
 import Control.Monad.Effect.State (State)
 import Control.Monad.Effect.Trace (Trace)
-import Control.Monad.Effect.Writer (Writer(..))
+import Control.Monad.Effect.Writer (Writer)
 
