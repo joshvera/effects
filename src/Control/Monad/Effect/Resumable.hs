@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators, TypeApplications, ScopedTypeVariables, GADTs, FlexibleContexts, DataKinds #-}
+{-# LANGUAGE TypeOperators, TypeApplications, ScopedTypeVariables, GADTs, FlexibleContexts, DataKinds, Rank2Types #-}
 module Control.Monad.Effect.Resumable (
     Resumable(..)
   , throwError
@@ -7,23 +7,30 @@ module Control.Monad.Effect.Resumable (
   , catchError
   ) where
 
+import Data.Functor.Classes
 import Control.Monad.Effect.Internal
 
-data Resumable exc v a where
-   Resumable :: exc -> Resumable exc v v
+data Resumable exc a where
+  Resumable :: exc v -> Resumable exc v
 
-throwError :: forall exc v e. (Resumable exc v :< e) => exc -> Eff e v
-throwError e = send (Resumable e :: Resumable exc v v)
+throwError :: forall exc v e. (Resumable exc :< e) => exc v -> Eff e v
+throwError e = send (Resumable e :: Resumable exc v)
 
-runError :: Eff (Resumable exc v ': e) a -> Eff e (Either exc a)
-runError = relay (pure . Right) (\ (Resumable e) _k -> pure (Left e))
+runError :: Eff (Resumable exc ': e) a -> Eff e (Either (SomeExc exc) a)
+runError = relay (pure . Right) (\ (Resumable e) _k -> pure (Left (SomeExc e)))
 
-resumeError :: forall v exc e a. (Resumable exc v :< e) =>
-        Eff e a -> (Arrow e v a -> exc -> Eff e a) -> Eff e a
-resumeError m handle = interpose @(Resumable exc v) pure (\(Resumable e) yield -> handle yield e) m
+resumeError :: forall exc e a. (Resumable exc :< e) =>
+       Eff e a -> (forall v. Arrow e v a -> exc v -> Eff e a) -> Eff e a
+resumeError m handle = interpose @(Resumable exc) pure (\(Resumable e) yield -> handle yield e) m
 
-catchError :: forall v exc e proxy a. (Resumable exc v :< e) =>
-        proxy v -> Eff e a -> (exc -> Eff e a) -> Eff e a
-catchError _ m handle = resumeError @v m (const handle)
+catchError :: forall exc e a. (Resumable exc :< e) => Eff e a -> (forall v. exc v -> Eff e a) -> Eff e a
+catchError m handle = resumeError m (const handle)
 
+data SomeExc exc where
+  SomeExc :: exc v -> SomeExc exc
 
+instance Eq1 exc => Eq (SomeExc exc) where
+  SomeExc exc1 == SomeExc exc2 = liftEq (const (const True)) exc1 exc2
+
+instance (Show1 exc) => Show (SomeExc exc) where
+  showsPrec num (SomeExc exc) = liftShowsPrec (const (const id)) (const id) num exc
