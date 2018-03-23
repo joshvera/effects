@@ -1,6 +1,7 @@
 {-# LANGUAGE TypeOperators, TypeApplications, ScopedTypeVariables, GADTs, FlexibleContexts, DataKinds, Rank2Types #-}
 module Control.Monad.Effect.Resumable (
     Resumable(..)
+  ,  SomeExc(..)
   , throwError
   , runError
   , resumeError
