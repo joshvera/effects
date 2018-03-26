@@ -26,6 +26,7 @@ module Control.Monad.Effect.State (
   gets,
   put,
   modify,
+  modify',
   runState,
   localState,
   transactionState
@@ -67,6 +68,12 @@ put s = send (Put s)
 -- | Modify state
 modify :: (State s :< e) => (s -> s) -> Eff e ()
 modify f = fmap f get >>= put
+
+-- | Modify state strictly
+modify' :: (State s :< e) => (s -> s) -> Eff e ()
+modify' f = do
+  v <- get
+  put $! f v
 
 -- |
 -- An encapsulated State handler, for transactional semantics
