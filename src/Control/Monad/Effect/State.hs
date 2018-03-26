@@ -3,7 +3,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeApplications #-}
 
 {-|
 Module      : Control.Monad.Effect.State
@@ -95,7 +94,7 @@ transactionState _ m = do s <- get; loop s m
 
 localState :: forall effects a s. Member (State s) effects => (s -> s) -> Eff effects a -> Eff effects a
 localState f effect = do
-  original <- get @s
+  original <- get
   put (f original)
   v <- effect
   put original
