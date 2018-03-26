@@ -3,7 +3,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeApplications #-}
 
 {-|
 Module      : Control.Monad.Effect.State
@@ -23,8 +22,10 @@ starting point.
 module Control.Monad.Effect.State (
   State,
   get,
+  gets,
   put,
   modify,
+  modify',
   runState,
   localState,
   transactionState
@@ -55,6 +56,10 @@ data State s v where
 get :: (State s :< e) => Eff e s
 get = send Get
 
+-- | Retrieve state, modulo a projection.
+gets :: (State s :< e) => (s -> a) -> Eff e a
+gets f = f <$> get
+
 -- | Store state
 put :: (State s :< e) => s -> Eff e ()
 put s = send (Put s)
@@ -62,6 +67,12 @@ put s = send (Put s)
 -- | Modify state
 modify :: (State s :< e) => (s -> s) -> Eff e ()
 modify f = fmap f get >>= put
+
+-- | Modify state strictly
+modify' :: (State s :< e) => (s -> s) -> Eff e ()
+modify' f = do
+  v <- get
+  put $! f v
 
 -- |
 -- An encapsulated State handler, for transactional semantics
@@ -81,10 +92,10 @@ transactionState _ m = do s <- get; loop s m
      _             -> E u (tsingleton k)
       where k = q >>> (loop s)
 
-localState :: forall effects a s. Member (State s) effects => s -> Eff effects a -> Eff effects a
-localState s effect = do
-  original <- get @s
-  put s
+localState :: forall effects a s. Member (State s) effects => (s -> s) -> Eff effects a -> Eff effects a
+localState f effect = do
+  original <- get
+  put (f original)
   v <- effect
   put original
   pure v
