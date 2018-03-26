@@ -93,10 +93,10 @@ transactionState _ m = do s <- get; loop s m
      _             -> E u (tsingleton k)
       where k = q >>> (loop s)
 
-localState :: forall effects a s. Member (State s) effects => s -> Eff effects a -> Eff effects a
-localState s effect = do
+localState :: forall effects a s. Member (State s) effects => (s -> s) -> Eff effects a -> Eff effects a
+localState f effect = do
   original <- get @s
-  put s
+  put (f original)
   v <- effect
   put original
   pure v
