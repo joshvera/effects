@@ -23,6 +23,7 @@ starting point.
 module Control.Monad.Effect.State (
   State,
   get,
+  gets,
   put,
   modify,
   runState,
@@ -54,6 +55,10 @@ data State s v where
 -- | Retrieve state
 get :: (State s :< e) => Eff e s
 get = send Get
+
+-- | Retrieve state, modulo a projection.
+gets :: (State s :< e) => (s -> a) -> Eff e a
+gets f = f <$> get
 
 -- | Store state
 put :: (State s :< e) => s -> Eff e ()
