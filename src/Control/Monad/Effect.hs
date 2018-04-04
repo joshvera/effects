@@ -13,7 +13,12 @@ module Control.Monad.Effect (
   -- * Running and Sending Effects
   Eff
   , run
+  , runM
   , send
+  -- * Handling Effects
+  , relay
+  , relayState
+  , interpose
   -- * Checking a List of Effects#
   , type(:<)
   , type(:<:)
@@ -42,4 +47,3 @@ import Control.Monad.Effect.Resumable (Resumable, SomeExc(..))
 import Control.Monad.Effect.State (State)
 import Control.Monad.Effect.Trace (Trace)
 import Control.Monad.Effect.Writer (Writer)
-
