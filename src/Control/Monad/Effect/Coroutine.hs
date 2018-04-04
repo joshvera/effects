@@ -22,7 +22,8 @@ module Control.Monad.Effect.Coroutine (
   Yield,
   yield,
   Status(..),
-  runC
+  runC,
+  runCoro
 ) where
 
 import Control.Monad.Effect.Internal
@@ -50,3 +51,9 @@ runC = relay (pure . Done) bind
   where
     bind :: Yield a b v -> Arrow e v (Status e a b w) -> Eff e (Status e a b w)
     bind (Yield a k) arr = pure $ Continue a (arr . k)
+
+-- | Launch a thread and run it to completion using a helper function to provide new inputs.
+runCoro :: Eff (Yield a b ': e) w -> (a -> b) -> Eff e w
+runCoro e f = runC e >>= loop
+  where loop (Done a)       = pure a
+        loop (Continue a k) = k (f a) >>= loop
