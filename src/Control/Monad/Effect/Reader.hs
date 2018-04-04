@@ -46,7 +46,7 @@ ask :: (Reader v :< e) => Eff e v
 ask = send Reader
 
 -- | Request a value from the environment and applys as function
-asks :: (v -> a) -> Eff '[Reader v] a
+asks :: (Reader v :< e) => (v -> a) -> Eff e a
 asks f = f <$> ask
 
 -- | Handler for reader effects
