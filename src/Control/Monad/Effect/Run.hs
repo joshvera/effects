@@ -11,6 +11,7 @@ import Control.Monad.Effect.NonDet
 import Control.Monad.Effect.Reader
 import Control.Monad.Effect.Resumable as Resumable
 import Control.Monad.Effect.State
+import Control.Monad.Effect.Trace
 
 class Run effects result function | effects result -> function where
   run' :: Eff effects result -> function
@@ -41,6 +42,9 @@ instance Run effects (Either (SomeExc exc) result) rest => Run (Resumable exc ':
 
 instance Run effects (result, b) rest => Run (State b ': effects) result (b -> rest) where
   run' = fmap run' . runState
+
+instance Run '[Trace] result (IO result) where
+  run' = runTrace
 
 instance Run '[] result result where
   run' = Eff.run
