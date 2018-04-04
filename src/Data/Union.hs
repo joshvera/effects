@@ -104,12 +104,12 @@ instance (t :< '[t]) where
 -}
 
 -- | Inject a functor into a type-aligned union.
-inj :: forall e r v. e :< r => e v -> Union r v
+inj :: forall e r v. (e :< r) => e v -> Union r v
 inj = inj' (unP (elemNo :: P e r))
 {-# INLINE inj #-}
 
 -- | Maybe project a functor out of a type-aligned union.
-prj :: forall e r v. e :< r => Union r v -> Maybe (e v)
+prj :: forall e r v. (e :< r) => Union r v -> Maybe (e v)
 prj = prj' (unP (elemNo :: P e r))
 {-# INLINE prj #-}
 
@@ -143,7 +143,7 @@ class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
   apply :: proxy c -> (forall g . c g => g a -> b) -> Union fs a -> b
 
 apply' :: Apply c fs => proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> b) -> Union fs a -> b
-apply' proxy f u@(Union n _) = apply proxy (\ r -> f (Union n) r) u
+apply' proxy f u@(Union n _) = apply proxy (f (Union n)) u
 {-# INLINABLE apply' #-}
 
 apply2 :: Apply c fs => proxy c -> (forall g . c g => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
@@ -167,7 +167,7 @@ type family EQU (a :: * -> *) (b :: * -> *) :: Bool where
 
 -- This class is used for emulating monad transformers
 class (t :< r) => MemberU2 (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
-instance (t1 :< r, MemberU' (EQU t1 t2) tag t1 (t2 ': r)) => MemberU2 tag t1 (t2 ': r)
+instance MemberU' (EQU t1 t2) tag t1 (t2 ': r) => MemberU2 tag t1 (t2 ': r)
 
 class (t :< r) =>
       MemberU' (f::Bool) (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t

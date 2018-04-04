@@ -15,6 +15,7 @@ module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
   Eff(..)
   , send
+  , NonDet(..)
   -- * Decomposing Unions
   , type(:<)
   , type(:<:)
@@ -40,8 +41,12 @@ module Control.Monad.Effect.Internal (
   , relay
   , relayState
   , interpose
+  , interpret
 ) where
 
+import Control.Applicative (Alternative(..))
+import Control.Monad (MonadPlus(..))
+import Control.Monad.IO.Class (MonadIO(..))
 import Data.Union hiding (apply)
 import Data.FTCQueue
 
@@ -109,7 +114,7 @@ run _       = error "Internal:run - This (E) should never happen"
 runM :: Monad m => Eff '[m] a -> m a
 runM (Val x) = pure x
 runM (E u q) = case decompose u of
-  Right m -> m >>= runM . (apply q)
+  Right m -> m >>= runM . apply q
   Left _   -> error "Internal:runM - This (Left) should never happen"
 
 -- | Given an effect request, either handle it with the given 'pure' function,
@@ -158,6 +163,11 @@ interpose ret h = loop
      _      -> E u (tsingleton k)
     where k = q >>> loop
 
+-- | Handle the topmost effect by interpreting it into the underlying effects.
+interpret :: (forall a. eff a -> Eff effs a) -> Eff (eff ': effs) b -> Eff effs b
+interpret f = relay pure (\ eff yield -> f eff >>= yield)
+
+
 -- * Effect Instances
 
 instance Functor (Eff e) where
@@ -181,3 +191,21 @@ instance Monad (Eff e) where
   Val x >>= k = k x
   E u q >>= k = E u (q |> k)
   {-# INLINE (>>=) #-}
+
+instance Member IO e => MonadIO (Eff e) where
+  liftIO = send
+  {-# INLINE liftIO #-}
+
+
+-- | A data type for representing nondeterminstic choice
+data NonDet a where
+  MZero :: NonDet a
+  MPlus :: NonDet Bool
+
+instance (NonDet :< e) => Alternative (Eff e) where
+  empty = mzero
+  (<|>) = mplus
+
+instance (NonDet :< a) => MonadPlus (Eff a) where
+  mzero       = send MZero
+  mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
