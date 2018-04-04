@@ -51,7 +51,7 @@ asks f = f <$> ask
 
 -- | Handler for reader effects
 runReader :: Eff (Reader v ': e) a -> v -> Eff e a
-runReader m e = relay pure (\Reader k -> k e) m
+runReader m e = interpret (\ Reader -> pure e) m
 
 -- |
 -- Locally rebind the value in the dynamic environment
