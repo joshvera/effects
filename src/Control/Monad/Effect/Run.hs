@@ -14,6 +14,7 @@ import Control.Monad.Effect.State
 import Control.Monad.Effect.Trace
 import Control.Monad.Effect.Writer
 
+-- | Elimination of effects.
 class Run effects result function | effects result -> function where
   run :: Eff.Eff effects result -> function
 
