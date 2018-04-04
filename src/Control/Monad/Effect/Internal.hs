@@ -15,6 +15,7 @@ module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
   Eff(..)
   , send
+  , NonDet(..)
   -- * Decomposing Unions
   , type(:<)
   , type(:<:)
@@ -40,7 +41,6 @@ module Control.Monad.Effect.Internal (
   , relay
   , relayState
   , interpose
-  , NonDet(..)
 ) where
 
 import Control.Applicative (Alternative(..))
