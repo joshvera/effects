@@ -1,7 +1,8 @@
-{-# LANGUAGE DataKinds, FlexibleContexts, FlexibleInstances, FunctionalDependencies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, FlexibleInstances, FunctionalDependencies, GADTs, TypeOperators, UndecidableInstances #-}
 module Control.Monad.Effect.Run where
 
 import Control.Monad.Effect.Coroutine
+import Control.Monad.Effect.Embedded
 import Control.Monad.Effect.Internal as Eff
 
 class Run effects result function | effects result -> function where
@@ -9,6 +10,9 @@ class Run effects result function | effects result -> function where
 
 instance Run effects result rest => Run (Yield a b ': effects) result ((a -> b) -> rest) where
   run' = fmap run' . runCoro
+
+instance Run effects result rest => Run (Embedded effects ': effects) result rest where
+  run' = run' . relay pure (\ (Embed e) k -> e >>= k)
 
 instance Run '[] result result where
   run' = Eff.run
