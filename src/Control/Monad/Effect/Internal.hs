@@ -5,8 +5,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 -- The following is needed to define MonadPlus instance. It is decidable
 -- (there is no recursion!), but GHC cannot see that.
@@ -49,7 +47,6 @@ module Control.Monad.Effect.Internal (
 
 import Control.Applicative (Alternative(..))
 import Control.Monad (MonadPlus(..))
-import Control.Monad.IO.Class (MonadIO(..))
 import Data.Union hiding (apply)
 import Data.FTCQueue
 
@@ -198,10 +195,6 @@ instance Monad (Eff e) where
   Val x >>= k = k x
   E u q >>= k = E u (q |> k)
   {-# INLINE (>>=) #-}
-
-
-instance (MonadIO io, LastMember io effs) => MonadIO (Eff effs) where
-  liftIO = sendM @io . liftIO
 
 
 -- | A data type for representing nondeterminstic choice
