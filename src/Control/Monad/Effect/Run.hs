@@ -18,6 +18,7 @@ import Control.Monad.Effect.Writer
 class Run effects result function | effects result -> function where
   run :: Eff.Eff effects result -> function
 
+
 instance Run effects result rest => Run (Yield a b ': effects) result ((a -> b) -> rest) where
   run = fmap run . runCoro
 
