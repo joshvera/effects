@@ -167,7 +167,7 @@ type family EQU (a :: * -> *) (b :: * -> *) :: Bool where
 
 -- This class is used for emulating monad transformers
 class (t :< r) => MemberU2 (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
-instance (t1 :< r, MemberU' (EQU t1 t2) tag t1 (t2 ': r)) => MemberU2 tag t1 (t2 ': r)
+instance MemberU' (EQU t1 t2) tag t1 (t2 ': r) => MemberU2 tag t1 (t2 ': r)
 
 class (t :< r) =>
       MemberU' (f::Bool) (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
