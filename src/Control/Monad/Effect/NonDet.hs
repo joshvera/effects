@@ -26,18 +26,6 @@ import Control.Monad.Effect.Internal
 --------------------------------------------------------------------------------
                     -- Nondeterministic Choice --
 --------------------------------------------------------------------------------
--- | A data type for representing nondeterminstic choice
-data NonDet a where
-  MZero :: NonDet a
-  MPlus :: NonDet Bool
-
-instance (NonDet :< e) => Alternative (Eff e) where
-  empty = mzero
-  (<|>) = mplus
-
-instance (NonDet :< a) => MonadPlus (Eff a) where
-  mzero       = send MZero
-  mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
 
 runNonDet :: Monoid b => (a -> b) -> Eff (NonDet ': e) a -> Eff e b
 runNonDet f = relay (pure . f) (\ m k -> case m of

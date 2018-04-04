@@ -40,8 +40,11 @@ module Control.Monad.Effect.Internal (
   , relay
   , relayState
   , interpose
+  , NonDet(..)
 ) where
 
+import Control.Applicative (Alternative(..))
+import Control.Monad (MonadPlus(..))
 import Data.Union hiding (apply)
 import Data.FTCQueue
 
@@ -181,3 +184,17 @@ instance Monad (Eff e) where
   Val x >>= k = k x
   E u q >>= k = E u (q |> k)
   {-# INLINE (>>=) #-}
+
+
+-- | A data type for representing nondeterminstic choice
+data NonDet a where
+  MZero :: NonDet a
+  MPlus :: NonDet Bool
+
+instance (NonDet :< e) => Alternative (Eff e) where
+  empty = mzero
+  (<|>) = mplus
+
+instance (NonDet :< a) => MonadPlus (Eff a) where
+  mzero       = send MZero
+  mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
