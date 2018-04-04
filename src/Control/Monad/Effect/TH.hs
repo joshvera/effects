@@ -9,11 +9,12 @@ module Control.Monad.Effect.TH
   , makeEff_
   ) where
 
-import Control.Monad (forM, unless)
+import Control.Monad (unless)
 import Control.Monad.Effect.Internal (send, Member, Eff)
 import Data.Char (toLower)
 import Data.List (nub)
 import Data.Maybe (mapMaybe)
+import Data.Traversable (for)
 import Language.Haskell.TH
 import Prelude
 
@@ -58,9 +59,9 @@ genEff makeSigs tcName = do
 
   reify tcName >>= \case
     TyConI (DataD _ _ _ _ cons _) -> do
-      sigs <- filter (const makeSigs) <$> mapM genSig cons
-      decs <- mapM genDecl cons
-      return $ sigs ++ decs
+      sigs <- filter (const makeSigs) <$> traverse genSig cons
+      decs <- traverse genDecl cons
+      pure $ sigs ++ decs
 
     _ ->
       fail "makeEff expects a type constructor"
@@ -83,12 +84,12 @@ genDecl (ForallC _ _ con) = genDecl con
 genDecl (GadtC [cName] tArgs _) = do
   let fnName = getDeclName cName
   let arity = length tArgs - 1
-  dTypeVars <- forM [0..arity] $ const $ newName "a"
-  return $ FunD fnName
-           . pure
-           $ Clause (VarP <$> dTypeVars)
-                    (NormalB . AppE (VarE 'send) $ foldl (\b -> AppE b . VarE) (ConE cName) dTypeVars)
-                    []
+  dTypeVars <- for [0..arity] $ const $ newName "a"
+  pure $ FunD fnName
+       . pure
+       $ Clause (VarP <$> dTypeVars)
+                (NormalB . AppE (VarE 'send) $ foldl (\b -> AppE b . VarE) (ConE cName) dTypeVars)
+                []
 genDecl _ = fail "genDecl expects a GADT constructor"
 
 
@@ -110,10 +111,10 @@ genSig (GadtC [cName] tArgs' ctrType) = do
       memberConstraint = ConT ''Member `AppT` eff       `AppT` VarT effs
       resultType       = ConT ''Eff    `AppT` VarT effs `AppT` tRet
 
-  return . SigD fnName
-         . ForallT quantifiedVars [memberConstraint]
-         . foldArrows
-         $ tArgs ++ [resultType]
+  pure . SigD fnName
+       . ForallT quantifiedVars [memberConstraint]
+       . foldArrows
+       $ tArgs ++ [resultType]
 genSig _ = fail "genSig expects a GADT constructor"
 
 

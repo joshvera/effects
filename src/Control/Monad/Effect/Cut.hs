@@ -38,7 +38,7 @@ cutFalse = throwError CutFalse
 {-
 call :: (Exc CutFalse :< r) => Eff (Exc CutFalse ': r) a -> Eff r a
 call m = loop [] m where
- loop jq (Val x) = return x `mplus` next jq          -- (C2)
+ loop jq (Val x) = pure x `mplus` next jq          -- (C2)
  loop jq (E u q) = case decompose u of
     Right (Exc CutFalse) -> mzero  -- drop jq (F2)
     Left u -> check jq u

@@ -36,5 +36,5 @@ tell o = send $ Writer o
 
 -- | Simple handler for Writer effects
 runWriter :: Monoid o => Eff (Writer o ': r) a -> Eff r (a,o)
-runWriter = relay (\x -> return (x,mempty))
-                  (\ (Writer o) k -> k () >>= \ (x,l) -> return (x,o `mappend` l))
+runWriter = relay (\x -> pure (x,mempty))
+                  (\ (Writer o) k -> k () >>= \ (x,l) -> pure (x,o `mappend` l))

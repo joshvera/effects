@@ -19,8 +19,8 @@ generatePrimes xs = do
   ifte (do d <- gen
            guard $ d < n && n `mod` d == 0)
        (const mzero)
-       (return n)
-  where gen = msum (fmap return xs)
+       (pure n)
+  where gen = msum (fmap pure xs)
 
 testIfte :: [Int] -> [Int]
 testIfte = run . makeChoiceA . generatePrimes
