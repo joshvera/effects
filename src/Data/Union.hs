@@ -143,7 +143,7 @@ class Apply (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
   apply :: proxy c -> (forall g . c g => g a -> b) -> Union fs a -> b
 
 apply' :: Apply c fs => proxy c -> (forall g . c g => (forall x. g x -> Union fs x) -> g a -> b) -> Union fs a -> b
-apply' proxy f u@(Union n _) = apply proxy (\ r -> f (Union n) r) u
+apply' proxy f u@(Union n _) = apply proxy (f (Union n)) u
 {-# INLINABLE apply' #-}
 
 apply2 :: Apply c fs => proxy c -> (forall g . c g => g a -> g b -> d) -> Union fs a -> Union fs b -> Maybe d
