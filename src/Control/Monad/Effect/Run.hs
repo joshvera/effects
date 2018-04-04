@@ -6,7 +6,7 @@ import Control.Monad.Effect.Embedded
 import Control.Monad.Effect.Exception as Exc
 import Control.Monad.Effect.Fail
 import Control.Monad.Effect.Fresh
-import Control.Monad.Effect.Internal as Eff
+import qualified Control.Monad.Effect.Internal as Eff
 import Control.Monad.Effect.NonDet
 import Control.Monad.Effect.Reader
 import Control.Monad.Effect.Resumable as Resumable
@@ -15,13 +15,13 @@ import Control.Monad.Effect.Trace
 import Control.Monad.Effect.Writer
 
 class Run effects result function | effects result -> function where
-  run' :: Eff effects result -> function
+  run' :: Eff.Eff effects result -> function
 
 instance Run effects result rest => Run (Yield a b ': effects) result ((a -> b) -> rest) where
   run' = fmap run' . runCoro
 
 instance Run effects result rest => Run (Embedded effects ': effects) result rest where
-  run' = run' . relay pure (\ (Embed e) k -> e >>= k)
+  run' = run' . Eff.relay pure (\ (Embed e) k -> e >>= k)
 
 instance Run effects (Either exc result) rest => Run (Exc exc ': effects) result rest where
   run' = run' . Exc.runError
@@ -51,7 +51,7 @@ instance (Monoid w, Run effects (result, w) rest) => Run (Writer w ': effects) r
   run' = run' . runWriter
 
 instance Run '[IO] result (IO result) where
-  run' = runM
+  run' = Eff.runM
 
 instance Run '[] result result where
   run' = Eff.run
