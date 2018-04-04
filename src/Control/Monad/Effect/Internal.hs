@@ -109,7 +109,7 @@ run _       = error "Internal:run - This (E) should never happen"
 runM :: Monad m => Eff '[m] a -> m a
 runM (Val x) = pure x
 runM (E u q) = case decompose u of
-  Right m -> m >>= runM . (apply q)
+  Right m -> m >>= runM . apply q
   Left _   -> error "Internal:runM - This (Left) should never happen"
 
 -- | Given an effect request, either handle it with the given 'pure' function,

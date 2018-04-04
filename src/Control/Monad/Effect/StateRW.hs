@@ -43,4 +43,4 @@ runStateR m s = loop s m
      Left  u'  -> case decompose u' of
        Right Reader -> k s' s'
        Left u'' -> E u'' (tsingleton (k s'))
-    where k s'' = q >>> (loop s'')
+    where k s'' = q >>> loop s''
