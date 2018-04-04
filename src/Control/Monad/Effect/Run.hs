@@ -15,6 +15,8 @@ import Control.Monad.Effect.Trace
 import Control.Monad.Effect.Writer
 
 -- | Elimination of effects.
+--
+--   Instances provide interpreters, optionally taking arguments and optionally modifying the result type.
 class Run effects result function | effects result -> function where
   run :: Eff.Eff effects result -> function
 
