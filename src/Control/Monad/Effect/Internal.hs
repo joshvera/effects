@@ -46,6 +46,7 @@ module Control.Monad.Effect.Internal (
 
 import Control.Applicative (Alternative(..))
 import Control.Monad (MonadPlus(..))
+import Control.Monad.IO.Class (MonadIO(..))
 import Data.Union hiding (apply)
 import Data.FTCQueue
 
@@ -190,6 +191,9 @@ instance Monad (Eff e) where
   Val x >>= k = k x
   E u q >>= k = E u (q |> k)
   {-# INLINE (>>=) #-}
+
+instance Member IO e => MonadIO (Eff e) where
+  liftIO = send
 
 
 -- | A data type for representing nondeterminstic choice
