@@ -41,11 +41,12 @@ yield x f = send (Yield x f)
 -- |
 -- Status of a thread: done or reporting the value of the type a and
 -- resuming with the value of type b
-data Status e a b = Done | Continue a (b -> Eff e (Status e a b))
+data Status e a b w = Done w | Continue a (b -> Eff e (Status e a b w))
+  deriving (Functor)
 
 -- | Launch a thread and report its status
-runC :: Eff (Yield a b ': e) w -> Eff e (Status e a b)
-runC = relay (\_ -> pure Done) bind
+runC :: Eff (Yield a b ': e) w -> Eff e (Status e a b w)
+runC = relay (pure . Done) bind
   where
-    bind :: Yield a b v -> Arrow e v (Status e a b) -> Eff e (Status e a b)
+    bind :: Yield a b v -> Arrow e v (Status e a b w) -> Eff e (Status e a b w)
     bind (Yield a k) arr = pure $ Continue a (arr . k)
