@@ -10,6 +10,7 @@ import Control.Monad.Effect.Internal as Eff
 import Control.Monad.Effect.NonDet
 import Control.Monad.Effect.Reader
 import Control.Monad.Effect.Resumable as Resumable
+import Control.Monad.Effect.State
 
 class Run effects result function | effects result -> function where
   run' :: Eff effects result -> function
@@ -37,6 +38,9 @@ instance Run effects result rest => Run (Reader b ': effects) result (b -> rest)
 
 instance Run effects (Either (SomeExc exc) result) rest => Run (Resumable exc ': effects) result rest where
   run' = run' . Resumable.runError
+
+instance Run effects (result, b) rest => Run (State b ': effects) result (b -> rest) where
+  run' = fmap run' . runState
 
 instance Run '[] result result where
   run' = Eff.run
