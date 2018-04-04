@@ -15,6 +15,7 @@ module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
   Eff(..)
   , send
+  , sendM
   , NonDet(..)
   -- * Decomposing Unions
   , type(:<)
@@ -91,6 +92,10 @@ apply q' x =
 -- | Send a effect and wait for a reply.
 send :: (eff :< e) => eff b -> Eff e b
 send t = E (inj t) (tsingleton Val)
+
+-- | A type-restricted variant of 'send' useful for embedding 'Monad'ic computations as the last element of an 'Eff' computation.
+sendM :: LastMember m effects => m a -> Eff effects a
+sendM = send
 
 -- | Runs an effect whose effects has been consumed.
 --

@@ -15,6 +15,7 @@ module Control.Monad.Effect (
   , run
   , runM
   , send
+  , sendM
   -- * Handling Effects
   , relay
   , relayState
