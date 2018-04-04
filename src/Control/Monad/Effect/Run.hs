@@ -50,5 +50,8 @@ instance Run '[Trace] result (IO result) where
 instance (Monoid w, Run effects (result, w) rest) => Run (Writer w ': effects) result rest where
   run' = run' . runWriter
 
+instance Run '[IO] result (IO result) where
+  run' = runM
+
 instance Run '[] result result where
   run' = Eff.run
