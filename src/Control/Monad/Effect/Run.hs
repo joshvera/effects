@@ -18,6 +18,7 @@ import Control.Monad.Effect.Writer
 --
 --   Instances provide interpreters, optionally taking arguments and optionally modifying the result type.
 class Run effects result function | effects result -> function where
+  -- | Interpret the effects in the given computation, possibly taking some arguments, and return the result.
   run :: Eff.Eff effects result -> function
 
 
