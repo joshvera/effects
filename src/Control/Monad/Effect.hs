@@ -19,6 +19,7 @@ module Control.Monad.Effect (
   , relay
   , relayState
   , interpose
+  , interpret
   -- * Checking a List of Effects#
   , type(:<)
   , type(:<:)

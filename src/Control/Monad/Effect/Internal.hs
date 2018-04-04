@@ -41,6 +41,7 @@ module Control.Monad.Effect.Internal (
   , relay
   , relayState
   , interpose
+  , interpret
 ) where
 
 import Control.Applicative (Alternative(..))
@@ -160,6 +161,11 @@ interpose ret h = loop
      Just x -> h x k
      _      -> E u (tsingleton k)
     where k = q >>> loop
+
+-- | Handle the topmost effect by interpreting it into the underlying effects.
+interpret :: (forall a. eff a -> Eff effs a) -> Eff (eff ': effs) b -> Eff effs b
+interpret f = relay pure (\ eff yield -> f eff >>= yield)
+
 
 -- * Effect Instances
 
