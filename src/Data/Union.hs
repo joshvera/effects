@@ -104,12 +104,12 @@ instance (t :< '[t]) where
 -}
 
 -- | Inject a functor into a type-aligned union.
-inj :: forall e r v. e :< r => e v -> Union r v
+inj :: forall e r v. (e :< r) => e v -> Union r v
 inj = inj' (unP (elemNo :: P e r))
 {-# INLINE inj #-}
 
 -- | Maybe project a functor out of a type-aligned union.
-prj :: forall e r v. e :< r => Union r v -> Maybe (e v)
+prj :: forall e r v. (e :< r) => Union r v -> Maybe (e v)
 prj = prj' (unP (elemNo :: P e r))
 {-# INLINE prj #-}
 
