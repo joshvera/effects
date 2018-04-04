@@ -7,6 +7,7 @@ import Control.Monad.Effect.Exception
 import Control.Monad.Effect.Fail
 import Control.Monad.Effect.Fresh
 import Control.Monad.Effect.Internal as Eff
+import Control.Monad.Effect.NonDet
 
 class Run effects result function | effects result -> function where
   run' :: Eff effects result -> function
@@ -25,6 +26,9 @@ instance Run effects (Either String result) rest => Run (Fail ': effects) result
 
 instance Run effects result rest => Run (Fresh ': effects) result (Int -> rest) where
   run' = fmap run' . runFresh'
+
+instance (Run effects [result] rest) => Run (NonDet ': effects) result rest where
+  run' = run' . runNonDet (:[])
 
 instance Run '[] result result where
   run' = Eff.run
