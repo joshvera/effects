@@ -17,6 +17,17 @@ import Control.Monad.Effect.Writer
 -- | Elimination of effects.
 --
 --   Instances provide interpreters, optionally taking arguments and optionally modifying the result type.
+--
+--   For example:
+--
+--   @
+--   run (eff :: Eff '[Reader Int, Fail, State String] ())
+--     1 -- to run the Reader effect
+--     "hello" -- to run the State effect
+--     :: ( Either String () -- the result of the Fail effect, wrapping the final result value
+--        , String ) -- the final state from the State effect
+--   @
+
 class Run effects result function | effects result -> function where
   -- | Interpret the effects in the given computation, possibly taking some arguments, and return the result.
   run :: Eff.Eff effects result -> function
