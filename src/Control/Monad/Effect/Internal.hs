@@ -194,6 +194,7 @@ instance Monad (Eff e) where
 
 instance Member IO e => MonadIO (Eff e) where
   liftIO = send
+  {-# INLINE liftIO #-}
 
 
 -- | A data type for representing nondeterminstic choice
