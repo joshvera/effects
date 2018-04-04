@@ -49,7 +49,6 @@ module Data.Union (
   Member,
   Members,
   MemberU2,
-  LastMember,
   Apply(..),
   apply',
   apply2,
@@ -176,13 +175,6 @@ class (t :< r) =>
 instance MemberU' 'True tag (tag e) (tag e ': r)
 instance (t :< (t' ': r), MemberU2 tag t r) =>
            MemberU' 'False tag t (t' ': r)
-
-
--- | This class is resolvable only when @t@ is the last member of @ts@. This can be useful for e.g. embedding 'Monad'ic actions in @Eff@.
-class Member t ts => LastMember t ts
-instance (LastMember t ts, Member t (t' ': ts)) => LastMember t (t' ': ts)
-instance LastMember t '[t]
-
 
 instance Apply Foldable fs => Foldable (Union fs) where
   foldMap f = apply (Proxy :: Proxy Foldable) (foldMap f)
