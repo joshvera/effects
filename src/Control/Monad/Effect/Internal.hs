@@ -159,8 +159,8 @@ interpose :: (eff :< e)
           -> Eff e a -> Eff e b
 interpose ret h = loop
  where
-   loop (Val x)  = ret x
-   loop (E u q)  = case prj u of
+   loop (Val x) = ret x
+   loop (E u q) = case prj u of
      Just x -> h x k
      _      -> E u (tsingleton k)
     where k = q >>> loop
