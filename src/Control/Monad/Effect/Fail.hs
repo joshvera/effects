@@ -15,5 +15,5 @@ runFail :: Eff (Fail ': fs) a -> Eff fs (Either String a)
 runFail = relay (pure . Right) (const . pure . Left . failMessage)
 
 
-instance Fail :< fs => MonadFail (Eff fs) where
+instance (Fail :< fs) => MonadFail (Eff fs) where
   fail = send . Fail
