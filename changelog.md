@@ -1,3 +1,8 @@
+# 0.3.1.0 (April 25, 2018)
+
+* Exported all the effect data constructors.
+* Too many other things have changed since 0.2.3.0 to list.
+
 # 0.2.3.0 (June 25, 2016)
 
 * Add GHC 8 support
