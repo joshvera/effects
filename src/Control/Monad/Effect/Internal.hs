@@ -42,6 +42,7 @@ module Control.Monad.Effect.Internal (
   , relay
   , relayState
   , interpose
+  , interposeState
   , interpret
 ) where
 
@@ -164,6 +165,20 @@ interpose ret h = loop
      Just x -> h x k
      _      -> E u (tsingleton k)
     where k = q >>> loop
+
+interposeState :: (eff :< e)
+               => s
+               -> (s -> Arrow e a b)
+               -> (forall v. s -> eff v -> (s -> Arrow e v b) -> Eff e b)
+               -> Eff e a
+               -> Eff e b
+interposeState initial ret handler = loop initial
+  where
+    loop state (Val x) = ret state x
+    loop state (E u q) = case prj u of
+      Just x -> handler state x k
+      _      -> E u (tsingleton (k state))
+      where k state' = q >>> loop state'
 
 -- | Handle the topmost effect by interpreting it into the underlying effects.
 interpret :: (forall a. eff a -> Eff effs a) -> Eff (eff ': effs) b -> Eff effs b
