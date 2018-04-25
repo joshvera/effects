@@ -22,8 +22,8 @@ starting point.
 -}
 module Control.Monad.Effect.StateRW (
   runStateR,
-  Reader,
-  Writer,
+  Reader(..),
+  Writer(..),
   tell,
   ask
 ) where

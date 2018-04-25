@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds, FlexibleContexts, TypeOperators, UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Control.Monad.Effect.Fail
-( Fail
+( Fail(..)
 , runFail
 , MonadFail(..)
 ) where

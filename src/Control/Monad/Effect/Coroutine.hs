@@ -19,7 +19,7 @@ starting point.
 
 -}
 module Control.Monad.Effect.Coroutine (
-  Yield,
+  Yield(..),
   yield,
   Status(..),
   runC,

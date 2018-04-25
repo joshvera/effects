@@ -20,7 +20,7 @@ starting point.
 
 -}
 module Control.Monad.Effect.Trace (
-  Trace,
+  Trace(..),
   trace,
   runTrace
 ) where
