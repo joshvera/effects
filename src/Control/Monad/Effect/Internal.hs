@@ -149,7 +149,7 @@ relayState s' pure' bind = loop s'
     loop s (E u' q)  = case decompose u' of
       Right x -> bind s x k
       Left  u -> E u (tsingleton (k s))
-     where k s'' x = loop s'' $ q `apply` x
+     where k s'' = q >>> loop s''
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
