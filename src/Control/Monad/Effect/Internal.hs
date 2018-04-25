@@ -154,7 +154,7 @@ relayState s' pure' bind = loop s'
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
 interpose :: (eff :< e)
-          => (a -> Eff e b)
+          => Arrow e a b
           -> (forall v. eff v -> Arrow e v b -> Eff e b)
           -> Eff e a -> Eff e b
 interpose ret h = loop
