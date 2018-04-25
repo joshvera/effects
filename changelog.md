@@ -1,3 +1,7 @@
+# 0.3.2.0 (April 25, 2018)
+
+* Added an `interposeState` handler.
+
 # 0.3.1.0 (April 25, 2018)
 
 * Exported all the effect data constructors.
