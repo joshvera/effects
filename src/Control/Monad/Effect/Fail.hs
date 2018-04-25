@@ -6,6 +6,7 @@ module Control.Monad.Effect.Fail
 ) where
 
 import Control.Monad.Effect.Internal
+import Control.Monad.Fail
 
 runFail :: Eff (Fail ': fs) a -> Eff fs (Either String a)
 runFail = relay (pure . Right) (const . pure . Left . failMessage)
