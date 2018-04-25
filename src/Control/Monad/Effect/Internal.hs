@@ -214,7 +214,7 @@ instance (NonDet :< a) => MonadPlus (Eff a) where
 
 
 -- | An effect representing failure.
-data Fail a = Fail { failMessage :: String }
+newtype Fail a = Fail { failMessage :: String }
 
 instance (Fail :< fs) => MonadFail (Eff fs) where
   fail = send . Fail
