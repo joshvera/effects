@@ -19,7 +19,7 @@ starting point.
 
 -}
 module Control.Monad.Effect.Cut (
-  CutFalse,
+  CutFalse(..),
   cutFalse,
   -- call
 ) where

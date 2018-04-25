@@ -16,6 +16,7 @@ module Control.Monad.Effect.Internal (
   Eff(..)
   , send
   , NonDet(..)
+  , Fail(..)
   -- * Decomposing Unions
   , type(:<)
   , type(:<:)
@@ -46,6 +47,7 @@ module Control.Monad.Effect.Internal (
 
 import Control.Applicative (Alternative(..))
 import Control.Monad (MonadPlus(..))
+import Control.Monad.Fail (MonadFail(..))
 import Control.Monad.IO.Class (MonadIO(..))
 import Data.Union hiding (apply)
 import Data.FTCQueue
@@ -209,3 +211,10 @@ instance (NonDet :< e) => Alternative (Eff e) where
 instance (NonDet :< a) => MonadPlus (Eff a) where
   mzero       = send MZero
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
+
+
+-- | An effect representing failure.
+newtype Fail a = Fail { failMessage :: String }
+
+instance (Fail :< fs) => MonadFail (Eff fs) where
+  fail = send . Fail
