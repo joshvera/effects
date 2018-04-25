@@ -166,6 +166,8 @@ interpose ret h = loop
      _      -> E u (tsingleton k)
     where k = q >>> loop
 
+-- | Intercept an effect like 'interpose', but with an explicit state
+-- parameter like 'relayState'.
 interposeState :: (eff :< e)
                => s
                -> (s -> Arrow e a b)
