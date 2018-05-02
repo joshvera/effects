@@ -32,7 +32,7 @@ extra-source-files:
 
 source-repository head
     type: git
-    location: git clone https://gitlab.com/joshvera/effects.git
+    location: git clone https://github.com/joshvera/effects.git
 
 library
   exposed-modules:     Control.Monad.Effect
