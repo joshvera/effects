@@ -31,7 +31,7 @@ data Writer o x where
   Writer :: o -> Writer o ()
 
 -- | Send a change to the attached environment
-tell :: (Writer o :< r) => o -> Eff r ()
+tell :: Member (Writer o) r => o -> Eff r ()
 tell o = send $ Writer o
 
 -- | Simple handler for Writer effects

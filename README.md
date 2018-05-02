@@ -43,13 +43,13 @@ data Teletype s where
   GetLine     :: Teletype String
   ExitSuccess :: Teletype ()
 
-putStrLn' :: (Teletype :< r) => String -> Eff r ()
+putStrLn' :: Member Teletype r => String -> Eff r ()
 putStrLn' = send . PutStrLn
 
-getLine'  :: (Teletype :< r) => Eff r String
+getLine'  :: Member Teletype r => Eff r String
 getLine' = send GetLine
 
-exitSuccess' :: (Teletype :< r) => Eff r ()
+exitSuccess' :: Member Teletype r => Eff r ()
 exitSuccess' = send ExitSuccess
 
 --------------------------------------------------------------------------------

@@ -18,7 +18,7 @@ testReader n x = run . flip runReader n $ ask `add` pure x
 
 {-
 t1rr' = run t1
-    No instance for (Reader Int :< Void)
+    No instance for (Member (Reader Int) Void)
       arising from a use of `t1'
 -}
 
@@ -32,7 +32,7 @@ testMultiReader f n = run . flip runReader f . flip runReader n $ t2
 -- The opposite order of layers
 {- If we mess up, we get an error
 t2rrr1' = run $ runReader (runReader t2 (20::Float)) (10::Float)
-    No instance for (Reader Int :< [])
+    No instance for (Member (Reader Int) [])
       arising from a use of `t2'
 -}
 
