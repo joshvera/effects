@@ -76,15 +76,6 @@ type family Members ms r :: Constraint where
   Members (t ': cs) r = (Member t r, Members cs r)
   Members '[] r = ()
 
-{-
--- Optimized specialized instance
-instance (Member t '[t]) where
-  {-# INLINE inj #-}
-  {-# INLINE prj #-}
-  inj x           = Union 0 x
-  prj (Union _ x) = Just (unsafeCoerce x)
--}
-
 -- | Inject a functor into a type-aligned union.
 inj :: forall e r v. Member e r => e v -> Union r v
 inj = inj' (unP (elemNo :: P e r))
