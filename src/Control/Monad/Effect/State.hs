@@ -53,23 +53,23 @@ data State s v where
   Put :: !s -> State s ()
 
 -- | Retrieve state
-get :: Member (State s) e => Eff e s
+get :: (State s :< e) => Eff e s
 get = send Get
 
 -- | Retrieve state, modulo a projection.
-gets :: Member (State s) e => (s -> a) -> Eff e a
+gets :: (State s :< e) => (s -> a) -> Eff e a
 gets f = f <$> get
 
 -- | Store state
-put :: Member (State s) e => s -> Eff e ()
+put :: (State s :< e) => s -> Eff e ()
 put s = send (Put s)
 
 -- | Modify state
-modify :: Member (State s) e => (s -> s) -> Eff e ()
+modify :: (State s :< e) => (s -> s) -> Eff e ()
 modify f = fmap f get >>= put
 
 -- | Modify state strictly
-modify' :: Member (State s) e => (s -> s) -> Eff e ()
+modify' :: (State s :< e) => (s -> s) -> Eff e ()
 modify' f = do
   v <- get
   put $! f v
@@ -78,7 +78,7 @@ modify' f = do
 -- An encapsulated State handler, for transactional semantics
 -- The global state is updated only if the transactionState finished
 -- successfully
-transactionState :: forall s e a. Member (State s) e
+transactionState :: forall s e a. (State s :< e)
                     => Proxy s
                     -> Eff e a
                     -> Eff e a

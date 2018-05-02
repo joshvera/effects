@@ -14,15 +14,15 @@ data Teletype s where
   ExitSuccess :: Teletype ()
 
 -- Takes a string and returns a teletype effect.
-putStrLn' :: Member Teletype e => String -> Eff e ()
+putStrLn' :: (Teletype :< e) => String -> Eff e ()
 putStrLn' = send . PutStrLn
 
 -- Gets a line from a Teletype.
-getLine'  :: Member Teletype e => Eff e String
+getLine'  :: (Teletype :< e) => Eff e String
 getLine' = send GetLine
 
 -- An exit success effect that returns ().
-exitSuccess' :: Member Teletype e => Eff e ()
+exitSuccess' :: (Teletype :< e) => Eff e ()
 exitSuccess' = send ExitSuccess
 
 -- Runs a Teletype effect b and returns IO b.

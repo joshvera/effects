@@ -44,6 +44,8 @@ module Data.Union (
   weaken,
   inj,
   prj,
+  type(:<),
+  type(:<:),
   Member,
   Members,
   MemberU2,
@@ -64,6 +66,8 @@ import GHC.TypeLits
 
 pure [mkElemIndexTypeFamily 150]
 
+infixr 5 :<
+
 -- Strong Sum (Existential with the evidence) is an open union
 -- t is can be a GADT and hence not necessarily a Functor.
 -- Int is the index of t in the list r; that is, the index of t in the
@@ -82,14 +86,17 @@ prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
 
 newtype P (t :: * -> *) (r :: [* -> *]) = P { unP :: Int }
 
+infixr 5 :<:
 -- | Find a list of members 'ms' in an open union 'r'.
 type family Members ms r :: Constraint where
   Members (t ': cs) r = (Member t r, Members cs r)
   Members '[] r = ()
 
+type (ts :<: r) = Members ts r
+
 {-
 -- Optimized specialized instance
-instance (Member t '[t]) where
+instance (t :< '[t]) where
   {-# INLINE inj #-}
   {-# INLINE prj #-}
   inj x           = Union 0 x
@@ -97,12 +104,12 @@ instance (Member t '[t]) where
 -}
 
 -- | Inject a functor into a type-aligned union.
-inj :: forall e r v. Member e r => e v -> Union r v
+inj :: forall e r v. (e :< r) => e v -> Union r v
 inj = inj' (unP (elemNo :: P e r))
 {-# INLINE inj #-}
 
 -- | Maybe project a functor out of a type-aligned union.
-prj :: forall e r v. Member e r => Union r v -> Maybe (e v)
+prj :: forall e r v. (e :< r) => Union r v -> Maybe (e v)
 prj = prj' (unP (elemNo :: P e r))
 {-# INLINE prj #-}
 
@@ -124,10 +131,11 @@ weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
 
 type (Member t r) = KnownNat (ElemIndex t r)
+type (t :< r) = Member t r
 
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
-elemNo :: forall t r . Member t r => P t r
+elemNo :: forall t r . (t :< r) => P t r
 elemNo = P (fromIntegral (natVal' (proxy# :: Proxy# (ElemIndex t r))))
 
 -- | Helper to apply a function to a functor of the nth type in a type list.
@@ -158,14 +166,14 @@ type family EQU (a :: * -> *) (b :: * -> *) :: Bool where
   EQU a b = 'False
 
 -- This class is used for emulating monad transformers
-class Member t r => MemberU2 (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
-instance (Member t1 (t2 ': r), MemberU' (EQU t1 t2) tag t1 (t2 ': r)) => MemberU2 tag t1 (t2 ': r)
+class (t :< r) => MemberU2 (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
+instance MemberU' (EQU t1 t2) tag t1 (t2 ': r) => MemberU2 tag t1 (t2 ': r)
 
-class Member t r =>
+class (t :< r) =>
       MemberU' (f::Bool) (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
 
 instance MemberU' 'True tag (tag e) (tag e ': r)
-instance (Member t (t' ': r), MemberU2 tag t r) =>
+instance (t :< (t' ': r), MemberU2 tag t r) =>
            MemberU' 'False tag t (t' ': r)
 
 instance Apply Foldable fs => Foldable (Union fs) where

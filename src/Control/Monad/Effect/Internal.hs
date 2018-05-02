@@ -18,6 +18,8 @@ module Control.Monad.Effect.Internal (
   , NonDet(..)
   , Fail(..)
   -- * Decomposing Unions
+  , type(:<)
+  , type(:<:)
   , Member
   , Members
   -- | Inserts multiple effects into 'E'.
@@ -48,7 +50,7 @@ import Control.Applicative (Alternative(..))
 import Control.Monad (MonadPlus(..))
 import Control.Monad.Fail (MonadFail(..))
 import Control.Monad.IO.Class (MonadIO(..))
-import Data.Union
+import Data.Union hiding (apply)
 import Data.FTCQueue
 
 -- | An effectful computation that returns 'b' and sends a list of 'effects'.
@@ -91,7 +93,7 @@ apply q' x =
 -- * Sending and Running Effects
 
 -- | Send a effect and wait for a reply.
-send :: Member eff e => eff b -> Eff e b
+send :: (eff :< e) => eff b -> Eff e b
 send t = E (inj t) (tsingleton Val)
 
 -- | Runs an effect whose effects has been consumed.
@@ -152,7 +154,7 @@ relayState s' pure' bind = loop s'
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
-interpose :: Member eff e
+interpose :: (eff :< e)
           => Arrow e a b
           -> (forall v. eff v -> Arrow e v b -> Eff e b)
           -> Eff e a -> Eff e b
@@ -166,7 +168,7 @@ interpose ret h = loop
 
 -- | Intercept an effect like 'interpose', but with an explicit state
 -- parameter like 'relayState'.
-interposeState :: Member eff e
+interposeState :: (eff :< e)
                => s
                -> (s -> Arrow e a b)
                -> (forall v. s -> eff v -> (s -> Arrow e v b) -> Eff e b)
@@ -219,11 +221,11 @@ data NonDet a where
   MZero :: NonDet a
   MPlus :: NonDet Bool
 
-instance Member NonDet e => Alternative (Eff e) where
+instance (NonDet :< e) => Alternative (Eff e) where
   empty = mzero
   (<|>) = mplus
 
-instance Member NonDet a => MonadPlus (Eff a) where
+instance (NonDet :< a) => MonadPlus (Eff a) where
   mzero       = send MZero
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
 
@@ -231,5 +233,5 @@ instance Member NonDet a => MonadPlus (Eff a) where
 -- | An effect representing failure.
 newtype Fail a = Fail { failMessage :: String }
 
-instance Member Fail fs => MonadFail (Eff fs) where
+instance (Fail :< fs) => MonadFail (Eff fs) where
   fail = send . Fail

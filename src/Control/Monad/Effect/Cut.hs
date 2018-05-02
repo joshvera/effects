@@ -32,11 +32,11 @@ data CutFalse = CutFalse
 -- data Choose a b = Choose [a] b
 
 -- | Implementation of logical Cut using Exc effects.
-cutFalse :: Member (Exc CutFalse) r => Eff r a
+cutFalse :: (Exc CutFalse :< r) => Eff r a
 cutFalse = throwError CutFalse
 
 {-
-call :: Member (Exc CutFalse) r => Eff (Exc CutFalse ': r) a -> Eff r a
+call :: (Exc CutFalse :< r) => Eff (Exc CutFalse ': r) a -> Eff r a
 call m = loop [] m where
  loop jq (Val x) = pure x `mplus` next jq          -- (C2)
  loop jq (E u q) = case decompose u of

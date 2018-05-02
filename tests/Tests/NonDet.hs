@@ -6,14 +6,14 @@ import Control.Monad
 import Control.Monad.Effect
 import Control.Monad.Effect.NonDet
 
-ifte :: Member NonDet e
+ifte :: (NonDet :< e)
      => Eff e a
      -> (a -> Eff e b)
      -> Eff e b
      -> Eff e b
 ifte t th el = msplit t >>= maybe el (\(a,m) -> th a <|> (m >>= th))
 
-generatePrimes :: Member NonDet e => [Int] -> Eff e Int
+generatePrimes :: (NonDet :< e) => [Int] -> Eff e Int
 generatePrimes xs = do
   n <- gen
   ifte (do d <- gen

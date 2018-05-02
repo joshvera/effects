@@ -14,7 +14,7 @@ import Control.Monad.Effect.State
 runTestCoroutine :: [Int] -> Int
 runTestCoroutine list = snd . run $ runState effTestCoroutine 0
   where
-    testCoroutine :: Members '[Yield () Int, State Int] e => Eff e ()
+    testCoroutine :: ('[Yield () Int, State Int] :<: e) => Eff e ()
     testCoroutine = do
       -- yield for two elements and hope they're both odd
       b <- (&&)
