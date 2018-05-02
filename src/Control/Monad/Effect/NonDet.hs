@@ -32,7 +32,7 @@ runNonDet f = relay (pure . f) (\ m k -> case m of
     MZero -> pure mempty
     MPlus -> mappend <$> k True <*> k False)
 
-gather :: (Monoid b, NonDet :< e)
+gather :: (Monoid b, Member NonDet e)
        => (a -> b) -- ^ A function constructing a 'Monoid'al value from a single computed result. This might typically be @unit@ (for @Reducer@s), 'pure' (for 'Applicative's), or some similar singleton constructor.
        -> Eff e a      -- ^ The computation to run locally-nondeterministically.
        -> Eff e b
@@ -49,7 +49,7 @@ makeChoiceA =
       MZero -> pure empty
       MPlus -> liftM2 (<|>) (k True) (k False)
 
-msplit :: (NonDet :< e)
+msplit :: Member NonDet e
        => Eff e a -> Eff e (Maybe (a, Eff e a))
 msplit = loop []
   where loop jq (Val x) = pure (Just (x, msum jq))

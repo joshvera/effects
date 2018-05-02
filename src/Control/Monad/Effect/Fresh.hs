@@ -35,7 +35,7 @@ data Fresh v where
   Fresh :: Fresh Int
 
 -- | Request a fresh effect
-fresh :: (Fresh :< r) => Eff r Int
+fresh :: Member Fresh r => Eff r Int
 fresh = send Fresh
 
 -- | Handler for Fresh effects, with an Int for a starting value
