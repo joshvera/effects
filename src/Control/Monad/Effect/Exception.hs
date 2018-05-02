@@ -34,7 +34,7 @@ import Control.Monad.Effect.Internal
 newtype Exc exc a = Exc exc
 
 -- | Throws an error carrying information of type 'exc'.
-throwError :: (Exc exc :< e) => exc -> Eff e a
+throwError :: Member (Exc exc) e => exc -> Eff e a
 throwError e = send (Exc e)
 
 -- | Handler for exception effects
@@ -47,6 +47,6 @@ runError =
 
 -- | A catcher for Exceptions. Handlers are allowed to rethrow
 -- exceptions.
-catchError :: (Exc exc :< e) =>
+catchError :: Member (Exc exc) e =>
         Eff e a -> (exc -> Eff e a) -> Eff e a
 catchError m handle = interpose pure (\(Exc e) _k -> handle e) m

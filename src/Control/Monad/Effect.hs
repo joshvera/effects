@@ -22,8 +22,6 @@ module Control.Monad.Effect (
   , interposeState
   , interpret
   -- * Checking a List of Effects#
-  , type(:<)
-  , type(:<:)
   , Member
   , Members
   , Embedded
