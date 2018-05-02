@@ -5,8 +5,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE MagicHash #-}
 
 -- Only for MemberU below, when emulating Monad Transformers
 {-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
@@ -51,10 +49,7 @@ module Data.Union (
 
 import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
-import GHC.Prim (Proxy#, proxy#)
-import GHC.TypeLits
 
-pure [mkElemIndexTypeFamily 150]
 
 -- Strong Sum (Existential with the evidence) is an open union
 -- t is can be a GADT and hence not necessarily a Functor.
@@ -115,12 +110,17 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
 
-type (Member t r) = KnownNat (ElemIndex t r)
 
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
-elemNo :: forall t r . Member t r => P t r
-elemNo = P (fromIntegral (natVal' (proxy# :: Proxy# (ElemIndex t r))))
+class Member t r where
+  elemNo :: P t r
+
+instance Member t (t ': r) where
+  elemNo = P 0
+
+instance {-# OVERLAPPABLE #-} Member t r => Member t (t' ': r) where
+  elemNo = P $ 1 + unP (elemNo :: P t r)
 
 
 type family EQU (a :: * -> *) (b :: * -> *) :: Bool where
