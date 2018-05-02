@@ -4,7 +4,6 @@ module Data.Union.Templates
 ) where
 
 import Language.Haskell.TH
-import Unsafe.Coerce (unsafeCoerce)
 
 mkElemIndexTypeFamily :: Integer -> Dec
 mkElemIndexTypeFamily paramN =
