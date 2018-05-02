@@ -21,6 +21,7 @@ module Control.Monad.Effect (
   , interpose
   , interposeState
   , interpret
+  , reinterpret
   -- * Checking a List of Effects#
   , Member
   , Members
