@@ -1,8 +1,6 @@
 module Main where
 
 import Control.Monad.Effect
-import Data.Functor.Classes (Eq1(..))
-import Data.Monoid (Sum(..))
 
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -15,7 +13,6 @@ import Tests.NonDet
 import Tests.Reader
 import Tests.State
 import Tests.StateRW
-import Tests.Union
 
 import qualified Data.List
 
@@ -126,27 +123,6 @@ stateTests = testGroup "State tests"
   ]
 
 --------------------------------------------------------------------------------
-                     -- Union instance Tests --
---------------------------------------------------------------------------------
-unionTests :: TestTree
-unionTests = testGroup "Union tests"
-  [ testProperty "unary fmap equivalence" (\ n -> fmap succ (testUnaryUnion n) == testUnaryUnion (succ n))
-  , testProperty "binary fmap equivalence 0" (\ n -> fmap succ (testBinaryUnion0 n) == testBinaryUnion0 (succ n))
-  , testProperty "binary fmap equivalence 1" (\ s -> fmap succ (testBinaryUnion1 s) == testBinaryUnion1 s)
-  , testProperty "unary traverse equivalence" (\ n -> traverse Just (testUnaryUnion n) == Just (testUnaryUnion n))
-  , testProperty "binary traverse equivalence 0" (\ n -> traverse Just (testBinaryUnion0 n) == Just (testBinaryUnion0 n))
-  , testProperty "binary traverse equivalence 1" (\ s -> traverse Just (testBinaryUnion1 s) == Just (testBinaryUnion1 s))
-  , testProperty "unary foldMap equivalence" (\ n -> foldMap Sum (testUnaryUnion n) == Sum n)
-  , testProperty "binary foldMap equivalence 0" (\ n -> foldMap Sum (testBinaryUnion0 n) == Sum n)
-  , testProperty "binary foldMap equivalence 1" (\ s -> foldMap Sum (testBinaryUnion1 s) == mempty)
-  , testProperty "unary lifted equality" (\ n -> liftEq (==) (testUnaryUnion n) (testUnaryUnion n))
-  , testProperty "binary lifted equality 0" (\ n -> liftEq (==) (testBinaryUnion0 n) (testBinaryUnion0 n))
-  , testProperty "binary lifted equality 1" (\ s -> liftEq (==) (testBinaryUnion1 s) (testBinaryUnion1 s))
-  , testProperty "binary lifted inequality 0" (\ n s -> not (liftEq (==) (testBinaryUnion0 n) (testBinaryUnion1 s)))
-  , testProperty "binary lifted inequality 1" (\ s n -> not (liftEq (==) (testBinaryUnion1 s) (testBinaryUnion0 n)))
-  ]
-
---------------------------------------------------------------------------------
                              -- Runner --
 --------------------------------------------------------------------------------
 main :: IO ()
@@ -158,5 +134,4 @@ main = defaultMain $ testGroup "Tests"
   , nonDetTests
   , readerTests
   , stateTests
-  , unionTests
   ]
