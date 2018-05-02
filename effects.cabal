@@ -55,7 +55,6 @@ library
                      , Data.FTCQueue
                      , Data.Union
   build-depends:       base >=4.7 && <5
-                     , ghc-prim
                      , template-haskell
                      , async
   hs-source-dirs:      src
