@@ -42,6 +42,7 @@ module Control.Monad.Effect.Internal (
   , relay
   , relayState
   , interpose
+  , interposeState
   , interpret
 ) where
 
@@ -149,21 +150,37 @@ relayState s' pure' bind = loop s'
     loop s (E u' q)  = case decompose u' of
       Right x -> bind s x k
       Left  u -> E u (tsingleton (k s))
-     where k s'' x = loop s'' $ q `apply` x
+     where k s'' = q >>> loop s''
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
 interpose :: (eff :< e)
-          => (a -> Eff e b)
+          => Arrow e a b
           -> (forall v. eff v -> Arrow e v b -> Eff e b)
           -> Eff e a -> Eff e b
 interpose ret h = loop
  where
-   loop (Val x)  = ret x
-   loop (E u q)  = case prj u of
+   loop (Val x) = ret x
+   loop (E u q) = case prj u of
      Just x -> h x k
      _      -> E u (tsingleton k)
     where k = q >>> loop
+
+-- | Intercept an effect like 'interpose', but with an explicit state
+-- parameter like 'relayState'.
+interposeState :: (eff :< e)
+               => s
+               -> (s -> Arrow e a b)
+               -> (forall v. s -> eff v -> (s -> Arrow e v b) -> Eff e b)
+               -> Eff e a
+               -> Eff e b
+interposeState initial ret handler = loop initial
+  where
+    loop state (Val x) = ret state x
+    loop state (E u q) = case prj u of
+      Just x -> handler state x k
+      _      -> E u (tsingleton (k state))
+      where k state' = q >>> loop state'
 
 -- | Handle the topmost effect by interpreting it into the underlying effects.
 interpret :: (forall a. eff a -> Eff effs a) -> Eff (eff ': effs) b -> Eff effs b
