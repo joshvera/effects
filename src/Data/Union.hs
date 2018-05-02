@@ -9,6 +9,8 @@
 -- Only for MemberU below, when emulating Monad Transformers
 {-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
 
+{-# OPTIONS_GHC -Wno-redundant-constraints #-} -- Due to MemberU2
+
 {-|
 Module      : Data.Union
 Description : Open unions (type-indexed co-products) for extensible effects.
