@@ -5,7 +5,7 @@ import Control.Monad.Effect.Fresh
 import Control.Monad.Effect.Trace
 
 traceFresh :: IO ()
-traceFresh = runM . runTrace . runFresh 0 $ do
+traceFresh = runM . runPrintingTrace . runFresh 0 $ do
   n <- fresh
   trace $ "Fresh " ++ show n
   n' <- fresh

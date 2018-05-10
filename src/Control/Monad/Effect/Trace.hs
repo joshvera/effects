@@ -22,7 +22,7 @@ starting point.
 module Control.Monad.Effect.Trace (
   Trace(..),
   trace,
-  runTrace
+  runPrintingTrace
 ) where
 
 import Control.Monad.Effect.Internal
@@ -36,5 +36,5 @@ trace :: (Member Trace e, Effectful m) => String -> m e ()
 trace = send . Trace
 
 -- | An IO handler for Trace effects
-runTrace :: Member IO effects => Eff (Trace ': effects) a -> Eff effects a
-runTrace = raiseHandler (relay pure (\ (Trace s) -> (send (putStrLn s) >>=)))
+runPrintingTrace :: Member IO effects => Eff (Trace ': effects) a -> Eff effects a
+runPrintingTrace = raiseHandler (relay pure (\ (Trace s) -> (send (putStrLn s) >>=)))
