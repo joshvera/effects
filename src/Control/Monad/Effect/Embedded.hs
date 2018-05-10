@@ -42,8 +42,8 @@ instance (Member e r, Raisable m r) =>  Raisable (e ': m) r where
       Right x -> send x
       Left u' -> raiseUnion u'
 
-raiseEmbedded :: Raisable m r => Eff m a -> Eff r a
-raiseEmbedded = loop
+raiseEmbedded :: (Raisable e e', Effectful m) => m e a -> m e' a
+raiseEmbedded = raiseHandler loop
   where
     loop (Val x)  = pure x
     loop (E u' q) = raiseUnion u' >>= (q >>> loop)
