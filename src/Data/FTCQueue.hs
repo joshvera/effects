@@ -55,7 +55,7 @@ class TANonEmptySequence sequence where
   tmap :: (forall x y. arrow x y -> arrow' x y) -> sequence arrow x y -> sequence arrow' x y
 
 data TANonEmptyViewL s arrow a b where
-  TOne  :: arrow a b -> TANonEmptyViewL s arrow a b
+  TOneL :: arrow a b -> TANonEmptyViewL s arrow a b
   (:<)  :: arrow a x -> s arrow x b -> TANonEmptyViewL s arrow a b
 
 instance TANonEmptySequence FTCQueue where
@@ -68,7 +68,7 @@ instance TANonEmptySequence FTCQueue where
   t1 >< t2 = Node t1 t2
   {-# INLINE (><) #-}
 
-  tviewl (Leaf r) = TOne r
+  tviewl (Leaf r) = TOneL r
   tviewl (Node t1 t2) = go t1 t2
     where
       go :: FTCQueue arrow a x -> FTCQueue arrow x b -> TANonEmptyViewL FTCQueue arrow a b

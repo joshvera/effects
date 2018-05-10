@@ -82,8 +82,8 @@ instance Arr.Arrow (Arrow effects) where
 apply :: Queue effects a b -> a -> Eff effects b
 apply q' x =
    case tviewl q' of
-   TOne k  -> runArrow k x
-   k :< t -> case runArrow k x of
+   TOneL k -> runArrow k x
+   k :< t  -> case runArrow k x of
      Val y -> t `apply` y
      E u q -> E u (q >< t)
 
