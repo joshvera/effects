@@ -67,8 +67,8 @@ modify :: (Member (State s) e, Effectful m) => (s -> s) -> m e ()
 modify f = raiseEff (fmap f get >>= put)
 
 -- | Modify state strictly
-modify' :: Member (State s) e => (s -> s) -> Eff e ()
-modify' f = do
+modify' :: (Member (State s) e, Effectful m) => (s -> s) -> m e ()
+modify' f = raiseEff $ do
   v <- get
   put $! f v
 
