@@ -48,8 +48,8 @@ raiseEmbedded = raiseHandler loop
     loop (Val x)  = pure x
     loop (E u' q) = raiseUnion u' >>= (q >>> loop)
 
-liftEmbedded :: (Raisable m r) => Eff (Embedded m ': r) a -> Eff r a
-liftEmbedded = runEmbedded void
+liftEmbedded :: (Raisable e e', Effectful m) => m (Embedded e ': e') a -> m e' a
+liftEmbedded = raiseHandler (runEmbedded void)
 
 runEmbedded :: (Raisable m r)
             => (forall v. Eff r v -> Eff r' ())
