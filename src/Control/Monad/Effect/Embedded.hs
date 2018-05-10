@@ -46,7 +46,7 @@ raiseEmbedded :: Raisable m r => Eff m a -> Eff r a
 raiseEmbedded = loop
   where
     loop (Val x)  = pure x
-    loop (E u' q) = raiseUnion u' >>= (q >>> loop)
+    loop (E u' q) = raiseUnion u' >>= runArrow (q >>> loop)
 
 liftEmbedded :: (Raisable m r) => Eff (Embedded m ': r) a -> Eff r a
 liftEmbedded = runEmbedded void

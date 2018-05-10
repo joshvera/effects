@@ -42,7 +42,7 @@ import Data.Proxy
 runState :: Eff (State s ': e) b -> s -> Eff e (b, s)
 runState (Val b) s = pure (b, s)
 runState (E u q) s = case decompose u of
-  Left  u'       -> E u' $ tsingleton (flip runState s . apply q)
+  Left  u'       -> E u' $ tsingleton (Arrow (flip runState s . apply q))
   Right Get      -> runState (apply q s) s
   Right (Put s') -> runState (apply q ()) s'
 
