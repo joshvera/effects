@@ -14,7 +14,7 @@ Portability : POSIX
 module Control.Monad.Effect.NonDet (
   NonDet(..),
   runNonDetM,
-  gather,
+  gatherM,
   makeChoiceA,
   msplit
 ) where
@@ -32,13 +32,13 @@ runNonDetM f = raiseHandler (relay (pure . f) (\ m k -> case m of
   MZero -> pure mempty
   MPlus -> mappend <$> k True <*> k False))
 
-gather :: (Monoid b, Member NonDet e, Effectful m)
-       => (a -> b) -- ^ A function constructing a 'Monoid'al value from a single computed result. This might typically be @unit@ (for @Reducer@s), 'pure' (for 'Applicative's), or some similar singleton constructor.
-       -> m e a    -- ^ The computation to run locally-nondeterministically.
-       -> m e b
-gather f = raiseHandler (interpose (pure . f) (\ m k -> case m of
-      MZero -> pure mempty
-      MPlus -> mappend <$> k True <*> k False))
+gatherM :: (Monoid b, Member NonDet e, Effectful m)
+        => (a -> b) -- ^ A function constructing a 'Monoid'al value from a single computed result. This might typically be @unit@ (for @Reducer@s), 'pure' (for 'Applicative's), or some similar singleton constructor.
+        -> m e a    -- ^ The computation to run locally-nondeterministically.
+        -> m e b
+gatherM f = raiseHandler (interpose (pure . f) (\ m k -> case m of
+  MZero -> pure mempty
+  MPlus -> mappend <$> k True <*> k False))
 
 -- | A handler for nondeterminstic effects
 makeChoiceA :: Alternative f
