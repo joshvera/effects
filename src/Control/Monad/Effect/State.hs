@@ -51,7 +51,7 @@ data State s v where
   Put :: !s -> State s ()
 
 -- | Retrieve state
-get :: Member (State s) e => Eff e s
+get :: (Member (State s) e, Effectful m) => m e s
 get = send Get
 
 -- | Retrieve state, modulo a projection.
