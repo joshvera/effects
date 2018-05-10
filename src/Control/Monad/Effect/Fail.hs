@@ -8,5 +8,5 @@ module Control.Monad.Effect.Fail
 import Control.Monad.Effect.Internal
 import Control.Monad.Fail
 
-runFail :: Eff (Fail ': fs) a -> Eff fs (Either String a)
-runFail = relay (pure . Right) (const . pure . Left . failMessage)
+runFail :: Effectful m => m (Fail ': fs) a -> m fs (Either String a)
+runFail = raiseHandler (relay (pure . Right) (const . pure . Left . failMessage))
