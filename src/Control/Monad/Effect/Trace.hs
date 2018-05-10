@@ -24,9 +24,11 @@ module Control.Monad.Effect.Trace
 , trace
 , runPrintingTrace
 , runIgnoringTrace
+, runReturningTrace
 ) where
 
 import Control.Monad.Effect.Internal
+import Control.Monad.Effect.State
 
 -- | A Trace effect; takes a String and performs output
 data Trace v where
@@ -43,3 +45,7 @@ runPrintingTrace = raiseHandler (relay pure (\ (Trace s) -> (send (putStrLn s) >
 -- | Run a 'Trace' effect, discarding the traced values.
 runIgnoringTrace :: Effectful m => m (Trace ': effects) a -> m effects a
 runIgnoringTrace = raiseHandler (interpret (\ (Trace _) -> pure ()))
+
+-- | Run a 'Trace' effect, accumulating the traced values into a list like a 'Writer'.
+runReturningTrace :: Effectful m => m (Trace ': effects) a -> m effects (a, [String])
+runReturningTrace = raiseHandler (fmap (fmap reverse) . runState [] . reinterpret (\ (Trace s) -> modify' (s:)))
