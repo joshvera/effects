@@ -31,7 +31,7 @@ data Embedded ms a where
 $(makeEff ''Embedded)
 
 class Raisable (ms :: [* -> *]) r where
-  raiseUnion :: Union ms a -> Eff r a
+  raiseUnion :: Effectful m => Union ms a -> m r a
 
 instance Raisable '[] r where
   raiseUnion _ = error "absurd: raiseUnion run on an empty union"
