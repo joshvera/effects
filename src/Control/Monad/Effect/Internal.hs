@@ -168,15 +168,15 @@ relayState s' pure' bind = raiseEff . loop s' . lowerEff
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
-interpose :: Member eff e
-          => Arrow Eff e a b
-          -> (forall v. eff v -> Arrow Eff e v b -> Eff e b)
-          -> Eff e a -> Eff e b
-interpose ret h = loop
+interpose :: (Member eff e, Effectful m)
+          => Arrow m e a b
+          -> (forall v. eff v -> Arrow m e v b -> m e b)
+          -> m e a -> m e b
+interpose pure' h = raiseEff . loop . lowerEff
  where
-   loop (Val x) = ret x
+   loop (Val x) = lowerEff (pure' x)
    loop (E u q) = case prj u of
-     Just x -> h x k
+     Just x -> lowerEff (h x (raiseEff . k))
      _      -> E u (tsingleton k)
     where k = q >>> loop
 
