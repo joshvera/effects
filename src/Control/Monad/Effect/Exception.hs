@@ -50,7 +50,7 @@ runError =
 -- exceptions.
 catchError :: (Member (Exc exc) e, Effectful m) =>
         m e a -> (exc -> m e a) -> m e a
-catchError m handle = raiseHandler (interpose pure (\(Exc e) _k -> lowerEff (handle e))) m
+catchError = flip handleError
 
 -- | 'catchError', but with its arguments in the opposite order. Useful
 -- in situations where the code for the handler is shorter, or when
