@@ -58,10 +58,10 @@ data Eff effects b
   -- | Done with the value of type `b`.
   = Val b
   -- | Send an union of 'effects' and 'eff a' to handle, and a queues of effects to apply from 'a' to 'b'.
-  | forall a. E (Union effects a) (Queue Eff effects a b)
+  | forall a. E (Union effects a) (Queue effects a b)
 
 -- | A queue of effects to apply from 'a' to 'b'.
-type Queue m (effects :: [* -> *]) a b = FTCQueue (m effects) a b
+type Queue effects a b = FTCQueue (Eff effects) a b
 
 -- | An effectful function from 'a' to 'b'
 --   that also performs a list of 'effects'.
@@ -80,7 +80,7 @@ instance Effectful Eff where
 -- * Composing and Applying Effects
 
 -- | Returns an effect by applying a given value to a queue of effects.
-apply :: Queue Eff effects a b -> a -> Eff effects b
+apply :: Queue effects a b -> a -> Eff effects b
 apply q' x =
    case tviewl q' of
    TOne k  -> k x
@@ -89,14 +89,14 @@ apply q' x =
      E u q -> E u (q >< t)
 
 -- | Compose queues left to right.
-(>>>) :: Queue Eff effects a b
+(>>>) :: Queue effects a b
       -> (Eff effects b -> Eff effects' c) -- ^ An function to compose.
       -> Arrow Eff effects' a c
 (>>>) queue f = f . apply queue
 
 -- | Compose queues right to left.
 (<<<) :: (Eff effects b -> Eff effects' c) -- ^ An function to compose.
-      -> Queue Eff effects  a b
+      -> Queue effects  a b
       -> Arrow Eff effects' a c
 (<<<) f queue  = f . apply queue
 
