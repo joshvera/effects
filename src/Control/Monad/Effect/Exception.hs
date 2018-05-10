@@ -34,7 +34,7 @@ import Control.Monad.Effect.Internal
 newtype Exc exc a = Exc exc
 
 -- | Throws an error carrying information of type 'exc'.
-throwError :: Member (Exc exc) e => exc -> Eff e a
+throwError :: (Member (Exc exc) e, Effectful m) => exc -> m e a
 throwError e = send (Exc e)
 
 -- | Handler for exception effects
