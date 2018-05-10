@@ -27,10 +27,10 @@ import Control.Monad.Effect.Internal
                     -- Nondeterministic Choice --
 --------------------------------------------------------------------------------
 
-runNonDet :: Monoid b => (a -> b) -> Eff (NonDet ': e) a -> Eff e b
-runNonDet f = relay (pure . f) (\ m k -> case m of
-    MZero -> pure mempty
-    MPlus -> mappend <$> k True <*> k False)
+runNonDet :: (Monoid b, Effectful m) => (a -> b) -> m (NonDet ': e) a -> m e b
+runNonDet f = raiseHandler (relay (pure . f) (\ m k -> case m of
+  MZero -> pure mempty
+  MPlus -> mappend <$> k True <*> k False))
 
 gather :: (Monoid b, Member NonDet e)
        => (a -> b) -- ^ A function constructing a 'Monoid'al value from a single computed result. This might typically be @unit@ (for @Reducer@s), 'pure' (for 'Applicative's), or some similar singleton constructor.
