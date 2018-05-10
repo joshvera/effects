@@ -2,7 +2,7 @@
 module Control.Monad.Effect.Resumable
   ( Resumable(..)
   , SomeExc(..)
-  , throwError
+  , throwResumable
   , runError
   , resumeError
   , catchError
@@ -13,8 +13,8 @@ import Control.Monad.Effect.Internal
 
 data Resumable exc a = Resumable (exc a)
 
-throwError :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
-throwError = send . Resumable
+throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
+throwResumable = send . Resumable
 
 runError :: Eff (Resumable exc ': e) a -> Eff e (Either (SomeExc exc) a)
 runError = relay (pure . Right) (\ (Resumable e) _k -> pure (Left (SomeExc e)))
