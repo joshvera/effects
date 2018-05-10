@@ -72,6 +72,10 @@ class Effectful m where
   raiseEff :: Eff effects a -> m effects a
   lowerEff :: m effects a -> Eff effects a
 
+instance Effectful Eff where
+  raiseEff = id
+  lowerEff = id
+
 
 -- * Composing and Applying Effects
 
