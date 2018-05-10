@@ -59,7 +59,7 @@ gets :: (Member (State s) e, Effectful m) => (s -> a) -> m e a
 gets f = raiseEff (f <$> get)
 
 -- | Store state
-put :: Member (State s) e => s -> Eff e ()
+put :: (Member (State s) e, Effectful m) => s -> m e ()
 put s = send (Put s)
 
 -- | Modify state
