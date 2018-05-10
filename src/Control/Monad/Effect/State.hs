@@ -39,8 +39,8 @@ import Data.Proxy
 --------------------------------------------------------------------------------
 
 -- | Run a 'State s' effect given an effect and an initial state.
-runState :: Eff (State s ': e) b -> s -> Eff e (b, s)
-runState m initial = relayState initial (\ s b -> pure (b, s)) (\ s eff yield -> case eff of
+runState :: Effectful m => m (State s ': e) b -> s -> m e (b, s)
+runState m initial = relayState initial (\ s b -> raiseEff (pure (b, s))) (\ s eff yield -> case eff of
   Get    -> yield s s
   Put s' -> yield s' ()) m
 
