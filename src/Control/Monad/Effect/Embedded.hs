@@ -23,6 +23,7 @@ import Control.Concurrent.Async (async)
 import Control.Monad
 import Control.Monad.Effect.TH
 import Control.Monad.Effect.Internal
+import Control.Monad.IO.Class
 
 
 data Embedded ms a where
@@ -57,8 +58,8 @@ runEmbedded :: (Raisable e e', Effectful m)
             -> m e'' a
 runEmbedded f = raiseHandler (relay pure (\(Embed e) -> (lowerEff (f (raiseEff (raiseEmbedded e))) >>=)))
 
-runEmbeddedAsync :: (Raisable m d, Member IO r)
-                 => (forall v. Eff d v -> IO v)
-                 -> Eff (Embedded m ': r) a
-                 -> Eff r a
-runEmbeddedAsync f = runEmbedded (send @Eff @IO . void . async . f)
+runEmbeddedAsync :: (Raisable e e', Member IO e'', Effectful m)
+                 => (forall v. m e' v -> IO v)
+                 -> m (Embedded e ': e'') a
+                 -> m e'' a
+runEmbeddedAsync f = raiseHandler (runEmbedded (liftIO . void . async . f . raiseEff))
