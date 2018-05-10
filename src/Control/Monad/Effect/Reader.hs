@@ -57,14 +57,14 @@ runReader e = raiseHandler (interpret (\ Reader -> pure e))
 -- Locally rebind the value in the dynamic environment
 -- This function is like a relay; it is both an admin for Reader requests,
 -- and a requestor of them
-local :: forall v b e. Member (Reader v) e =>
-         (v -> v) -> Eff e b -> Eff e b
-local f m = do
+local :: forall v b m e. (Member (Reader v) e, Effectful m) =>
+         (v -> v) -> m e b -> m e b
+local f m = raiseEff $ do
   e0 <- ask
   let e = f e0
   let bind :: Reader v a -> Arrow Eff e a b -> Eff e b
       bind Reader g = g e
-  interpose pure bind m
+  interpose pure bind (lowerEff m)
 
 
 {- $simpleReaderExample
