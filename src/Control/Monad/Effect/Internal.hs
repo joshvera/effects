@@ -46,6 +46,7 @@ module Control.Monad.Effect.Internal (
 ) where
 
 import Control.Applicative (Alternative(..))
+import qualified Control.Arrow as Arr
 import qualified Control.Category as Cat
 import Control.Monad (MonadPlus(..), (<=<))
 import Control.Monad.Fail (MonadFail(..))
@@ -70,6 +71,10 @@ newtype Arrow effects a b = Arrow { runArrow :: a -> Eff effects b }
 instance Cat.Category (Arrow effects) where
   id = Arrow pure
   Arrow runB . Arrow runA = Arrow (runB <=< runA)
+
+instance Arr.Arrow (Arrow effects) where
+  arr f = Arrow (pure . f)
+  Arrow runA *** Arrow runB = Arrow (\ (a, b) -> (,) <$> runA a <*> runB b)
 
 -- * Composing and Applying Effects
 
