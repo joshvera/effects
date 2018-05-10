@@ -45,6 +45,7 @@ module Control.Monad.Effect.Internal (
   , interposeState
   , interpret
   , reinterpret
+  , reinterpret2
 ) where
 
 import Control.Applicative (Alternative(..))
@@ -215,6 +216,17 @@ reinterpret handle = raiseHandler loop
         loop (E u' q) = case decompose u' of
             Right eff -> lowerEff (handle eff) >>= q >>> loop
             Left  u   -> E (weaken u) (tsingleton (q >>> loop))
+
+-- | Interpret an effect by replacing it with two new effects.
+reinterpret2 :: Effectful m
+             => (forall x. effect x -> m (newEffect1 ': newEffect2 ': effs) x)
+             -> m (effect ': effs) a
+             -> m (newEffect1 ': newEffect2 ': effs) a
+reinterpret2 handle = raiseHandler loop
+  where loop (Val x)  = pure x
+        loop (E u' q) = case decompose u' of
+            Right eff -> lowerEff (handle eff) >>= q >>> loop
+            Left  u   -> E (weaken (weaken u)) (tsingleton (q >>> loop))
 
 
 -- * Effect Instances
