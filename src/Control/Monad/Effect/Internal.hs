@@ -121,10 +121,10 @@ runM (E u q) = case decompose u of
 
 -- | Given an effect request, either handle it with the given 'pure' function,
 -- or relay it to the given 'bind' function.
-relay :: Arrow e a b -- ^ An 'pure' effectful arrow.
+relay :: (a -> Eff e b) -- ^ An 'pure' effectful arrow.
       -- | A function to relay to, that binds a relayed 'eff v' to
       -- an effectful arrow and returns a new effect.
-      -> (forall v. eff v -> Arrow e v b -> Eff e b)
+      -> (forall v. eff v -> (v -> Eff e b) -> Eff e b)
       -> Eff (eff ': e) a -- ^ The 'eff' to relay and consume.
       -> Eff e b -- ^ The relayed effect with 'eff' consumed.
 relay pure' bind = loop
@@ -140,7 +140,7 @@ relay pure' bind = loop
 -- effect, or relayed to a handler that can handle the target effect.
 relayState :: s
            -> (s -> a -> Eff e b)
-           -> (forall v. s -> eff v -> (s -> Arrow e v b) -> Eff e b)
+           -> (forall v. s -> eff v -> (s -> v -> Eff e b) -> Eff e b)
            -> Eff (eff ': e) a
            -> Eff e b
 relayState s' pure' bind = loop s'
@@ -154,8 +154,8 @@ relayState s' pure' bind = loop s'
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
 interpose :: Member eff e
-          => Arrow e a b
-          -> (forall v. eff v -> Arrow e v b -> Eff e b)
+          => (a -> Eff e b)
+          -> (forall v. eff v -> (v -> Eff e b) -> Eff e b)
           -> Eff e a -> Eff e b
 interpose ret h = loop
  where
@@ -169,8 +169,8 @@ interpose ret h = loop
 -- parameter like 'relayState'.
 interposeState :: Member eff e
                => s
-               -> (s -> Arrow e a b)
-               -> (forall v. s -> eff v -> (s -> Arrow e v b) -> Eff e b)
+               -> (s -> a -> Eff e b)
+               -> (forall v. s -> eff v -> (s -> v -> Eff e b) -> Eff e b)
                -> Eff e a
                -> Eff e b
 interposeState initial ret handler = loop initial
