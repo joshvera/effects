@@ -134,17 +134,18 @@ runM m = case lowerEff m of
 
 -- | Given an effect request, either handle it with the given 'pure' function,
 -- or relay it to the given 'bind' function.
-relay :: Arrow Eff e a b -- ^ An 'pure' effectful arrow.
+relay :: Effectful m
+      => Arrow m e a b -- ^ An 'pure' effectful arrow.
       -- | A function to relay to, that binds a relayed 'eff v' to
       -- an effectful arrow and returns a new effect.
-      -> (forall v. eff v -> Arrow Eff e v b -> Eff e b)
-      -> Eff (eff ': e) a -- ^ The 'eff' to relay and consume.
-      -> Eff e b -- ^ The relayed effect with 'eff' consumed.
-relay pure' bind = loop
+      -> (forall v. eff v -> Arrow m e v b -> m e b)
+      -> m (eff ': e) a -- ^ The 'eff' to relay and consume.
+      -> m e b -- ^ The relayed effect with 'eff' consumed.
+relay pure' bind = raiseEff . loop . lowerEff
  where
-  loop (Val x)  = pure' x
+  loop (Val x)  = lowerEff (pure' x)
   loop (E u' q) = case decompose u' of
-    Right x -> bind x k
+    Right x -> lowerEff (bind x (raiseEff . k))
     Left  u -> E u (tsingleton k)
    where k = q >>> loop
 
