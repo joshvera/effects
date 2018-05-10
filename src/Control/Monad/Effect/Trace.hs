@@ -19,10 +19,11 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Effect.Trace (
-  Trace(..),
-  trace,
-  runPrintingTrace
+module Control.Monad.Effect.Trace
+( Trace(..)
+, trace
+, runPrintingTrace
+, runIgnoringTrace
 ) where
 
 import Control.Monad.Effect.Internal
@@ -38,3 +39,7 @@ trace = send . Trace
 -- | An IO handler for Trace effects
 runPrintingTrace :: (Member IO effects, Effectful m) => m (Trace ': effects) a -> m effects a
 runPrintingTrace = raiseHandler (relay pure (\ (Trace s) -> (send (putStrLn s) >>=)))
+
+-- | Run a 'Trace' effect, discarding the traced values.
+runIgnoringTrace :: Effectful m => m (Trace ': effects) a -> m effects a
+runIgnoringTrace = raiseHandler (interpret (\ (Trace _) -> pure ()))
