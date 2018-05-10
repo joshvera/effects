@@ -22,7 +22,7 @@ starting point.
 module Control.Monad.Effect.Fresh (
   Fresh(..),
   fresh,
-  runFresh'
+  runFresh
 ) where
 
 import Control.Monad.Effect.Internal
@@ -39,5 +39,5 @@ fresh :: (Member Fresh e, Effectful m) => m e Int
 fresh = send Fresh
 
 -- | Handler for Fresh effects, with an Int for a starting value
-runFresh' :: Effectful m => Int -> m (Fresh ': e) a -> m e a
-runFresh' s = raiseHandler (relayState s (const pure) (\s' Fresh k -> (k $! s'+1) s'))
+runFresh :: Effectful m => Int -> m (Fresh ': e) a -> m e a
+runFresh s = raiseHandler (relayState s (const pure) (\s' Fresh k -> (k $! s'+1) s'))
