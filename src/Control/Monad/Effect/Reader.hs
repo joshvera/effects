@@ -84,7 +84,7 @@ with 'runReader', how to access the Reader data with 'ask' and 'asks'.
 >
 >-- Returns True if the "count" variable contains correct bindings size.
 >isCountCorrect :: Bindings -> Bool
->isCountCorrect bindings = run $ runReader calc_isCountCorrect bindings
+>isCountCorrect bindings = run $ runReader bindings calc_isCountCorrect
 >
 >-- The Reader effect, which implements this complicated check.
 >calc_isCountCorrect :: Eff '[Reader Bindings] Bool
@@ -130,8 +130,8 @@ Shows how to modify Reader content with 'local'.
 > main :: IO ()
 > main = do
 >     let s = "12345";
->     let modifiedLen = run $ runReader calculateModifiedContentLen s;
->     let len = run $ runReader calculateContentLen s ;
+>     let modifiedLen = run $ runReader s calculateModifiedContentLen;
+>     let len = run $ runReader s calculateContentLen ;
 >     putStrLn $ "Modified 's' length: " ++ (show modifiedLen)
 >     putStrLn $ "Original 's' length: " ++ (show len)
 -}
