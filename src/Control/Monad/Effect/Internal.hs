@@ -129,7 +129,7 @@ relay :: (a -> Eff e b) -- ^ An 'pure' effectful arrow.
       -> Eff e b -- ^ The relayed effect with 'eff' consumed.
 relay pure' bind = loop
  where
-  loop (Val x)  = pure' x
+  loop (Val x)   = pure' x
   loop (E u' q)  = case decompose u' of
     Right x -> bind x k
     Left  u -> E u (tsingleton k)
