@@ -36,7 +36,7 @@ data Yield a b v = Yield a (b -> v)
     deriving (Functor)
 
 -- | Lifts a value and a function into the Coroutine effect
-yield :: Member (Yield a b) e => a -> (b -> c) -> Eff e c
+yield :: (Member (Yield a b) e, Effectful m) => a -> (b -> c) -> m e c
 yield x f = send (Yield x f)
 
 -- |
