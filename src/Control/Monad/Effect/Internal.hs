@@ -62,7 +62,7 @@ data Eff effects b
   | forall a. E (Union effects a) (Queue effects a b)
 
 -- | A queue of effects to apply from 'a' to 'b'.
-type Queue effects a b = FTCQueue (Arrow effects) a b
+type Queue effects = FTCQueue (Arrow effects)
 
 -- | An effectful function from 'a' to 'b'
 --   that also performs a list of 'effects'.
