@@ -15,7 +15,7 @@ module Control.Monad.Effect.NonDet (
   NonDet(..),
   runNonDetM,
   gatherM,
-  makeChoiceA,
+  runNonDetA,
   msplit
 ) where
 
@@ -41,10 +41,10 @@ gatherM f = raiseHandler (interpose (pure . f) (\ m k -> case m of
   MPlus -> mappend <$> k True <*> k False))
 
 -- | A handler for nondeterminstic effects
-makeChoiceA :: (Alternative f, Effectful m)
+runNonDetA :: (Alternative f, Effectful m)
             => m (NonDet ': e) a
             -> m e (f a)
-makeChoiceA = raiseHandler (relay (pure . pure) (\ m k -> case m of
+runNonDetA = raiseHandler (relay (pure . pure) (\ m k -> case m of
   MZero -> pure empty
   MPlus -> liftM2 (<|>) (k True) (k False)))
 

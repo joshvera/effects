@@ -23,4 +23,4 @@ generatePrimes xs = do
   where gen = msum (fmap pure xs)
 
 testIfte :: [Int] -> [Int]
-testIfte = run . makeChoiceA . generatePrimes
+testIfte = run . runNonDetA . generatePrimes
