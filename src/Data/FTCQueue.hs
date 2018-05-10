@@ -38,20 +38,20 @@ data FTCQueue arrow a b where
 
 class TANonEmptySequence sequence where
   {-# MINIMAL tsingleton, (><), tviewl, tmap #-}
-  -- | Build a leaf from a single operation [O(1)]
+  -- | Build a leaf from a single operation
   tsingleton :: arrow x y -> sequence arrow x y
 
-  -- | Append an operation to the right of the tree [O(1)]
+  -- | Append an operation to the right of the tree
   (|>) :: sequence arrow x y -> arrow y z -> sequence arrow x z
   as |> a = as >< tsingleton a
 
-  -- | Append two trees of operations [O(1)]
+  -- | Append two trees of operations
   (><) :: sequence arrow x y -> sequence arrow y z -> sequence arrow x z
 
-  -- | Left view deconstruction [average O(1)]
+  -- | Left view deconstruction
   tviewl :: sequence arrow x y -> TANonEmptyViewL sequence arrow x y
 
-  -- | Map over leaf arrows [O(n)]
+  -- | Map over leaf arrows
   tmap :: (forall x y. arrow x y -> arrow' x y) -> sequence arrow x y -> sequence arrow' x y
 
 data TANonEmptyViewL s arrow a b where
@@ -59,15 +59,19 @@ data TANonEmptyViewL s arrow a b where
   (:<)  :: arrow a x -> s arrow x b -> TANonEmptyViewL s arrow a b
 
 instance TANonEmptySequence FTCQueue where
+  -- O(1)
   tsingleton = Leaf
   {-# INLINE tsingleton #-}
 
+  -- O(1)
   t |> r = Node t (Leaf r)
   {-# INLINE (|>) #-}
 
+  -- O(1)
   t1 >< t2 = Node t1 t2
   {-# INLINE (><) #-}
 
+  -- average O(1)
   tviewl (Leaf r) = TOneL r
   tviewl (Node t1 t2) = go t1 t2
     where
@@ -75,6 +79,7 @@ instance TANonEmptySequence FTCQueue where
       go (Leaf r) tr = r :< tr
       go (Node tl1 tl2) tr = go tl1 (Node tl2 tr)
 
+  -- O(n)
   tmap f (Leaf r) = Leaf (f r)
   tmap f (Node l r) = Node (tmap f l) (tmap f r)
 
