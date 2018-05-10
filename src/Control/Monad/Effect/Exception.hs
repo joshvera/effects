@@ -47,6 +47,6 @@ runError =
 
 -- | A catcher for Exceptions. Handlers are allowed to rethrow
 -- exceptions.
-catchError :: Member (Exc exc) e =>
-        Eff e a -> (exc -> Eff e a) -> Eff e a
-catchError m handle = interpose pure (\(Exc e) _k -> handle e) m
+catchError :: (Member (Exc exc) e, Effectful m) =>
+        m e a -> (exc -> m e a) -> m e a
+catchError m handle = raiseHandler (interpose pure (\(Exc e) _k -> lowerEff (handle e))) m
