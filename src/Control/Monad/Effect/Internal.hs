@@ -81,6 +81,7 @@ instance Effectful Eff where
 -- | Raise a handler on 'Eff' to a handler on some 'Effectful' @m@.
 raiseHandler :: Effectful m => (Eff effectsA a -> Eff effectsB b) -> m effectsA a -> m effectsB b
 raiseHandler handler = raiseEff . handler . lowerEff
+{-# INLINE raiseHandler #-}
 
 
 -- * Composing and Applying Effects
