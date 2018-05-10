@@ -13,8 +13,8 @@ import Control.Monad.Effect.Internal
 
 data Resumable exc a = Resumable (exc a)
 
-throwError :: forall exc v e. Member (Resumable exc) e => exc v -> Eff e v
-throwError e = send (Resumable e :: Resumable exc v)
+throwError :: Member (Resumable exc) e => exc v -> Eff e v
+throwError = send . Resumable
 
 runError :: Eff (Resumable exc ': e) a -> Eff e (Either (SomeExc exc) a)
 runError = relay (pure . Right) (\ (Resumable e) _k -> pure (Left (SomeExc e)))
