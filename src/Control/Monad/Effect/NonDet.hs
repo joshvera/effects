@@ -13,7 +13,7 @@ Portability : POSIX
 
 module Control.Monad.Effect.NonDet (
   NonDet(..),
-  runNonDet,
+  runNonDetM,
   gather,
   makeChoiceA,
   msplit
@@ -27,8 +27,8 @@ import Control.Monad.Effect.Internal
                     -- Nondeterministic Choice --
 --------------------------------------------------------------------------------
 
-runNonDet :: (Monoid b, Effectful m) => (a -> b) -> m (NonDet ': e) a -> m e b
-runNonDet f = raiseHandler (relay (pure . f) (\ m k -> case m of
+runNonDetM :: (Monoid b, Effectful m) => (a -> b) -> m (NonDet ': e) a -> m e b
+runNonDetM f = raiseHandler (relay (pure . f) (\ m k -> case m of
   MZero -> pure mempty
   MPlus -> mappend <$> k True <*> k False))
 
