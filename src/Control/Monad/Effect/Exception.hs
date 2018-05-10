@@ -18,11 +18,12 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Effect.Exception (
-  Exc(..),
-  throwError,
-  runError,
-  catchError
+module Control.Monad.Effect.Exception
+( Exc(..)
+, throwError
+, runError
+, catchError
+, handleError
 ) where
 
 import Control.Monad.Effect.Internal
@@ -50,3 +51,9 @@ runError =
 catchError :: (Member (Exc exc) e, Effectful m) =>
         m e a -> (exc -> m e a) -> m e a
 catchError m handle = raiseHandler (interpose pure (\(Exc e) _k -> lowerEff (handle e))) m
+
+-- | 'catchError', but with its arguments in the opposite order. Useful
+-- in situations where the code for the handler is shorter, or when
+-- composing chains of handlers together.
+handleError :: (Member (Exc exc) e, Effectful m) => (exc -> m e a) -> m e a -> m e a
+handleError handle = raiseHandler (interpose pure (\(Exc e) _ -> lowerEff (handle e)))
