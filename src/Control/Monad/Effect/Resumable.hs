@@ -13,7 +13,7 @@ import Control.Monad.Effect.Internal
 
 data Resumable exc a = Resumable (exc a)
 
-throwError :: Member (Resumable exc) e => exc v -> Eff e v
+throwError :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
 throwError = send . Resumable
 
 runError :: Eff (Resumable exc ': e) a -> Eff e (Either (SomeExc exc) a)
