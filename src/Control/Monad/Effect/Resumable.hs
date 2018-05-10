@@ -3,8 +3,8 @@ module Control.Monad.Effect.Resumable
   ( Resumable(..)
   , SomeExc(..)
   , throwResumable
-  , runResumable
   , catchResumable
+  , runResumable
   ) where
 
 import Data.Functor.Classes
@@ -15,14 +15,15 @@ data Resumable exc a = Resumable (exc a)
 throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
 throwResumable = send . Resumable
 
-runResumable :: Effectful m => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
-runResumable = raiseHandler (relay (pure . Right) (\ (Resumable e) _ -> pure (Left (SomeExc e))))
-
 catchResumable :: forall exc e m a. (Member (Resumable exc) e, Effectful m)
                => m e a
                -> (forall v. exc v -> m e v)
                -> m e a
 catchResumable m handle = raiseHandler (interpose @(Resumable exc) pure (\(Resumable e) yield -> lowerEff (handle e) >>= yield)) m
+
+
+runResumable :: Effectful m => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
+runResumable = raiseHandler (relay (pure . Right) (\ (Resumable e) _ -> pure (Left (SomeExc e))))
 
 data SomeExc exc where
   SomeExc :: exc v -> SomeExc exc
