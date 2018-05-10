@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, RankNTypes #-}
 
 {-|
 Module      : Data.FTCQueue
@@ -43,6 +43,8 @@ class TANonEmptySequence sequence where
   (><) :: sequence arrow x y -> sequence arrow y z -> sequence arrow x z
   -- | Left view deconstruction [average O(1)]
   tviewl :: sequence arrow x y -> TANonEmptyViewL sequence arrow x y
+  -- | Map over leaf arrows [O(n)]
+  tmap :: (forall x y. arrow x y -> arrow' x y) -> sequence arrow x y -> sequence arrow' x y
 
 data TANonEmptyViewL s arrow a b where
   TOne  :: arrow a b -> TANonEmptyViewL s arrow a b
@@ -64,3 +66,6 @@ instance TANonEmptySequence FTCQueue where
       go :: FTCQueue arrow a x -> FTCQueue arrow x b -> TANonEmptyViewL FTCQueue arrow a b
       go (Leaf r) tr = r :< tr
       go (Node tl1 tl2) tr = go tl1 (Node tl2 tr)
+
+  tmap f (Leaf r) = Leaf (f r)
+  tmap f (Node l r) = Node (tmap f l) (tmap f r)
