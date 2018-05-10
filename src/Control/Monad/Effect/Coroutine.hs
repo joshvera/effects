@@ -48,10 +48,7 @@ data Status m (e :: [* -> *]) a b w = Done w | Continue a (b -> m e (Status m e 
 
 -- | Launch a thread and report its status
 runC :: Effectful m => m (Yield a b ': e) w -> m e (Status m e a b w)
-runC = relay (raiseEff . pure . Done) bind
-  where
-    bind :: Effectful m => Yield a b v -> Arrow m e v (Status m e a b w) -> m e (Status m e a b w)
-    bind (Yield a k) arr = raiseEff (pure (Continue a (arr . k)))
+runC = relay (raiseEff . pure . Done) (\ (Yield a k) arr -> raiseEff (pure (Continue a (arr . k))))
 
 -- | Launch a thread and run it to completion using a helper function to provide new inputs.
 runCoro :: Eff (Yield a b ': e) w -> (a -> b) -> Eff e w
