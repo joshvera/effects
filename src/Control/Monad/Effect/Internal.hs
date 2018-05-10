@@ -206,13 +206,14 @@ interpret :: Effectful m => (forall a. eff a -> m effs a) -> m (eff ': effs) b -
 interpret handler = raiseHandler (relay pure (\ eff yield -> lowerEff (handler eff) >>= yield))
 
 -- | Interpret an effect by replacing it with another effect.
-reinterpret :: (forall x. effect x -> Eff (newEffect ': effs) x)
-            -> Eff (effect ': effs) a
-            -> Eff (newEffect ': effs) a
-reinterpret handle = loop
+reinterpret :: Effectful m
+            => (forall x. effect x -> m (newEffect ': effs) x)
+            -> m (effect ': effs) a
+            -> m (newEffect ': effs) a
+reinterpret handle = raiseHandler loop
   where loop (Val x)  = pure x
         loop (E u' q) = case decompose u' of
-            Right eff -> handle eff >>=            q >>> loop
+            Right eff -> lowerEff (handle eff) >>= q >>> loop
             Left  u   -> E (weaken u) (tsingleton (q >>> loop))
 
 
