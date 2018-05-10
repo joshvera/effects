@@ -46,8 +46,8 @@ ask :: (Member (Reader v) e, Effectful m) => m e v
 ask = send Reader
 
 -- | Request a value from the environment and applys as function
-asks :: Member (Reader v) e => (v -> a) -> Eff e a
-asks f = f <$> ask
+asks :: (Member (Reader v) e, Effectful m) => (v -> a) -> m e a
+asks f = raiseEff (f <$> ask)
 
 -- | Handler for reader effects
 runReader :: Eff (Reader v ': e) a -> v -> Eff e a
