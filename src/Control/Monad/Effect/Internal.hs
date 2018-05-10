@@ -113,9 +113,10 @@ send t = raiseEff (E (inj t) (tsingleton Val))
 -- @
 -- run . runEff1 eff1Arg . runEff2 eff2Arg1 eff2Arg2 (program)
 -- @
-run :: Eff '[] b -> b
-run (Val x) = x
-run _       = error "Internal:run - This (E) should never happen"
+run :: Effectful m => m '[] b -> b
+run m = case lowerEff m of
+  Val x -> x
+  _     -> error "Internal:run - This (E) should never happen"
 -- the other case is unreachable since Union [] a cannot be
 -- constructed. Therefore, run is a total function if its argument
 -- terminates.
