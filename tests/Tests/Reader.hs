@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeApplications #-}
 module Tests.Reader (
   testReader,
   testMultiReader,
@@ -14,7 +15,7 @@ import Tests.Common
                             -- Examples --
 --------------------------------------------------------------------------------
 testReader :: Int -> Int -> Int
-testReader n x = run . runReader n $ ask `add` pure x
+testReader n x = run @Eff . runReader n $ ask `add` pure x
 
 {-
 t1rr' = run t1
@@ -23,7 +24,7 @@ t1rr' = run t1
 -}
 
 testMultiReader :: Float -> Int -> Float
-testMultiReader f n = run . runReader f . runReader n $ t2
+testMultiReader f n = run @Eff . runReader f . runReader n $ t2
   where t2 = do
           v1 <- ask
           v2 <- ask
@@ -37,6 +38,6 @@ t2rrr1' = run $ runReader (10::Float) (runReader (20::Float) t2)
 -}
 
 testLocal :: Int -> Int -> Int
-testLocal env inc = run $ runReader env t3
+testLocal env inc = run @Eff $ runReader env t3
   where t3 = t1 `add` local (+ inc) t1
         t1 = ask `add` return (1 :: Int)

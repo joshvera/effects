@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 module Main where
 
 import Control.Monad.Effect
@@ -20,7 +21,7 @@ import qualified Data.List
                            -- Pure Tests --
 --------------------------------------------------------------------------------
 addInEff :: Int -> Int -> Int
-addInEff x y = run ((+) <$> pure x <*> pure y)
+addInEff x y = run @Eff ((+) <$> pure x <*> pure y)
 
 pureTests :: TestTree
 pureTests = testGroup "Pure Eff tests"
