@@ -61,4 +61,4 @@ runEmbeddedAsync :: (Raisable m d, Member IO r)
                  => (forall v. Eff d v -> IO v)
                  -> Eff (Embedded m ': r) a
                  -> Eff r a
-runEmbeddedAsync f = runEmbedded (send @IO . void . async . f)
+runEmbeddedAsync f = runEmbedded (send @Eff @IO . void . async . f)
