@@ -55,8 +55,8 @@ get :: (Member (State s) e, Effectful m) => m e s
 get = send Get
 
 -- | Retrieve state, modulo a projection.
-gets :: Member (State s) e => (s -> a) -> Eff e a
-gets f = f <$> get
+gets :: (Member (State s) e, Effectful m) => (s -> a) -> m e a
+gets f = raiseEff (f <$> get)
 
 -- | Store state
 put :: Member (State s) e => s -> Eff e ()
