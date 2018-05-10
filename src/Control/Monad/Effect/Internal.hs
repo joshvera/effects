@@ -152,16 +152,17 @@ relay pure' bind = raiseEff . loop . lowerEff
 -- | Parameterized 'relay'
 -- Allows sending along some state to be handled for the target
 -- effect, or relayed to a handler that can handle the target effect.
-relayState :: s
-           -> (s -> a -> Eff e b)
-           -> (forall v. s -> eff v -> (s -> Arrow Eff e v b) -> Eff e b)
-           -> Eff (eff ': e) a
-           -> Eff e b
-relayState s' pure' bind = loop s'
+relayState :: Effectful m
+           => s
+           -> (s -> a -> m e b)
+           -> (forall v. s -> eff v -> (s -> Arrow m e v b) -> m e b)
+           -> m (eff ': e) a
+           -> m e b
+relayState s' pure' bind = raiseEff . loop s' . lowerEff
   where
-    loop s (Val x)  = pure' s x
-    loop s (E u' q)  = case decompose u' of
-      Right x -> bind s x k
+    loop s (Val x)  = lowerEff (pure' s x)
+    loop s (E u' q) = case decompose u' of
+      Right x -> lowerEff (bind s x (fmap raiseEff . k))
       Left  u -> E u (tsingleton (k s))
      where k s'' = q >>> loop s''
 
