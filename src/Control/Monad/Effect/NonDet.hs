@@ -41,13 +41,12 @@ gatherM f = raiseHandler (interpose (pure . f) (\ m k -> case m of
   MPlus -> mappend <$> k True <*> k False))
 
 -- | A handler for nondeterminstic effects
-makeChoiceA :: Alternative f
-            => Eff (NonDet ': e) a -> Eff e (f a)
-makeChoiceA =
-  relay (pure . pure) $ \m k ->
-    case m of
-      MZero -> pure empty
-      MPlus -> liftM2 (<|>) (k True) (k False)
+makeChoiceA :: (Alternative f, Effectful m)
+            => m (NonDet ': e) a
+            -> m e (f a)
+makeChoiceA = raiseHandler (relay (pure . pure) (\ m k -> case m of
+  MZero -> pure empty
+  MPlus -> liftM2 (<|>) (k True) (k False)))
 
 msplit :: Member NonDet e
        => Eff e a -> Eff e (Maybe (a, Eff e a))
