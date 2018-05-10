@@ -27,7 +27,7 @@ module Control.Monad.Effect.Internal (
   , decompose
   , Queue
   , tsingleton
-  , Arrow
+  , Arrow(..)
   , Union
   -- * Composing and Applying Effects
   , apply
@@ -64,7 +64,7 @@ type Queue effects a b = FTCQueue (Eff effects) a b
 
 -- | An effectful function from 'a' to 'b'
 --   that also performs a list of 'effects'.
-type Arrow effects a b = a -> Eff effects b
+newtype Arrow effects a b = Arrow { runArrow :: a -> Eff effects b }
 
 -- * Composing and Applying Effects
 
@@ -80,13 +80,13 @@ apply q' x =
 -- | Compose queues left to right.
 (>>>) :: Queue effects a b
       -> (Eff effects b -> Eff effects' c) -- ^ An function to compose.
-      -> Arrow effects' a c
+      -> (a -> Eff effects' c)
 (>>>) queue f = f . apply queue
 
 -- | Compose queues right to left.
 (<<<) :: (Eff effects b -> Eff effects' c) -- ^ An function to compose.
       -> Queue effects  a b
-      -> Arrow effects' a c
+      -> (a -> Eff effects' c)
 (<<<) f queue  = f . apply queue
 
 -- * Sending and Running Effects
