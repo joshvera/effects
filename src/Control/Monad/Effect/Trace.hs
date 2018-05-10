@@ -36,8 +36,5 @@ trace :: (Member Trace e, Effectful m) => String -> m e ()
 trace = send . Trace
 
 -- | An IO handler for Trace effects
-runTrace :: Eff '[Trace] a -> IO a
-runTrace (Val x) = pure x
-runTrace (E u q) = case decompose u of
-     Right (Trace s) -> putStrLn s >> runTrace (apply q ())
-     Left _          -> error "runTrace:Left - This should never happen"
+runTrace :: Member IO effects => Eff (Trace ': effects) a -> Eff effects a
+runTrace = raiseHandler (relay pure (\ (Trace s) -> (send (putStrLn s) >>=)))

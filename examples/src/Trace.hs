@@ -22,7 +22,7 @@ mapMdebug f (h:t) = do
   return (h':t')
 
 tMd :: IO [Int]
-tMd = runTrace $ runReader (10::Int) (mapMdebug f [1..5])
+tMd = runM . runTrace $ runReader (10::Int) (mapMdebug f [1..5])
  where f x = ask `add` return x
 {-
 mapMdebug: 1
@@ -35,7 +35,7 @@ mapMdebug: 5
 
 -- duplicate layers
 tdup :: IO ()
-tdup = runTrace $ runReader (10::Int) m
+tdup = runM . runTrace $ runReader (10::Int) m
  where
  m = do
      runReader (20::Int) tr
