@@ -27,6 +27,8 @@ module Data.FTCQueue
 , TANonEmptyViewL(..)
 ) where
 
+import qualified Control.Category as Cat
+
 -- |
 -- Non-empty tree. Deconstruction operations make it more and more
 -- left-leaning
@@ -69,3 +71,8 @@ instance TANonEmptySequence FTCQueue where
 
   tmap f (Leaf r) = Leaf (f r)
   tmap f (Node l r) = Node (tmap f l) (tmap f r)
+
+
+instance Cat.Category arrow => Cat.Category (FTCQueue arrow) where
+  id = Leaf Cat.id
+  (.) = flip (><)
