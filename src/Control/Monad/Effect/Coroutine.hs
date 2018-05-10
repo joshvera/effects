@@ -27,6 +27,7 @@ module Control.Monad.Effect.Coroutine (
   runCoro
 ) where
 
+import Control.Monad ((<=<))
 import Control.Monad.Effect.Internal
 
 -- | A type representing a yielding of control
@@ -52,6 +53,6 @@ runC = relay (raiseEff . pure . Done) (\ (Yield a k) arr -> raiseEff (pure (Cont
 
 -- | Launch a thread and run it to completion using a helper function to provide new inputs.
 runCoro :: Effectful m => (a -> b) -> m (Yield a b ': e) w -> m e w
-runCoro f e = raiseEff (runC (lowerEff e) >>= loop)
+runCoro f = raiseHandler (loop <=< runC)
   where loop (Done a)       = pure a
         loop (Continue a k) = k (f a) >>= loop
