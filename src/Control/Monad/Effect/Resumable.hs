@@ -24,7 +24,7 @@ resumeError :: forall exc e a. Member (Resumable exc) e =>
        Eff e a -> (forall v. Arrow Eff e v a -> exc v -> Eff e a) -> Eff e a
 resumeError m handle = interpose @(Resumable exc) pure (\(Resumable e) yield -> handle yield e) m
 
-catchError :: forall exc e a. Member (Resumable exc) e => Eff e a -> (forall v. exc v -> Eff e a) -> Eff e a
+catchError :: Member (Resumable exc) e => Eff e a -> (forall v. exc v -> Eff e a) -> Eff e a
 catchError m handle = resumeError m (const handle)
 
 data SomeExc exc where
