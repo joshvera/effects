@@ -41,9 +41,9 @@ throwError e = send (Exc e)
 -- If there are no exceptions thrown, returns Right If exceptions are
 -- thrown and not handled, returns Left, interrupting the execution of
 -- any other effect handlers.
-runError :: Eff (Exc exc ': e) a -> Eff e (Either exc a)
+runError :: Effectful m => m (Exc exc ': e) a -> m e (Either exc a)
 runError =
-   relay (pure . Right) (\ (Exc e) _k -> pure (Left e))
+   raiseHandler (relay (pure . Right) (\ (Exc e) _ -> pure (Left e)))
 
 -- | A catcher for Exceptions. Handlers are allowed to rethrow
 -- exceptions.
