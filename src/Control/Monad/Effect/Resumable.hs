@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators, TypeApplications, ScopedTypeVariables, GADTs, FlexibleContexts, DataKinds, Rank2Types #-}
+{-# LANGUAGE TypeOperators, TypeApplications, GADTs, FlexibleContexts, DataKinds, Rank2Types #-}
 module Control.Monad.Effect.Resumable
   ( Resumable(..)
   , SomeExc(..)
@@ -16,11 +16,11 @@ data Resumable exc a = Resumable (exc a)
 throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
 throwResumable = send . Resumable
 
-catchResumable :: forall exc e m a. (Member (Resumable exc) e, Effectful m)
+catchResumable :: (Member (Resumable exc) e, Effectful m)
                => m e a
                -> (forall v. exc v -> m e v)
                -> m e a
-catchResumable m handle = raiseHandler (interpose @(Resumable exc) pure (\(Resumable e) yield -> lowerEff (handle e) >>= yield)) m
+catchResumable m handle = raiseHandler (interpose pure (\(Resumable e) yield -> lowerEff (handle e) >>= yield)) m
 
 
 runResumable :: Effectful m => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
