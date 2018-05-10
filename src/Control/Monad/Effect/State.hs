@@ -76,11 +76,11 @@ modify' f = raiseEff $ do
 -- An encapsulated State handler, for transactional semantics
 -- The global state is updated only if the transactionState finished
 -- successfully
-transactionState :: forall s e a. Member (State s) e
+transactionState :: forall s e a m. (Member (State s) e, Effectful m)
                     => Proxy s
-                    -> Eff e a
-                    -> Eff e a
-transactionState _ m = do s <- get; loop s m
+                    -> m e a
+                    -> m e a
+transactionState _ m = raiseEff $ do s <- get; loop s (lowerEff m)
  where
    loop :: s -> Eff e a -> Eff e a
    loop s (Val x) = put s >> pure x
