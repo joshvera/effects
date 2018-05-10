@@ -12,6 +12,7 @@ Portability : POSIX
 module Control.Monad.Effect (
   -- * Running and Sending Effects
   Eff
+  , Effectful(..)
   , run
   , runM
   , send

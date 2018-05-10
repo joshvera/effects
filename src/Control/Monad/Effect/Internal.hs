@@ -17,6 +17,7 @@ module Control.Monad.Effect.Internal (
   , send
   , NonDet(..)
   , Fail(..)
+  , Effectful(..)
   -- * Decomposing Unions
   , Member
   , Members
@@ -65,6 +66,12 @@ type Queue effects a b = FTCQueue (Eff effects) a b
 -- | An effectful function from 'a' to 'b'
 --   that also performs a list of 'effects'.
 type Arrow effects a b = a -> Eff effects b
+
+
+class Effectful m where
+  raiseEff :: Eff effects a -> m effects a
+  lowerEff :: m effects a -> Eff effects a
+
 
 -- * Composing and Applying Effects
 
