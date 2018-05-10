@@ -42,6 +42,7 @@ class TANonEmptySequence sequence where
 
   -- | Append an operation to the right of the tree [O(1)]
   (|>) :: sequence arrow x y -> arrow y z -> sequence arrow x z
+  as |> a = as >< tsingleton a
 
   -- | Append two trees of operations [O(1)]
   (><) :: sequence arrow x y -> sequence arrow y z -> sequence arrow x z
