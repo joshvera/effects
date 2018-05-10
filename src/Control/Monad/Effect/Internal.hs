@@ -197,8 +197,8 @@ interposeState initial pure' handler = raiseEff . loop initial . lowerEff
       where k state' = q >>> loop state'
 
 -- | Handle the topmost effect by interpreting it into the underlying effects.
-interpret :: (forall a. eff a -> Eff effs a) -> Eff (eff ': effs) b -> Eff effs b
-interpret f = relay pure (\ eff yield -> f eff >>= yield)
+interpret :: Effectful m => (forall a. eff a -> m effs a) -> m (eff ': effs) b -> m effs b
+interpret handler = raiseEff . relay pure (\ eff yield -> lowerEff (handler eff) >>= yield) . lowerEff
 
 -- | Interpret an effect by replacing it with another effect.
 reinterpret :: (forall x. effect x -> Eff (newEffect ': effs) x)
