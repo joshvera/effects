@@ -40,11 +40,9 @@ import Data.Proxy
 
 -- | Run a 'State s' effect given an effect and an initial state.
 runState :: Eff (State s ': e) b -> s -> Eff e (b, s)
-runState (Val b) s = pure (b, s)
-runState (E u q) s = case decompose u of
-  Left  u'       -> E u' $ tsingleton (flip runState s . apply q)
-  Right Get      -> runState (apply q s) s
-  Right (Put s') -> runState (apply q ()) s'
+runState m initial = relayState initial (\ s b -> pure (b, s)) (\ s eff yield -> case eff of
+  Get    -> yield s s
+  Put s' -> yield s' ()) m
 
 
 -- | Strict State effects: one can either Get values or Put them
