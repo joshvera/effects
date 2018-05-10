@@ -4,6 +4,7 @@ module Control.Monad.Effect.Resumable
   , SomeExc(..)
   , throwResumable
   , catchResumable
+  , handleResumable
   , runResumable
   , runResumableWith
   ) where
@@ -21,6 +22,12 @@ catchResumable :: (Member (Resumable exc) e, Effectful m)
                -> (forall v. exc v -> m e v)
                -> m e a
 catchResumable m handle = raiseHandler (interpose pure (\(Resumable e) yield -> lowerEff (handle e) >>= yield)) m
+
+handleResumable :: (Member (Resumable exc) e, Effectful m)
+                => (forall v. exc v -> m e v)
+                -> m e a
+                -> m e a
+handleResumable handle = raiseHandler (interpose pure (\(Resumable e) yield -> lowerEff (handle e) >>= yield))
 
 
 runResumable :: Effectful m => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
