@@ -50,8 +50,8 @@ asks :: (Member (Reader v) e, Effectful m) => (v -> a) -> m e a
 asks f = raiseEff (f <$> ask)
 
 -- | Handler for reader effects
-runReader :: Eff (Reader v ': e) a -> v -> Eff e a
-runReader m e = interpret (\ Reader -> pure e) m
+runReader :: v -> Eff (Reader v ': e) a -> Eff e a
+runReader e = interpret (\ Reader -> pure e)
 
 -- |
 -- Locally rebind the value in the dynamic environment
