@@ -39,12 +39,16 @@ data FTCQueue arrow a b where
 class TANonEmptySequence sequence where
   -- | Build a leaf from a single operation [O(1)]
   tsingleton :: arrow x y -> sequence arrow x y
+
   -- | Append an operation to the right of the tree [O(1)]
   (|>) :: sequence arrow x y -> arrow y z -> sequence arrow x z
+
   -- | Append two trees of operations [O(1)]
   (><) :: sequence arrow x y -> sequence arrow y z -> sequence arrow x z
+
   -- | Left view deconstruction [average O(1)]
   tviewl :: sequence arrow x y -> TANonEmptyViewL sequence arrow x y
+
   -- | Map over leaf arrows [O(n)]
   tmap :: (forall x y. arrow x y -> arrow' x y) -> sequence arrow x y -> sequence arrow' x y
 
