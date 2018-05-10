@@ -7,7 +7,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Control.Monad.Effect.Embedded (
   Embedded(..),
@@ -21,7 +20,6 @@ module Control.Monad.Effect.Embedded (
 
 import Control.Concurrent.Async (async)
 import Control.Monad
-import Control.Monad.Effect.TH
 import Control.Monad.Effect.Internal
 import Control.Monad.IO.Class
 
@@ -29,7 +27,8 @@ import Control.Monad.IO.Class
 data Embedded ms a where
   Embed :: Eff ms () -> Embedded ms ()
 
-$(makeEff ''Embedded)
+embed :: (Member (Embedded ms) effects, Effectful m) => m ms () -> m effects ()
+embed = send . Embed . lowerEff
 
 class Raisable (ms :: [* -> *]) r where
   raiseUnion :: Effectful m => Union ms a -> m r a
