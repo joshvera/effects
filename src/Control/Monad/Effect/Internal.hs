@@ -18,6 +18,7 @@ module Control.Monad.Effect.Internal (
   , NonDet(..)
   , Fail(..)
   , Effectful(..)
+  , raiseHandler
   -- * Decomposing Unions
   , Member
   , Members
@@ -75,6 +76,10 @@ class Effectful m where
 instance Effectful Eff where
   raiseEff = id
   lowerEff = id
+
+-- | Raise a handler on 'Eff' to a handler on some 'Effectful' @m@.
+raiseHandler :: Effectful m => (Eff effectsA a -> Eff effectsB b) -> m effectsA a -> m effectsB b
+raiseHandler handler = raiseEff . handler . lowerEff
 
 
 -- * Composing and Applying Effects
