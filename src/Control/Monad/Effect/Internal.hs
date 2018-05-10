@@ -46,7 +46,8 @@ module Control.Monad.Effect.Internal (
 ) where
 
 import Control.Applicative (Alternative(..))
-import Control.Monad (MonadPlus(..))
+import qualified Control.Category as Cat
+import Control.Monad (MonadPlus(..), (<=<))
 import Control.Monad.Fail (MonadFail(..))
 import Control.Monad.IO.Class (MonadIO(..))
 import Data.Union
@@ -65,6 +66,10 @@ type Queue effects a b = FTCQueue (Arrow effects) a b
 -- | An effectful function from 'a' to 'b'
 --   that also performs a list of 'effects'.
 newtype Arrow effects a b = Arrow { runArrow :: a -> Eff effects b }
+
+instance Cat.Category (Arrow effects) where
+  id = Arrow pure
+  Arrow runB . Arrow runA = Arrow (runB <=< runA)
 
 -- * Composing and Applying Effects
 
