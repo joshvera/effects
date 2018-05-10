@@ -39,8 +39,5 @@ fresh :: (Member Fresh e, Effectful m) => m e Int
 fresh = send Fresh
 
 -- | Handler for Fresh effects, with an Int for a starting value
-runFresh' :: Effectful m => m (Fresh ': e) a -> Int -> m e a
-runFresh' m s =
-  raiseHandler (relayState s (\_s x -> pure x)
-               (\s' Fresh k -> (k $! s'+1) s'))
-               m
+runFresh' :: Effectful m => Int -> m (Fresh ': e) a -> m e a
+runFresh' s = raiseHandler (relayState s (const pure) (\s' Fresh k -> (k $! s'+1) s'))
