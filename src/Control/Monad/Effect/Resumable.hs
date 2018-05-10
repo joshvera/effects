@@ -11,8 +11,7 @@ module Control.Monad.Effect.Resumable
 import Data.Functor.Classes
 import Control.Monad.Effect.Internal
 
-data Resumable exc a where
-  Resumable :: exc v -> Resumable exc v
+data Resumable exc a = Resumable (exc a)
 
 throwError :: forall exc v e. Member (Resumable exc) e => exc v -> Eff e v
 throwError e = send (Resumable e :: Resumable exc v)
