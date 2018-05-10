@@ -63,8 +63,8 @@ put :: (Member (State s) e, Effectful m) => s -> m e ()
 put s = send (Put s)
 
 -- | Modify state
-modify :: Member (State s) e => (s -> s) -> Eff e ()
-modify f = fmap f get >>= put
+modify :: (Member (State s) e, Effectful m) => (s -> s) -> m e ()
+modify f = raiseEff (fmap f get >>= put)
 
 -- | Modify state strictly
 modify' :: Member (State s) e => (s -> s) -> Eff e ()
