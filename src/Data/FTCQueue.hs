@@ -25,6 +25,7 @@ module Data.FTCQueue
 ( FTCQueue
 , TANonEmptySequence(..)
 , TANonEmptyViewL(..)
+, TANonEmptyViewR(..)
 ) where
 
 import qualified Control.Category as Cat
@@ -37,7 +38,7 @@ data FTCQueue arrow a b where
   Node :: FTCQueue arrow a x -> FTCQueue arrow x b -> FTCQueue arrow a b
 
 class TANonEmptySequence sequence where
-  {-# MINIMAL tsingleton, ((><) | (<|)), tviewl, tmap #-}
+  {-# MINIMAL tsingleton, ((><) | (<|)), (tviewl | tviewr), tmap #-}
   -- | Build a leaf from a single operation
   tsingleton :: arrow x y -> sequence arrow x y
 
@@ -57,6 +58,19 @@ class TANonEmptySequence sequence where
 
   -- | Left view deconstruction
   tviewl :: sequence arrow x y -> TANonEmptyViewL sequence arrow x y
+  tviewl q = case tviewr q of
+    TOneR x -> TOneL x
+    p :> l  -> case tviewl p of
+        TOneL x -> x :< tsingleton l
+        h :< t  -> h :< (t |> l)
+
+  -- | Right view deconstruction
+  tviewr :: sequence arrow x y -> TANonEmptyViewR sequence arrow x y
+  tviewr q = case tviewl q of
+    TOneL x -> TOneR x
+    h :< t  -> case tviewr t of
+        TOneR x -> tsingleton h :> x
+        p :> l  -> (h <| p)     :> l
 
   -- | Map over leaf arrows
   tmap :: (forall x y. arrow x y -> arrow' x y) -> sequence arrow x y -> sequence arrow' x y
@@ -64,6 +78,10 @@ class TANonEmptySequence sequence where
 data TANonEmptyViewL s arrow a b where
   TOneL :: arrow a b -> TANonEmptyViewL s arrow a b
   (:<)  :: arrow a x -> s arrow x b -> TANonEmptyViewL s arrow a b
+
+data TANonEmptyViewR s arrow a b where
+  TOneR :: arrow a b                -> TANonEmptyViewR s arrow a b
+  (:>)  :: s arrow a x -> arrow x b -> TANonEmptyViewR s arrow a b
 
 instance TANonEmptySequence FTCQueue where
   -- O(1)
