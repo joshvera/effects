@@ -146,7 +146,7 @@ relay :: Effectful m
       -> (forall v. eff v -> Arrow m e v b -> m e b)
       -> m (eff ': e) a -- ^ The 'eff' to relay and consume.
       -> m e b -- ^ The relayed effect with 'eff' consumed.
-relay pure' bind = raiseEff . loop . lowerEff
+relay pure' bind = raiseHandler loop
  where
   loop (Val x)  = lowerEff (pure' x)
   loop (E u' q) = case decompose u' of
@@ -163,7 +163,7 @@ relayState :: Effectful m
            -> (forall v. s -> eff v -> (s -> Arrow m e v b) -> m e b)
            -> m (eff ': e) a
            -> m e b
-relayState s' pure' bind = raiseEff . loop s' . lowerEff
+relayState s' pure' bind = raiseHandler (loop s')
   where
     loop s (Val x)  = lowerEff (pure' s x)
     loop s (E u' q) = case decompose u' of
@@ -177,7 +177,7 @@ interpose :: (Member eff e, Effectful m)
           => Arrow m e a b
           -> (forall v. eff v -> Arrow m e v b -> m e b)
           -> m e a -> m e b
-interpose pure' h = raiseEff . loop . lowerEff
+interpose pure' h = raiseHandler loop
  where
    loop (Val x) = lowerEff (pure' x)
    loop (E u q) = case prj u of
@@ -193,7 +193,7 @@ interposeState :: (Member eff e, Effectful m)
                -> (forall v. s -> eff v -> (s -> Arrow m e v b) -> m e b)
                -> m e a
                -> m e b
-interposeState initial pure' handler = raiseEff . loop initial . lowerEff
+interposeState initial pure' handler = raiseHandler (loop initial)
   where
     loop state (Val x) = lowerEff (pure' state x)
     loop state (E u q) = case prj u of
@@ -203,7 +203,7 @@ interposeState initial pure' handler = raiseEff . loop initial . lowerEff
 
 -- | Handle the topmost effect by interpreting it into the underlying effects.
 interpret :: Effectful m => (forall a. eff a -> m effs a) -> m (eff ': effs) b -> m effs b
-interpret handler = raiseEff . relay pure (\ eff yield -> lowerEff (handler eff) >>= yield) . lowerEff
+interpret handler = raiseHandler (relay pure (\ eff yield -> lowerEff (handler eff) >>= yield))
 
 -- | Interpret an effect by replacing it with another effect.
 reinterpret :: (forall x. effect x -> Eff (newEffect ': effs) x)
