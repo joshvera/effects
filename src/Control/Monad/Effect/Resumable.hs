@@ -19,9 +19,9 @@ throwResumable = send . Resumable
 runResumable :: Effectful m => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
 runResumable = raiseHandler (relay (pure . Right) (\ (Resumable e) _ -> pure (Left (SomeExc e))))
 
-resumeError :: forall exc e a. Member (Resumable exc) e =>
-       Eff e a -> (forall v. Arrow Eff e v a -> exc v -> Eff e a) -> Eff e a
-resumeError m handle = interpose @(Resumable exc) pure (\(Resumable e) yield -> handle yield e) m
+resumeError :: forall exc e m a. (Member (Resumable exc) e, Effectful m) =>
+       m e a -> (forall v. Arrow m e v a -> exc v -> m e a) -> m e a
+resumeError m handle = raiseHandler (interpose @(Resumable exc) pure (\(Resumable e) yield -> lowerEff (handle (raiseEff . yield) e))) m
 
 catchError :: Member (Resumable exc) e => Eff e a -> (forall v. exc v -> Eff e a) -> Eff e a
 catchError m handle = resumeError m (const handle)
