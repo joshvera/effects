@@ -19,10 +19,11 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Effect.Fresh (
-  Fresh(..),
-  fresh,
-  runFresh
+module Control.Monad.Effect.Fresh
+( Fresh(..)
+, fresh
+, resetFresh
+, runFresh
 ) where
 
 import Control.Monad.Effect.Internal
@@ -37,6 +38,9 @@ data Fresh v where
 -- | Request a fresh effect
 fresh :: (Member Fresh e, Effectful m) => m e Int
 fresh = send Fresh
+
+resetFresh :: (Effectful m, Member Fresh effects) => Int -> m effects a -> m effects a
+resetFresh start = raiseHandler (interposeState start (const pure) (\ counter Fresh yield -> (yield $! succ counter) counter))
 
 -- | Handler for Fresh effects, with an Int for a starting value
 runFresh :: Effectful m => Int -> m (Fresh ': e) a -> m e a
