@@ -90,10 +90,10 @@ transactionState _ m = raiseEff $ do s <- get; loop s (lowerEff m)
      _             -> E u (tsingleton k)
       where k = q >>> (loop s)
 
-localState :: Member (State s) effects => (s -> s) -> Eff effects a -> Eff effects a
-localState f effect = do
+localState :: (Member (State s) effects, Effectful m) => (s -> s) -> m effects a -> m effects a
+localState f action = raiseEff $ do
   original <- get
   put (f original)
-  v <- effect
+  v <- lowerEff action
   put original
   pure v
