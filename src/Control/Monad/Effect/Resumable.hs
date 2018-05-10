@@ -3,7 +3,7 @@ module Control.Monad.Effect.Resumable
   ( Resumable(..)
   , SomeExc(..)
   , throwResumable
-  , runError
+  , runResumable
   , resumeError
   , catchError
   ) where
@@ -16,8 +16,8 @@ data Resumable exc a = Resumable (exc a)
 throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
 throwResumable = send . Resumable
 
-runError :: Effectful m => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
-runError = raiseHandler (relay (pure . Right) (\ (Resumable e) _k -> pure (Left (SomeExc e))))
+runResumable :: Effectful m => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
+runResumable = raiseHandler (relay (pure . Right) (\ (Resumable e) _ -> pure (Left (SomeExc e))))
 
 resumeError :: forall exc e a. Member (Resumable exc) e =>
        Eff e a -> (forall v. Arrow Eff e v a -> exc v -> Eff e a) -> Eff e a
