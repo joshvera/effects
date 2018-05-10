@@ -69,8 +69,8 @@ type Arrow m (effects :: [* -> *]) a b = a -> m effects b
 
 
 class Effectful m where
-  raiseEff :: Eff effects a -> m effects a
-  lowerEff :: m effects a -> Eff effects a
+  raiseEff :: Eff effects a -> m   effects a
+  lowerEff :: m   effects a -> Eff effects a
 
 instance Effectful Eff where
   raiseEff = id
