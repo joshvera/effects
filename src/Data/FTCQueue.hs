@@ -38,7 +38,7 @@ data FTCQueue arrow a b where
   Node :: FTCQueue arrow a x -> FTCQueue arrow x b -> FTCQueue arrow a b
 
 class TANonEmptySequence sequence where
-  {-# MINIMAL tsingleton, ((><) | (<|)), (tviewl | tviewr), tmap #-}
+  {-# MINIMAL tsingleton, ((><) | (<|) | (|>)), (tviewl | tviewr), tmap #-}
   -- | Build a leaf from a single operation
   tsingleton :: arrow x y -> sequence arrow x y
 
