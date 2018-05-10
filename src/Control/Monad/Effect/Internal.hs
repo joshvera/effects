@@ -182,17 +182,17 @@ interpose pure' h = raiseEff . loop . lowerEff
 
 -- | Intercept an effect like 'interpose', but with an explicit state
 -- parameter like 'relayState'.
-interposeState :: Member eff e
+interposeState :: (Member eff e, Effectful m)
                => s
-               -> (s -> Arrow Eff e a b)
-               -> (forall v. s -> eff v -> (s -> Arrow Eff e v b) -> Eff e b)
-               -> Eff e a
-               -> Eff e b
-interposeState initial ret handler = loop initial
+               -> (s -> Arrow m e a b)
+               -> (forall v. s -> eff v -> (s -> Arrow m e v b) -> m e b)
+               -> m e a
+               -> m e b
+interposeState initial pure' handler = raiseEff . loop initial . lowerEff
   where
-    loop state (Val x) = ret state x
+    loop state (Val x) = lowerEff (pure' state x)
     loop state (E u q) = case prj u of
-      Just x -> handler state x k
+      Just x -> lowerEff (handler state x (fmap raiseEff . k))
       _      -> E u (tsingleton (k state))
       where k state' = q >>> loop state'
 
