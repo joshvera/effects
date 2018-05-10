@@ -36,5 +36,5 @@ trace :: (Member Trace e, Effectful m) => String -> m e ()
 trace = send . Trace
 
 -- | An IO handler for Trace effects
-runPrintingTrace :: Member IO effects => Eff (Trace ': effects) a -> Eff effects a
+runPrintingTrace :: (Member IO effects, Effectful m) => m (Trace ': effects) a -> m effects a
 runPrintingTrace = raiseHandler (relay pure (\ (Trace s) -> (send (putStrLn s) >>=)))
