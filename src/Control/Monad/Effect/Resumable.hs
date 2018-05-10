@@ -5,6 +5,7 @@ module Control.Monad.Effect.Resumable
   , throwResumable
   , catchResumable
   , runResumable
+  , runResumableWith
   ) where
 
 import Data.Functor.Classes
@@ -24,6 +25,10 @@ catchResumable m handle = raiseHandler (interpose @(Resumable exc) pure (\(Resum
 
 runResumable :: Effectful m => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
 runResumable = raiseHandler (relay (pure . Right) (\ (Resumable e) _ -> pure (Left (SomeExc e))))
+
+-- | Run a 'Resumable' effect in an 'Effectful' context, using a handler to resume computation.
+runResumableWith :: Effectful m => (forall resume . exc resume -> m effects resume) -> m (Resumable exc ': effects) a -> m effects a
+runResumableWith handler = raiseHandler (relay pure (\ (Resumable err) yield -> lowerEff (handler err) >>= yield))
 
 data SomeExc exc where
   SomeExc :: exc v -> SomeExc exc
