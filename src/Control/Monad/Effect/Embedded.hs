@@ -51,11 +51,11 @@ raiseEmbedded = raiseHandler loop
 liftEmbedded :: (Raisable e e', Effectful m) => m (Embedded e ': e') a -> m e' a
 liftEmbedded = raiseHandler (runEmbedded void)
 
-runEmbedded :: (Raisable m r)
-            => (forall v. Eff r v -> Eff r' ())
-            -> Eff (Embedded m ': r') a
-            -> Eff r' a
-runEmbedded f = relay pure $ \(Embed e) -> (f (raiseEmbedded e) >>=)
+runEmbedded :: (Raisable e e', Effectful m)
+            => (forall v. m e' v -> m e'' ())
+            -> m (Embedded e ': e'') a
+            -> m e'' a
+runEmbedded f = raiseHandler (relay pure (\(Embed e) -> (lowerEff (f (raiseEff (raiseEmbedded e))) >>=)))
 
 runEmbeddedAsync :: (Raisable m d, Member IO r)
                  => (forall v. Eff d v -> IO v)
