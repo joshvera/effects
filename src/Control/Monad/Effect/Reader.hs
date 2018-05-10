@@ -42,7 +42,7 @@ data Reader v a where
   Reader :: Reader a a
 
 -- | Request a value for the environment
-ask :: Member (Reader v) e => Eff e v
+ask :: (Member (Reader v) e, Effectful m) => m e v
 ask = send Reader
 
 -- | Request a value from the environment and applys as function
