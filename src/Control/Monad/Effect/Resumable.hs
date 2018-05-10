@@ -21,7 +21,7 @@ runError :: Eff (Resumable exc ': e) a -> Eff e (Either (SomeExc exc) a)
 runError = relay (pure . Right) (\ (Resumable e) _k -> pure (Left (SomeExc e)))
 
 resumeError :: forall exc e a. Member (Resumable exc) e =>
-       Eff e a -> (forall v. Arrow e v a -> exc v -> Eff e a) -> Eff e a
+       Eff e a -> (forall v. Arrow Eff e v a -> exc v -> Eff e a) -> Eff e a
 resumeError m handle = interpose @(Resumable exc) pure (\(Resumable e) yield -> handle yield e) m
 
 catchError :: forall exc e a. Member (Resumable exc) e => Eff e a -> (forall v. exc v -> Eff e a) -> Eff e a

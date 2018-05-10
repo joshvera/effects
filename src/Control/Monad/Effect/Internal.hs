@@ -65,7 +65,7 @@ type Queue effects a b = FTCQueue (Eff effects) a b
 
 -- | An effectful function from 'a' to 'b'
 --   that also performs a list of 'effects'.
-type Arrow effects a b = a -> Eff effects b
+type Arrow m (effects :: [* -> *]) a b = a -> m effects b
 
 
 class Effectful m where
@@ -91,13 +91,13 @@ apply q' x =
 -- | Compose queues left to right.
 (>>>) :: Queue effects a b
       -> (Eff effects b -> Eff effects' c) -- ^ An function to compose.
-      -> Arrow effects' a c
+      -> Arrow Eff effects' a c
 (>>>) queue f = f . apply queue
 
 -- | Compose queues right to left.
 (<<<) :: (Eff effects b -> Eff effects' c) -- ^ An function to compose.
       -> Queue effects  a b
-      -> Arrow effects' a c
+      -> Arrow Eff effects' a c
 (<<<) f queue  = f . apply queue
 
 -- * Sending and Running Effects
@@ -134,16 +134,16 @@ runM m = case lowerEff m of
 
 -- | Given an effect request, either handle it with the given 'pure' function,
 -- or relay it to the given 'bind' function.
-relay :: Arrow e a b -- ^ An 'pure' effectful arrow.
+relay :: Arrow Eff e a b -- ^ An 'pure' effectful arrow.
       -- | A function to relay to, that binds a relayed 'eff v' to
       -- an effectful arrow and returns a new effect.
-      -> (forall v. eff v -> Arrow e v b -> Eff e b)
+      -> (forall v. eff v -> Arrow Eff e v b -> Eff e b)
       -> Eff (eff ': e) a -- ^ The 'eff' to relay and consume.
       -> Eff e b -- ^ The relayed effect with 'eff' consumed.
 relay pure' bind = loop
  where
   loop (Val x)  = pure' x
-  loop (E u' q)  = case decompose u' of
+  loop (E u' q) = case decompose u' of
     Right x -> bind x k
     Left  u -> E u (tsingleton k)
    where k = q >>> loop
@@ -153,7 +153,7 @@ relay pure' bind = loop
 -- effect, or relayed to a handler that can handle the target effect.
 relayState :: s
            -> (s -> a -> Eff e b)
-           -> (forall v. s -> eff v -> (s -> Arrow e v b) -> Eff e b)
+           -> (forall v. s -> eff v -> (s -> Arrow Eff e v b) -> Eff e b)
            -> Eff (eff ': e) a
            -> Eff e b
 relayState s' pure' bind = loop s'
@@ -167,8 +167,8 @@ relayState s' pure' bind = loop s'
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
 interpose :: Member eff e
-          => Arrow e a b
-          -> (forall v. eff v -> Arrow e v b -> Eff e b)
+          => Arrow Eff e a b
+          -> (forall v. eff v -> Arrow Eff e v b -> Eff e b)
           -> Eff e a -> Eff e b
 interpose ret h = loop
  where
@@ -182,8 +182,8 @@ interpose ret h = loop
 -- parameter like 'relayState'.
 interposeState :: Member eff e
                => s
-               -> (s -> Arrow e a b)
-               -> (forall v. s -> eff v -> (s -> Arrow e v b) -> Eff e b)
+               -> (s -> Arrow Eff e a b)
+               -> (forall v. s -> eff v -> (s -> Arrow Eff e v b) -> Eff e b)
                -> Eff e a
                -> Eff e b
 interposeState initial ret handler = loop initial

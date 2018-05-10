@@ -62,7 +62,7 @@ local :: forall v b e. Member (Reader v) e =>
 local f m = do
   e0 <- ask
   let e = f e0
-  let bind :: Reader v a -> Arrow e a b -> Eff e b
+  let bind :: Reader v a -> Arrow Eff e a b -> Eff e b
       bind Reader g = g e
   interpose pure bind m
 
