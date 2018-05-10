@@ -35,6 +35,5 @@ tell :: (Member (Writer o) e, Effectful m) => o -> m e ()
 tell = send . Writer
 
 -- | Simple handler for Writer effects
-runWriter :: Monoid o => Eff (Writer o ': r) a -> Eff r (a,o)
-runWriter = relay (\x -> pure (x,mempty))
-                  (\ (Writer o) k -> k () >>= \ (x,l) -> pure (x,o `mappend` l))
+runWriter :: (Monoid o, Effectful m) => m (Writer o ': e) a -> m e (a,o)
+runWriter = raiseHandler (relay (\x -> pure (x, mempty)) (\ (Writer o) k -> k () >>= \ (x,l) -> pure (x, o `mappend` l)))
