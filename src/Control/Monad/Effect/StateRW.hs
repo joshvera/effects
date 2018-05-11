@@ -33,8 +33,8 @@ import Control.Monad.Effect.Writer
 import Control.Monad.Effect.Internal
 
 -- | State handler, using Reader/Writer effects
-runStateR :: Eff (Writer s ': Reader s ': e) a -> s -> Eff e (a, s)
-runStateR m s = loop s m
+runStateR :: Effectful m => s -> m (Writer s ': Reader s ': e) a -> m e (a, s)
+runStateR s = raiseHandler (loop s)
  where
    loop :: s -> Eff (Writer s ': Reader s ': e) a -> Eff e (a, s)
    loop s' (Val x) = pure (x,s')

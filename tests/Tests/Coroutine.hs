@@ -12,7 +12,7 @@ import Control.Monad.Effect.Coroutine
 import Control.Monad.Effect.State
 
 runTestCoroutine :: [Int] -> Int
-runTestCoroutine list = snd . run $ runState effTestCoroutine 0
+runTestCoroutine list = snd . run $ runState 0 effTestCoroutine
   where
     testCoroutine :: Members '[Yield () Int, State Int] e => Eff e ()
     testCoroutine = do

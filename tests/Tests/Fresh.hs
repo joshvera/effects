@@ -5,7 +5,7 @@ import Control.Monad.Effect
 import Control.Monad.Effect.Fresh
 
 makeFresh :: Int -> Eff r Int
-makeFresh n = runFresh' (liftM last (replicateM n fresh)) 0
+makeFresh n = runFresh 0 (liftM last (replicateM n fresh))
 
 testFresh :: Int -> Int
 testFresh = run . makeFresh

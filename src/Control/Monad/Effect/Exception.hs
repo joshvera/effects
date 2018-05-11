@@ -18,11 +18,12 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Effect.Exception (
-  Exc(..),
-  throwError,
-  runError,
-  catchError
+module Control.Monad.Effect.Exception
+( Exc(..)
+, throwError
+, runError
+, catchError
+, handleError
 ) where
 
 import Control.Monad.Effect.Internal
@@ -34,19 +35,25 @@ import Control.Monad.Effect.Internal
 newtype Exc exc a = Exc exc
 
 -- | Throws an error carrying information of type 'exc'.
-throwError :: Member (Exc exc) e => exc -> Eff e a
+throwError :: (Member (Exc exc) e, Effectful m) => exc -> m e a
 throwError e = send (Exc e)
 
 -- | Handler for exception effects
 -- If there are no exceptions thrown, returns Right If exceptions are
 -- thrown and not handled, returns Left, interrupting the execution of
 -- any other effect handlers.
-runError :: Eff (Exc exc ': e) a -> Eff e (Either exc a)
+runError :: Effectful m => m (Exc exc ': e) a -> m e (Either exc a)
 runError =
-   relay (pure . Right) (\ (Exc e) _k -> pure (Left e))
+   raiseHandler (relay (pure . Right) (\ (Exc e) _ -> pure (Left e)))
 
 -- | A catcher for Exceptions. Handlers are allowed to rethrow
 -- exceptions.
-catchError :: Member (Exc exc) e =>
-        Eff e a -> (exc -> Eff e a) -> Eff e a
-catchError m handle = interpose pure (\(Exc e) _k -> handle e) m
+catchError :: (Member (Exc exc) e, Effectful m) =>
+        m e a -> (exc -> m e a) -> m e a
+catchError = flip handleError
+
+-- | 'catchError', but with its arguments in the opposite order. Useful
+-- in situations where the code for the handler is shorter, or when
+-- composing chains of handlers together.
+handleError :: (Member (Exc exc) e, Effectful m) => (exc -> m e a) -> m e a -> m e a
+handleError handle = raiseHandler (interpose pure (\(Exc e) _ -> lowerEff (handle e)))

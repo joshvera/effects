@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DataKinds #-}
 
@@ -26,6 +27,7 @@ module Control.Monad.Effect.Coroutine (
   runCoro
 ) where
 
+import Control.Monad ((<=<))
 import Control.Monad.Effect.Internal
 
 -- | A type representing a yielding of control
@@ -36,24 +38,21 @@ data Yield a b v = Yield a (b -> v)
     deriving (Functor)
 
 -- | Lifts a value and a function into the Coroutine effect
-yield :: Member (Yield a b) e => a -> (b -> c) -> Eff e c
+yield :: (Member (Yield a b) e, Effectful m) => a -> (b -> c) -> m e c
 yield x f = send (Yield x f)
 
 -- |
 -- Status of a thread: done or reporting the value of the type a and
 -- resuming with the value of type b
-data Status e a b w = Done w | Continue a (b -> Eff e (Status e a b w))
+data Status m (e :: [* -> *]) a b w = Done w | Continue a (b -> m e (Status m e a b w))
   deriving (Functor)
 
 -- | Launch a thread and report its status
-runC :: Eff (Yield a b ': e) w -> Eff e (Status e a b w)
-runC = relay (pure . Done) bind
-  where
-    bind :: Yield a b v -> Arrow e v (Status e a b w) -> Eff e (Status e a b w)
-    bind (Yield a k) arr = pure $ Continue a (arr . k)
+runC :: Effectful m => m (Yield a b ': e) w -> m e (Status m e a b w)
+runC = relay (raiseEff . pure . Done) (\ (Yield a k) arr -> raiseEff (pure (Continue a (arr . k))))
 
 -- | Launch a thread and run it to completion using a helper function to provide new inputs.
-runCoro :: Eff (Yield a b ': e) w -> (a -> b) -> Eff e w
-runCoro e f = runC e >>= loop
+runCoro :: Effectful m => (a -> b) -> m (Yield a b ': e) w -> m e w
+runCoro f = raiseHandler (loop <=< runC)
   where loop (Done a)       = pure a
         loop (Continue a k) = k (f a) >>= loop

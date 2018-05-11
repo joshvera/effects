@@ -46,16 +46,13 @@ library
                      , Control.Monad.Effect.NonDet
                      , Control.Monad.Effect.Reader
                      , Control.Monad.Effect.Resumable
-                     , Control.Monad.Effect.Run
                      , Control.Monad.Effect.State
                      , Control.Monad.Effect.StateRW
-                     , Control.Monad.Effect.TH
                      , Control.Monad.Effect.Trace
                      , Control.Monad.Effect.Writer
                      , Data.FTCQueue
                      , Data.Union
   build-depends:       base >=4.7 && <5
-                     , template-haskell
                      , async
   hs-source-dirs:      src
   ghc-options:         -Wall

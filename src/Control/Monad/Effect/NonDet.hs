@@ -13,45 +13,44 @@ Portability : POSIX
 
 module Control.Monad.Effect.NonDet (
   NonDet(..),
-  runNonDet,
-  gather,
-  makeChoiceA,
+  runNonDetM,
+  gatherM,
+  runNonDetA,
   msplit
 ) where
 
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Effect.Internal
+import Data.Bifunctor (second)
+import Data.Monoid (Alt(..))
 
 --------------------------------------------------------------------------------
                     -- Nondeterministic Choice --
 --------------------------------------------------------------------------------
 
-runNonDet :: Monoid b => (a -> b) -> Eff (NonDet ': e) a -> Eff e b
-runNonDet f = relay (pure . f) (\ m k -> case m of
-    MZero -> pure mempty
-    MPlus -> mappend <$> k True <*> k False)
+runNonDetM :: (Monoid b, Effectful m) => (a -> b) -> m (NonDet ': e) a -> m e b
+runNonDetM f = raiseHandler (relay (pure . f) (\ m k -> case m of
+  MZero -> pure mempty
+  MPlus -> mappend <$> k True <*> k False))
 
-gather :: (Monoid b, Member NonDet e)
-       => (a -> b) -- ^ A function constructing a 'Monoid'al value from a single computed result. This might typically be @unit@ (for @Reducer@s), 'pure' (for 'Applicative's), or some similar singleton constructor.
-       -> Eff e a      -- ^ The computation to run locally-nondeterministically.
-       -> Eff e b
-gather f = interpose (pure . f) (\ m k -> case m of
-      MZero -> pure mempty
-      MPlus -> mappend <$> k True <*> k False)
+gatherM :: (Monoid b, Member NonDet e, Effectful m)
+        => (a -> b) -- ^ A function constructing a 'Monoid'al value from a single computed result. This might typically be @unit@ (for @Reducer@s), 'pure' (for 'Applicative's), or some similar singleton constructor.
+        -> m e a    -- ^ The computation to run locally-nondeterministically.
+        -> m e b
+gatherM f = raiseHandler (interpose (pure . f) (\ m k -> case m of
+  MZero -> pure mempty
+  MPlus -> mappend <$> k True <*> k False))
 
 -- | A handler for nondeterminstic effects
-makeChoiceA :: Alternative f
-            => Eff (NonDet ': e) a -> Eff e (f a)
-makeChoiceA =
-  relay (pure . pure) $ \m k ->
-    case m of
-      MZero -> pure empty
-      MPlus -> liftM2 (<|>) (k True) (k False)
+runNonDetA :: (Alternative f, Effectful m)
+            => m (NonDet ': e) a
+            -> m e (f a)
+runNonDetA = raiseHandler (fmap getAlt . runNonDetM (Alt . pure))
 
-msplit :: Member NonDet e
-       => Eff e a -> Eff e (Maybe (a, Eff e a))
-msplit = loop []
+msplit :: (Member NonDet e, Effectful m)
+       => m e a -> m e (Maybe (a, m e a))
+msplit = raiseHandler (fmap (fmap (second raiseEff)) . loop [])
   where loop jq (Val x) = pure (Just (x, msum jq))
         loop jq (E u q) =
           case prj u of

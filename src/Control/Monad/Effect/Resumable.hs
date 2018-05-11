@@ -1,31 +1,42 @@
-{-# LANGUAGE TypeOperators, TypeApplications, ScopedTypeVariables, GADTs, FlexibleContexts, DataKinds, Rank2Types #-}
-module Control.Monad.Effect.Resumable (
-    Resumable(..)
-  ,  SomeExc(..)
-  , throwError
-  , runError
-  , resumeError
-  , catchError
+{-# LANGUAGE TypeOperators, TypeApplications, GADTs, FlexibleContexts, DataKinds, Rank2Types #-}
+module Control.Monad.Effect.Resumable
+  ( Resumable(..)
+  , SomeExc(..)
+  , throwResumable
+  , catchResumable
+  , handleResumable
+  , runResumable
+  , runResumableWith
   ) where
 
 import Data.Functor.Classes
 import Control.Monad.Effect.Internal
 
-data Resumable exc a where
-  Resumable :: exc v -> Resumable exc v
+data Resumable exc a = Resumable (exc a)
 
-throwError :: forall exc v e. Member (Resumable exc) e => exc v -> Eff e v
-throwError e = send (Resumable e :: Resumable exc v)
+throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
+throwResumable = send . Resumable
 
-runError :: Eff (Resumable exc ': e) a -> Eff e (Either (SomeExc exc) a)
-runError = relay (pure . Right) (\ (Resumable e) _k -> pure (Left (SomeExc e)))
+catchResumable :: (Member (Resumable exc) e, Effectful m)
+               => m e a
+               -> (forall v. exc v -> m e v)
+               -> m e a
+catchResumable m handle = handleResumable handle m
 
-resumeError :: forall exc e a. Member (Resumable exc) e =>
-       Eff e a -> (forall v. Arrow e v a -> exc v -> Eff e a) -> Eff e a
-resumeError m handle = interpose @(Resumable exc) pure (\(Resumable e) yield -> handle yield e) m
+handleResumable :: (Member (Resumable exc) e, Effectful m)
+                => (forall v. exc v -> m e v)
+                -> m e a
+                -> m e a
+handleResumable handle = raiseHandler (interpose pure (\(Resumable e) yield -> lowerEff (handle e) >>= yield))
 
-catchError :: forall exc e a. Member (Resumable exc) e => Eff e a -> (forall v. exc v -> Eff e a) -> Eff e a
-catchError m handle = resumeError m (const handle)
+
+runResumable :: Effectful m => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
+runResumable = raiseHandler (relay (pure . Right) (\ (Resumable e) _ -> pure (Left (SomeExc e))))
+
+-- | Run a 'Resumable' effect in an 'Effectful' context, using a handler to resume computation.
+runResumableWith :: Effectful m => (forall resume . exc resume -> m effects resume) -> m (Resumable exc ': effects) a -> m effects a
+runResumableWith handler = raiseHandler (relay pure (\ (Resumable err) yield -> lowerEff (handler err) >>= yield))
+
 
 data SomeExc exc where
   SomeExc :: exc v -> SomeExc exc

@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE FlexibleContexts #-}
 module Tests.StateRW (
   testPutGetRW,
@@ -9,11 +10,11 @@ import Control.Monad.Effect
 import Control.Monad.Effect.StateRW
 
 testPutGetRW :: Int -> Int -> (Int,Int)
-testPutGetRW n start = run (runStateR go start)
+testPutGetRW n start = run @Eff (runStateR start go)
   where go = tell n >> ask
 
 testPutGetPutGetPlusRW :: Int -> Int -> Int -> (Int,Int)
-testPutGetPutGetPlusRW p1 p2 start = run (runStateR go start)
+testPutGetPutGetPlusRW p1 p2 start = run @Eff (runStateR start go)
   where go = do
           tell p1
           x <- ask
@@ -22,5 +23,5 @@ testPutGetPutGetPlusRW p1 p2 start = run (runStateR go start)
           return (x+y)
 
 testGetStartRW :: Int -> (Int,Int)
-testGetStartRW = run . runStateR go
+testGetStartRW start = run @Eff (runStateR start go)
   where go = ask

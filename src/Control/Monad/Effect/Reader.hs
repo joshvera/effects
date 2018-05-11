@@ -42,29 +42,29 @@ data Reader v a where
   Reader :: Reader a a
 
 -- | Request a value for the environment
-ask :: Member (Reader v) e => Eff e v
+ask :: (Member (Reader v) e, Effectful m) => m e v
 ask = send Reader
 
 -- | Request a value from the environment and applys as function
-asks :: Member (Reader v) e => (v -> a) -> Eff e a
-asks f = f <$> ask
+asks :: (Member (Reader v) e, Effectful m) => (v -> a) -> m e a
+asks f = raiseEff (f <$> ask)
 
 -- | Handler for reader effects
-runReader :: Eff (Reader v ': e) a -> v -> Eff e a
-runReader m e = interpret (\ Reader -> pure e) m
+runReader :: Effectful m => v -> m (Reader v ': e) a -> m e a
+runReader e = raiseHandler (interpret (\ Reader -> pure e))
 
 -- |
 -- Locally rebind the value in the dynamic environment
 -- This function is like a relay; it is both an admin for Reader requests,
 -- and a requestor of them
-local :: forall v b e. Member (Reader v) e =>
-         (v -> v) -> Eff e b -> Eff e b
-local f m = do
+local :: forall v b m e. (Member (Reader v) e, Effectful m) =>
+         (v -> v) -> m e b -> m e b
+local f m = raiseEff $ do
   e0 <- ask
   let e = f e0
-  let bind :: Reader v a -> Arrow e a b -> Eff e b
+  let bind :: Reader v a -> Arrow Eff e a b -> Eff e b
       bind Reader g = g e
-  interpose pure bind m
+  interpose pure bind (lowerEff m)
 
 
 {- $simpleReaderExample
@@ -84,7 +84,7 @@ with 'runReader', how to access the Reader data with 'ask' and 'asks'.
 >
 >-- Returns True if the "count" variable contains correct bindings size.
 >isCountCorrect :: Bindings -> Bool
->isCountCorrect bindings = run $ runReader calc_isCountCorrect bindings
+>isCountCorrect bindings = run $ runReader bindings calc_isCountCorrect
 >
 >-- The Reader effect, which implements this complicated check.
 >calc_isCountCorrect :: Eff '[Reader Bindings] Bool
@@ -130,8 +130,8 @@ Shows how to modify Reader content with 'local'.
 > main :: IO ()
 > main = do
 >     let s = "12345";
->     let modifiedLen = run $ runReader calculateModifiedContentLen s;
->     let len = run $ runReader calculateContentLen s ;
+>     let modifiedLen = run $ runReader s calculateModifiedContentLen;
+>     let len = run $ runReader s calculateContentLen ;
 >     putStrLn $ "Modified 's' length: " ++ (show modifiedLen)
 >     putStrLn $ "Original 's' length: " ++ (show len)
 -}

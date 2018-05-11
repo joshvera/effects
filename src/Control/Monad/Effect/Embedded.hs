@@ -7,7 +7,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Control.Monad.Effect.Embedded (
   Embedded(..),
@@ -21,17 +20,18 @@ module Control.Monad.Effect.Embedded (
 
 import Control.Concurrent.Async (async)
 import Control.Monad
-import Control.Monad.Effect.TH
 import Control.Monad.Effect.Internal
+import Control.Monad.IO.Class
 
 
 data Embedded ms a where
   Embed :: Eff ms () -> Embedded ms ()
 
-$(makeEff ''Embedded)
+embed :: (Member (Embedded ms) effects, Effectful m) => m ms () -> m effects ()
+embed = send . Embed . lowerEff
 
 class Raisable (ms :: [* -> *]) r where
-  raiseUnion :: Union ms a -> Eff r a
+  raiseUnion :: Effectful m => Union ms a -> m r a
 
 instance Raisable '[] r where
   raiseUnion _ = error "absurd: raiseUnion run on an empty union"
@@ -42,23 +42,23 @@ instance (Member e r, Raisable m r) =>  Raisable (e ': m) r where
       Right x -> send x
       Left u' -> raiseUnion u'
 
-raiseEmbedded :: Raisable m r => Eff m a -> Eff r a
-raiseEmbedded = loop
+raiseEmbedded :: (Raisable e e', Effectful m) => m e a -> m e' a
+raiseEmbedded = raiseHandler loop
   where
     loop (Val x)  = pure x
     loop (E u' q) = raiseUnion u' >>= (q >>> loop)
 
-liftEmbedded :: (Raisable m r) => Eff (Embedded m ': r) a -> Eff r a
-liftEmbedded = runEmbedded void
+liftEmbedded :: (Raisable e e', Effectful m) => m (Embedded e ': e') a -> m e' a
+liftEmbedded = raiseHandler (runEmbedded void)
 
-runEmbedded :: (Raisable m r)
-            => (forall v. Eff r v -> Eff r' ())
-            -> Eff (Embedded m ': r') a
-            -> Eff r' a
-runEmbedded f = relay pure $ \(Embed e) -> (f (raiseEmbedded e) >>=)
+runEmbedded :: (Raisable e e', Effectful m)
+            => (forall v. m e' v -> m e'' ())
+            -> m (Embedded e ': e'') a
+            -> m e'' a
+runEmbedded f = raiseHandler (relay pure (\(Embed e) -> (lowerEff (f (raiseEff (raiseEmbedded e))) >>=)))
 
-runEmbeddedAsync :: (Raisable m d, Member IO r)
-                 => (forall v. Eff d v -> IO v)
-                 -> Eff (Embedded m ': r) a
-                 -> Eff r a
-runEmbeddedAsync f = runEmbedded (send @IO . void . async . f)
+runEmbeddedAsync :: (Raisable e e', Member IO e'', Effectful m)
+                 => (forall v. m e' v -> IO v)
+                 -> m (Embedded e ': e'') a
+                 -> m e'' a
+runEmbeddedAsync f = raiseHandler (runEmbedded (liftIO . void . async . f . raiseEff))

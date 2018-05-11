@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeApplications #-}
 module Trace where
 
 import Control.Monad.Effect
@@ -22,7 +23,7 @@ mapMdebug f (h:t) = do
   return (h':t')
 
 tMd :: IO [Int]
-tMd = runTrace $ runReader (mapMdebug f [1..5]) (10::Int)
+tMd = runM @Eff . runPrintingTrace $ runReader (10::Int) (mapMdebug f [1..5])
  where f x = ask `add` return x
 {-
 mapMdebug: 1
@@ -35,10 +36,10 @@ mapMdebug: 5
 
 -- duplicate layers
 tdup :: IO ()
-tdup = runTrace $ runReader m (10::Int)
+tdup = runM @Eff . runPrintingTrace $ runReader (10::Int) m
  where
  m = do
-     runReader tr (20::Int)
+     runReader (20::Int) tr
      tr
  tr = do
       v <- ask

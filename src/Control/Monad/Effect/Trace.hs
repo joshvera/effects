@@ -19,25 +19,33 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Effect.Trace (
-  Trace(..),
-  trace,
-  runTrace
+module Control.Monad.Effect.Trace
+( Trace(..)
+, trace
+, runPrintingTrace
+, runIgnoringTrace
+, runReturningTrace
 ) where
 
 import Control.Monad.Effect.Internal
+import Control.Monad.Effect.State
 
 -- | A Trace effect; takes a String and performs output
 data Trace v where
   Trace :: String -> Trace ()
 
 -- | Printing a string in a trace
-trace :: Member Trace e => String -> Eff e ()
+trace :: (Member Trace e, Effectful m) => String -> m e ()
 trace = send . Trace
 
 -- | An IO handler for Trace effects
-runTrace :: Eff '[Trace] a -> IO a
-runTrace (Val x) = pure x
-runTrace (E u q) = case decompose u of
-     Right (Trace s) -> putStrLn s >> runTrace (apply q ())
-     Left _          -> error "runTrace:Left - This should never happen"
+runPrintingTrace :: (Member IO effects, Effectful m) => m (Trace ': effects) a -> m effects a
+runPrintingTrace = raiseHandler (relay pure (\ (Trace s) -> (send (putStrLn s) >>=)))
+
+-- | Run a 'Trace' effect, discarding the traced values.
+runIgnoringTrace :: Effectful m => m (Trace ': effects) a -> m effects a
+runIgnoringTrace = raiseHandler (interpret (\ (Trace _) -> pure ()))
+
+-- | Run a 'Trace' effect, accumulating the traced values into a list like a 'Writer'.
+runReturningTrace :: Effectful m => m (Trace ': effects) a -> m effects (a, [String])
+runReturningTrace = raiseHandler (fmap (fmap reverse) . runState [] . reinterpret (\ (Trace s) -> modify' (s:)))

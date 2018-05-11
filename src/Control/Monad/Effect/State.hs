@@ -39,12 +39,10 @@ import Data.Proxy
 --------------------------------------------------------------------------------
 
 -- | Run a 'State s' effect given an effect and an initial state.
-runState :: Eff (State s ': e) b -> s -> Eff e (b, s)
-runState (Val b) s = pure (b, s)
-runState (E u q) s = case decompose u of
-  Left  u'       -> E u' $ tsingleton (flip runState s . apply q)
-  Right Get      -> runState (apply q s) s
-  Right (Put s') -> runState (apply q ()) s'
+runState :: Effectful m => s -> m (State s ': e) b -> m e (b, s)
+runState initial = relayState initial (\ s b -> raiseEff (pure (b, s))) (\ s eff yield -> case eff of
+  Get    -> yield s s
+  Put s' -> yield s' ())
 
 
 -- | Strict State effects: one can either Get values or Put them
@@ -53,24 +51,24 @@ data State s v where
   Put :: !s -> State s ()
 
 -- | Retrieve state
-get :: Member (State s) e => Eff e s
+get :: (Member (State s) e, Effectful m) => m e s
 get = send Get
 
 -- | Retrieve state, modulo a projection.
-gets :: Member (State s) e => (s -> a) -> Eff e a
-gets f = f <$> get
+gets :: (Member (State s) e, Effectful m) => (s -> a) -> m e a
+gets f = raiseEff (f <$> get)
 
 -- | Store state
-put :: Member (State s) e => s -> Eff e ()
+put :: (Member (State s) e, Effectful m) => s -> m e ()
 put s = send (Put s)
 
 -- | Modify state
-modify :: Member (State s) e => (s -> s) -> Eff e ()
-modify f = fmap f get >>= put
+modify :: (Member (State s) e, Effectful m) => (s -> s) -> m e ()
+modify f = raiseEff (fmap f get >>= put)
 
 -- | Modify state strictly
-modify' :: Member (State s) e => (s -> s) -> Eff e ()
-modify' f = do
+modify' :: (Member (State s) e, Effectful m) => (s -> s) -> m e ()
+modify' f = raiseEff $ do
   v <- get
   put $! f v
 
@@ -78,11 +76,11 @@ modify' f = do
 -- An encapsulated State handler, for transactional semantics
 -- The global state is updated only if the transactionState finished
 -- successfully
-transactionState :: forall s e a. Member (State s) e
+transactionState :: forall s e a m. (Member (State s) e, Effectful m)
                     => Proxy s
-                    -> Eff e a
-                    -> Eff e a
-transactionState _ m = do s <- get; loop s m
+                    -> m e a
+                    -> m e a
+transactionState _ m = raiseEff $ do s <- get; loop s (lowerEff m)
  where
    loop :: s -> Eff e a -> Eff e a
    loop s (Val x) = put s >> pure x
@@ -92,10 +90,10 @@ transactionState _ m = do s <- get; loop s m
      _             -> E u (tsingleton k)
       where k = q >>> (loop s)
 
-localState :: forall effects a s. Member (State s) effects => (s -> s) -> Eff effects a -> Eff effects a
-localState f effect = do
+localState :: (Member (State s) effects, Effectful m) => (s -> s) -> m effects a -> m effects a
+localState f action = raiseEff $ do
   original <- get
   put (f original)
-  v <- effect
+  v <- lowerEff action
   put original
   pure v
