@@ -56,6 +56,7 @@ library
                      , Data.Union
   build-depends:       base >=4.7 && <5
                      , template-haskell
+                     , type-aligned
                      , async
   hs-source-dirs:      src
   ghc-options:         -Wall
