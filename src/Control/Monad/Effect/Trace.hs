@@ -29,6 +29,7 @@ module Control.Monad.Effect.Trace
 
 import Control.Monad.Effect.Internal
 import Control.Monad.Effect.State
+import System.IO
 
 -- | A Trace effect; takes a String and performs output
 data Trace v where
@@ -38,9 +39,9 @@ data Trace v where
 trace :: (Member Trace e, Effectful m) => String -> m e ()
 trace = send . Trace
 
--- | An IO handler for Trace effects
+-- | An IO handler for Trace effects. Prints output to stderr.
 runPrintingTrace :: (Member IO effects, Effectful m) => m (Trace ': effects) a -> m effects a
-runPrintingTrace = raiseHandler (relay pure (\ (Trace s) -> (send (putStrLn s) >>=)))
+runPrintingTrace = raiseHandler (relay pure (\ (Trace s) -> (send (hPutStrLn stderr s) >>=)))
 
 -- | Run a 'Trace' effect, discarding the traced values.
 runIgnoringTrace :: Effectful m => m (Trace ': effects) a -> m effects a
