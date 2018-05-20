@@ -237,6 +237,7 @@ reinterpret2 handle = raiseHandler loop
             Left  u   -> E (weaken (weaken u)) (tsingleton (q >>> loop))
 
 
+-- | Interpret an effect by iterated refinement.
 refine :: forall m eff effects a
        .  Effectful m
        => (forall result . eff result -> m (eff ': effects) result)
