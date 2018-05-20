@@ -237,7 +237,10 @@ reinterpret2 handle = raiseHandler loop
             Left  u   -> E (weaken (weaken u)) (tsingleton (q >>> loop))
 
 
-refine :: forall m eff effects a . Effectful m => (forall result . eff result -> m (eff ': effects) result) -> m (eff ': effects) a -> m effects a
+refine :: forall m eff effects a
+       .  Effectful m
+       => (forall result . eff result -> m (eff ': effects) result)
+       -> m (eff ': effects) a -> m effects a
 refine refinement = raiseHandler go
   where go :: Eff (eff ': effects) x -> Eff effects x
         go = relay pure (\ eff yield -> go (lowerEff (refinement eff)) >>= yield)
