@@ -238,6 +238,8 @@ reinterpret2 handle = raiseHandler loop
 
 
 -- | Interpret an effect by iterated refinement.
+--
+--   Refinement is performed via a handler which is able to request the handled effect, essentially unfolding a computation by handling effects in terms of (in some sense) “smaller” effects until no more are present. Therefore, care must be taken not to introduce cycles by e.g. interpreting the effect in terms of itself (even indirectly).
 refine :: forall m eff effects a
        .  Effectful m
        => (forall result . eff result -> m (eff ': effects) result)
