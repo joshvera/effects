@@ -5,6 +5,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- The following is needed to define MonadPlus instance. It is decidable
 -- (there is no recursion!), but GHC cannot see that.
@@ -46,6 +47,7 @@ module Control.Monad.Effect.Internal (
   , interpret
   , reinterpret
   , reinterpret2
+  , refine
 ) where
 
 import Control.Applicative (Alternative(..))
@@ -233,6 +235,12 @@ reinterpret2 handle = raiseHandler loop
         loop (E u' q) = case decompose u' of
             Right eff -> lowerEff (handle eff) >>= q >>> loop
             Left  u   -> E (weaken (weaken u)) (tsingleton (q >>> loop))
+
+
+refine :: forall m eff effects a . Effectful m => (forall result . eff result -> m (eff ': effects) result) -> m (eff ': effects) a -> m effects a
+refine refinement = raiseHandler go
+  where go :: Eff (eff ': effects) x -> Eff effects x
+        go = relay pure (\ eff yield -> go (lowerEff (refinement eff)) >>= yield)
 
 
 -- * Effect Instances
