@@ -26,6 +26,7 @@ module Control.Monad.Effect (
   , interpretAny
   , reinterpret
   , reinterpret2
+  , shuffle
   -- * Checking a List of Effects#
   , Member
   , Members
