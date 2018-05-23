@@ -114,7 +114,7 @@ instance (t \\ (t ': ts)) ts
 instance {-# OVERLAPPABLE #-} (t \\ ts) ts' => (t \\ (t' ': ts)) (t' : ts')
 
 -- | Split a 'Union' into 'Either' the selected member, or the 'Union' of the remaining values.
-split :: forall t ts a . Member t ts => Union ts a -> Either (Union (Delete t ts) a) (t a)
+split :: forall t ts ts' a . (t \\ ts) ts' => Union ts a -> Either (Union ts' a) (t a)
 split (Union n t) = case compare n (unP (elemNo :: P t ts)) of
   LT -> Left  (Union n t)
   EQ -> Right (unsafeCoerce t)
