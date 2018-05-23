@@ -258,6 +258,7 @@ reinterpret2 handle = raiseHandler loop
             Right eff -> lowerEff (handle eff) >>= q >>> loop
             Left  u   -> E (weaken (weaken u)) (tsingleton (q >>> loop))
 
+-- | Shuffle an effect to the head of the list.
 shuffle :: (Effectful m, (effect \\ effects) effects') => m effects a -> m (effect ': effects') a
 shuffle = raiseHandler loop
  where loop (Val x)  = pure x
