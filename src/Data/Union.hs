@@ -93,6 +93,7 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 {-# RULES "decompose/singleton"  decompose = decompose0 #-}
 {-# INLINE decompose0 #-}
 
+-- | Weaken a 'Union' by adding another type to the front of the list.
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
 
