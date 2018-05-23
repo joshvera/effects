@@ -41,8 +41,8 @@ module Data.Union (
   MemberU2,
 ) where
 
-import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
+import Unsafe.Coerce (unsafeCoerce)
 
 
 -- Strong Sum (Existential with the evidence) is an open union
