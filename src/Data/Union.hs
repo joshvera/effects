@@ -33,7 +33,6 @@ module Data.Union (
   decompose,
   weaken,
   strengthen,
-  Delete,
   type (\\),
   split,
   inj,
@@ -103,11 +102,7 @@ strengthen :: Union '[t] a -> t a
 strengthen (Union _ t) = unsafeCoerce t
 
 
--- | Delete the element @t@ from the list @ts@.
-type family Delete (t :: * -> *) (ts :: [* -> *]) :: [* -> *] where
-  Delete t (t ': ts) = ts
-  Delete t (t' ': ts) = t' ': Delete t ts
-
+-- | Delete the element @t@ from the list @ts@, producing @ts'@.
 class Member t ts => (t \\ ts) (rest :: [* -> *]) | t ts -> rest, ts rest -> t
 
 instance (t \\ (t ': ts)) ts
