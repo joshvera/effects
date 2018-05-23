@@ -1,14 +1,4 @@
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ConstraintKinds, DataKinds #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE RankNTypes #-}
-
--- Only for MemberU below, when emulating Monad Transformers
-{-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
-
+{-# LANGUAGE TypeOperators, GADTs, TypeFamilies, ConstraintKinds, DataKinds, ScopedTypeVariables, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, RankNTypes, FunctionalDependencies, UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-} -- Due to MemberU2
 
 {-|
