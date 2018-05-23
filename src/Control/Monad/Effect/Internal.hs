@@ -40,6 +40,7 @@ module Control.Monad.Effect.Internal (
   , runM
   -- * Relaying and Interposing Effects
   , relay
+  , relayAny
   , relayState
   , interpose
   , interposeState
@@ -160,6 +161,20 @@ relay pure' bind = raiseHandler loop
     Right x -> lowerEff (bind x (raiseEff . k))
     Left  u -> E u (tsingleton k)
    where k = q >>> loop
+
+-- | Given an effect request somewhere in the list, either handle it with the given 'pure' function, or relay it to the given 'bind' function.
+relayAny :: (Member effect effects, Effectful m)
+         => Arrow m (Delete effect effects) a b
+         -> (forall v. effect v -> Arrow m (Delete effect effects) v b -> m (Delete effect effects) b)
+         -> m effects a
+         -> m (Delete effect effects) b
+relayAny pure' bind = raiseHandler loop
+ where loop (Val x)  = lowerEff (pure' x)
+       loop (E u' q) = case split u' of
+         Right x -> lowerEff (bind x (raiseEff . k))
+         Left  u -> E u (tsingleton k)
+         where k = q >>> loop
+
 
 -- | Parameterized 'relay'
 -- Allows sending along some state to be handled for the target
