@@ -43,6 +43,7 @@ module Data.Union (
   decompose,
   weaken,
   Delete,
+  split,
   inj,
   prj,
   Member,
@@ -108,6 +109,13 @@ weaken (Union n v) = Union (n+1) v
 type family Delete (t :: * -> *) (ts :: [* -> *]) :: [* -> *] where
   Delete t (t ': ts) = ts
   Delete t (t' ': ts) = t' ': Delete t ts
+
+split :: forall t ts a . Member t ts => Union ts a -> Either (Union (Delete t ts) a) (t a)
+split (Union n t) = case compare n (unP (elemNo :: P t ts)) of
+  LT -> Left  (Union n t)
+  EQ -> Right (unsafeCoerce t)
+  GT -> Left  (Union (n-1) t)
+
 
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
