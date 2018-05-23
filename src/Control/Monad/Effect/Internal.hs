@@ -45,6 +45,7 @@ module Control.Monad.Effect.Internal (
   , interpose
   , interposeState
   , interpret
+  , interpretAny
   , reinterpret
   , reinterpret2
 ) where
@@ -226,6 +227,13 @@ interposeState initial pure' handler = raiseHandler (loop initial)
 -- | Handle the topmost effect by interpreting it into the underlying effects.
 interpret :: Effectful m => (forall a. eff a -> m effs a) -> m (eff ': effs) b -> m effs b
 interpret handler = raiseHandler (relay pure (\ eff yield -> lowerEff (handler eff) >>= yield))
+
+-- | Handle an effect somewhere in the list by interpreting it into the remaining effects.
+interpretAny :: ((effect \\ effects) effects', Effectful m)
+             => (forall a. effect a -> m effects' a)
+             -> m effects b
+             -> m effects' b
+interpretAny handler = raiseHandler (relayAny pure (\ eff yield -> lowerEff (handler eff) >>= yield))
 
 -- | Interpret an effect by replacing it with another effect.
 reinterpret :: Effectful m
