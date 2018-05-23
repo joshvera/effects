@@ -18,6 +18,7 @@ module Control.Monad.Effect (
   , send
   -- * Handling Effects
   , relay
+  , relayAny
   , relayState
   , interpose
   , interposeState
