@@ -106,6 +106,7 @@ weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
 
 
+-- | Delete the element @t@ from the list @ts@.
 type family Delete (t :: * -> *) (ts :: [* -> *]) :: [* -> *] where
   Delete t (t ': ts) = ts
   Delete t (t' ': ts) = t' ': Delete t ts
