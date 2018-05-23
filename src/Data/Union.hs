@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators, GADTs, TypeFamilies, ConstraintKinds, DataKinds, ScopedTypeVariables, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, RankNTypes, FunctionalDependencies, UndecidableInstances #-}
+{-# LANGUAGE ConstraintKinds, DataKinds, FlexibleContexts, FlexibleInstances, FunctionalDependencies, GADTs, MultiParamTypeClasses, RankNTypes, ScopedTypeVariables, TypeFamilies, TypeOperators, UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-} -- Due to MemberU2
 
 {-|
