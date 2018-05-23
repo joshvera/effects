@@ -48,6 +48,7 @@ module Control.Monad.Effect.Internal (
   , interpretAny
   , reinterpret
   , reinterpret2
+  , shuffle
 ) where
 
 import Control.Applicative (Alternative(..))
@@ -256,6 +257,15 @@ reinterpret2 handle = raiseHandler loop
         loop (E u' q) = case decompose u' of
             Right eff -> lowerEff (handle eff) >>= q >>> loop
             Left  u   -> E (weaken (weaken u)) (tsingleton (q >>> loop))
+
+shuffle :: (Effectful m, (effect \\ effects) effects') => m effects a -> m (effect ': effects') a
+shuffle = raiseHandler loop
+ where loop (Val x)  = pure x
+       loop (E u' q) = case split u' of
+         Right x -> E (inj x)    (tsingleton k)
+         Left  u -> E (weaken u) (tsingleton k)
+         where k = q >>> loop
+
 
 
 -- * Effect Instances
