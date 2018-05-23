@@ -34,6 +34,7 @@ module Data.Union (
   weaken,
   strengthen,
   Delete,
+  type (\\),
   split,
   inj,
   prj,
@@ -106,6 +107,11 @@ strengthen (Union _ t) = unsafeCoerce t
 type family Delete (t :: * -> *) (ts :: [* -> *]) :: [* -> *] where
   Delete t (t ': ts) = ts
   Delete t (t' ': ts) = t' ': Delete t ts
+
+class Member t ts => (t \\ ts) (rest :: [* -> *]) | t ts -> rest, ts rest -> t
+
+instance (t \\ (t ': ts)) ts
+instance {-# OVERLAPPABLE #-} (t \\ ts) ts' => (t \\ (t' ': ts)) (t' : ts')
 
 -- | Split a 'Union' into 'Either' the selected member, or the 'Union' of the remaining values.
 split :: forall t ts a . Member t ts => Union ts a -> Either (Union (Delete t ts) a) (t a)
