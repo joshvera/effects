@@ -32,6 +32,7 @@ module Data.Union (
   Union,
   decompose,
   weaken,
+  strengthen,
   Delete,
   split,
   inj,
@@ -94,6 +95,9 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
+
+strengthen :: Union '[t] a -> t a
+strengthen (Union _ t) = unsafeCoerce t
 
 
 -- | Delete the element @t@ from the list @ts@.
