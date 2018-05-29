@@ -39,12 +39,15 @@ module Control.Monad.Effect.Internal (
   , runM
   -- * Relaying and Interposing Effects
   , relay
+  , relayAny
   , relayState
   , interpose
   , interposeState
   , interpret
+  , interpretAny
   , reinterpret
   , reinterpret2
+  , shuffle
 ) where
 
 import Control.Applicative (Alternative(..))
@@ -160,6 +163,20 @@ relay pure' bind = raiseHandler loop
     Left  u -> E u (tsingleton k)
    where k = q >>> loop
 
+-- | Given an effect request somewhere in the list, either handle it with the given 'pure' function, or relay it to the given 'bind' function.
+relayAny :: ((effect \\ effects) effects', Effectful m)
+         => Arrow m effects' a b
+         -> (forall v. effect v -> Arrow m effects' v b -> m effects' b)
+         -> m effects a
+         -> m effects' b
+relayAny pure' bind = raiseHandler loop
+ where loop (Val x)  = lowerEff (pure' x)
+       loop (E u' q) = case split u' of
+         Right x -> lowerEff (bind x (raiseEff . k))
+         Left  u -> E u (tsingleton k)
+         where k = q >>> loop
+
+
 -- | Parameterized 'relay'
 -- Allows sending along some state to be handled for the target
 -- effect, or relayed to a handler that can handle the target effect.
@@ -211,6 +228,13 @@ interposeState initial pure' handler = raiseHandler (loop initial)
 interpret :: Effectful m => (forall a. eff a -> m effs a) -> m (eff ': effs) b -> m effs b
 interpret handler = raiseHandler (relay pure (\ eff yield -> lowerEff (handler eff) >>= yield))
 
+-- | Handle an effect somewhere in the list by interpreting it into the remaining effects.
+interpretAny :: ((effect \\ effects) effects', Effectful m)
+             => (forall a. effect a -> m effects' a)
+             -> m effects b
+             -> m effects' b
+interpretAny handler = raiseHandler (relayAny pure (\ eff yield -> lowerEff (handler eff) >>= yield))
+
 -- | Interpret an effect by replacing it with another effect.
 reinterpret :: Effectful m
             => (forall x. effect x -> m (newEffect ': effs) x)
@@ -232,6 +256,16 @@ reinterpret2 handle = raiseHandler loop
         loop (E u' q) = case decompose u' of
             Right eff -> lowerEff (handle eff) >>= q >>> loop
             Left  u   -> E (weaken (weaken u)) (tsingleton (q >>> loop))
+
+-- | Shuffle an effect to the head of the list.
+shuffle :: (Effectful m, (effect \\ effects) effects') => m effects a -> m (effect ': effects') a
+shuffle = raiseHandler loop
+ where loop (Val x)  = pure x
+       loop (E u' q) = case split u' of
+         Right x -> E (inj x)    (tsingleton k)
+         Left  u -> E (weaken u) (tsingleton k)
+         where k = q >>> loop
+
 
 
 -- * Effect Instances

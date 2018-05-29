@@ -1,14 +1,4 @@
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ConstraintKinds, DataKinds #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE RankNTypes #-}
-
--- Only for MemberU below, when emulating Monad Transformers
-{-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
-
+{-# LANGUAGE ConstraintKinds, DataKinds, FlexibleContexts, FlexibleInstances, FunctionalDependencies, GADTs, RankNTypes, ScopedTypeVariables, TypeFamilies, TypeOperators, UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-} -- Due to MemberU2
 
 {-|
@@ -42,14 +32,17 @@ module Data.Union (
   Union,
   decompose,
   weaken,
+  strengthen,
+  type (\\),
+  split,
   inj,
   prj,
   Member,
   MemberU2,
 ) where
 
-import Unsafe.Coerce(unsafeCoerce)
 import GHC.Exts (Constraint)
+import Unsafe.Coerce (unsafeCoerce)
 
 
 -- Strong Sum (Existential with the evidence) is an open union
@@ -94,8 +87,27 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 {-# RULES "decompose/singleton"  decompose = decompose0 #-}
 {-# INLINE decompose0 #-}
 
+-- | Weaken a 'Union' by adding another type to the front of the list.
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
+
+-- | Strengthen a singleton 'Union' by extracting its value.
+strengthen :: Union '[t] a -> t a
+strengthen (Union _ t) = unsafeCoerce t
+
+
+-- | Delete the element @t@ from the list @ts@, producing @ts'@.
+class Member t ts => (t \\ ts) (rest :: [* -> *]) | t ts -> rest, ts rest -> t
+
+instance (t \\ (t ': ts)) ts
+instance {-# OVERLAPPABLE #-} (t \\ ts) ts' => (t \\ (t' ': ts)) (t' : ts')
+
+-- | Split a 'Union' into 'Either' the selected member, or the 'Union' of the remaining values.
+split :: forall t ts ts' a . (t \\ ts) ts' => Union ts a -> Either (Union ts' a) (t a)
+split (Union n t) = case compare n (unP (elemNo :: P t ts)) of
+  LT -> Left  (Union n t)
+  EQ -> Right (unsafeCoerce t)
+  GT -> Left  (Union (n-1) t)
 
 
 -- Find an index of an element in an `r'.

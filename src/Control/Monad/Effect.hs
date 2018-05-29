@@ -18,12 +18,15 @@ module Control.Monad.Effect (
   , send
   -- * Handling Effects
   , relay
+  , relayAny
   , relayState
   , interpose
   , interposeState
   , interpret
+  , interpretAny
   , reinterpret
   , reinterpret2
+  , shuffle
   -- * Checking a List of Effects#
   , Member
   , Embedded
