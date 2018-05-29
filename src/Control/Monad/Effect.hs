@@ -26,7 +26,6 @@ module Control.Monad.Effect (
   , reinterpret2
   -- * Checking a List of Effects#
   , Member
-  , Members
   , Embedded
   , Exc
   , Fail
