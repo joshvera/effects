@@ -45,7 +45,6 @@ module Data.Union (
   inj,
   prj,
   Member,
-  Members,
   MemberU2,
 ) where
 
@@ -70,11 +69,6 @@ prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
                     | otherwise = Nothing
 
 newtype P (t :: * -> *) (r :: [* -> *]) = P { unP :: Int }
-
--- | Find a list of members 'ms' in an open union 'r'.
-type family Members ms r :: Constraint where
-  Members (t ': cs) r = (Member t r, Members cs r)
-  Members '[] r = ()
 
 -- | Inject a functor into a type-aligned union.
 inj :: forall e r v. Member e r => e v -> Union r v
