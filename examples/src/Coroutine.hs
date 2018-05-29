@@ -27,7 +27,7 @@ Done
 -- Before it was
 --    th2 :: MonadReader Int m => CoT Int m ()
 -- Now it is more general:
-th2 :: (Members '[Yield Int (), Reader Int] r) => Eff r ()
+th2 :: (Member (Yield Int ()) r, Member (Reader Int) r) => Eff r ()
 th2 = ask >>= yieldInt >> (ask >>= yieldInt)
 
 
@@ -52,7 +52,7 @@ Done
 -}
 
 -- Real example, with two sorts of local rebinding
-th3 :: (Members '[Yield Int (), Reader Int] r) => Eff r ()
+th3 :: (Member (Yield Int ()) r, Member (Reader Int) r) => Eff r ()
 th3 = ay >> ay >> local (+(10::Int)) (ay >> ay)
  where ay = ask >>= yieldInt
 
