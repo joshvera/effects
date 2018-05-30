@@ -24,6 +24,7 @@ module Control.Monad.Effect (
   , interpret
   , reinterpret
   , reinterpret2
+  , refine
   -- * Checking a List of Effects#
   , Member
   , Embedded
