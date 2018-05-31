@@ -32,6 +32,8 @@ module Data.FTCQueue (
   tviewl
 ) where
 
+import Control.Category
+
 -- |
 -- Non-empty tree. Deconstruction operations make it more and more
 -- left-leaning
@@ -77,3 +79,8 @@ tviewl (Node t1 t2) = go t1 t2
    go :: FTCQueue m a x -> FTCQueue m x b -> ViewL m a b
    go (Leaf r) tr = r :< tr
    go (Node tl1 tl2) tr = go tl1 (Node tl2 tr)
+
+
+instance Applicative m => Category (FTCQueue m) where
+  id = tsingleton pure
+  (.) = flip (><)
