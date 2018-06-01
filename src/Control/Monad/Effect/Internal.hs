@@ -5,6 +5,8 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveFunctor #-}
 
 -- The following is needed to define MonadPlus instance. It is decidable
 -- (there is no recursion!), but GHC cannot see that.
@@ -48,7 +50,7 @@ module Control.Monad.Effect.Internal (
 ) where
 
 import Control.Applicative (Alternative(..))
-import Control.Monad (MonadPlus(..))
+import Control.Monad
 import Control.Monad.Fail (MonadFail(..))
 import Control.Monad.IO.Class (MonadIO(..))
 import Data.Union
@@ -60,6 +62,134 @@ data Eff effects b
   = Val b
   -- | Send an union of 'effects' and 'eff a' to handle, and a queues of effects to apply from 'a' to 'b'.
   | forall a. E (Union effects a) (Queue effects a b)
+
+data Eff2 effects scopes a
+  = Pure a
+  | forall b . Eff (Union effects b) (Queue2 effects scopes b a)
+  | forall b . Scope (Union scopes b) (HQueue2 effects scopes b a)
+
+type Queue2 effects scopes = FTCQueue (Eff2 effects scopes)
+type HQueue2 effects scopes = FTCQueue (H (Eff2 effects scopes))
+
+instance Functor (Eff2 effects scopes) where
+  fmap f (Pure a) = Pure (f a)
+  fmap f (Eff u q) = Eff u (q |> (Pure . f))
+  fmap f (Scope u q) = Scope u (q |> (pure . f))
+
+instance Applicative (Eff2 effects scopes) where
+  pure = Pure
+  {-# INLINE pure #-}
+
+  Pure f <*> Pure x = Pure $ f x
+  Pure f <*> m = fmap f m
+  Eff u q <*> m     = Eff u (q |> (`fmap` m))
+  Scope u q <*> m = Scope u (q |> (H . pure . (`fmap` m)))
+  {-# INLINE (<*>) #-}
+
+instance Monad (Eff2 effects scopes) where
+  return = Pure
+  {-# INLINE return #-}
+
+  Pure x >>= k = k x
+  Eff u q >>= k = Eff u (q |> k)
+  Scope u q >>= k = Scope u (q |> (H . pure . k))
+  {-# INLINE (>>=) #-}
+
+newtype H m a = H { runH :: m (m a) }
+  deriving (Functor)
+
+instance Applicative m => Applicative (H m) where
+  pure = H . pure . pure
+  H f <*> H a = H ((<*>) <$> f <*> a)
+
+instance Monad m => Monad (H m) where
+  H m >>= f = H (m >>= (>>= runH . f))
+
+
+data Choice a where
+  No :: Choice a
+  Or :: Choice Bool
+
+newtype Once a = Once a
+
+instance Functor Once where
+  fmap f (Once a) = Once (f a)
+
+once :: (Member Choice effs, Member Once scopes) => Eff2 effs scopes a -> Eff2 effs scopes a
+once = scope . Once
+
+data Ask r a where
+  Ask :: Ask r r
+
+data Local r a where
+  Local :: (r -> r) -> a -> Local r a
+
+ask :: Member (Ask r) effects => Eff2 effects scopes r
+ask = send2 Ask
+
+local :: Member (Local r) scopes => (r -> r) -> Eff2 effects scopes a -> Eff2 effects scopes a
+local f = scope . Local f
+
+instance Member Choice effects => Alternative (Eff2 effects scopes) where
+  empty = send2 No
+  a <|> b = send2 Or >>= \ c -> if c then a else b
+
+send2 :: Member eff e => eff b -> Eff2 e s b
+send2 t = Eff (inj t) (tsingleton Pure)
+
+scope :: Member eff s => eff (Eff2 e s b) -> Eff2 e s b
+scope t = Scope (inj t) (tsingleton (H . pure))
+
+
+apply2 :: Queue2 effects scopes a b -> a -> Eff2 effects scopes b
+apply2 q' x =
+   case tviewl q' of
+   TOne k  -> k x
+   k :< t -> case k x of
+     Pure y -> t `apply2` y
+     Eff u q -> Eff u (q >< t)
+     Scope u q -> Scope u (q >< tsingleton (H . pure . (t `apply2`)))
+
+-- | Compose queues left to right.
+(>>>>) :: Queue2 effects scopes a b
+      -> (Eff2 effects scopes b -> Eff2 effects' scopes c) -- ^ An function to compose.
+      -> (a -> Eff2 effects' scopes c)
+(>>>>) queue f = f . apply2 queue
+
+run2 :: Eff2 '[] '[] b -> b
+run2 m = case m of
+  Pure x -> x
+  _     -> error "Internal:run - This (E) should never happen"
+
+data EffAlg eff effects a b = EffAlg
+  { whenPure   :: a -> b
+  , whenImpure :: forall v . eff v -> (v -> Eff effects b) -> Eff effects b }
+
+data Nat = Z | S Nat
+
+-- data Alg eff effects scope scopes a b = Alg
+--   { handle  :: forall (n :: Nat) v . eff   v -> (v -> Eff2 effects scopes (b    n))  -> b n
+--   , demote  :: forall (n :: Nat) v . scope v -> (v -> Eff2 effects scopes (b (S n))) -> b n
+--   , promote :: forall (n :: Nat)   .        a    n   -> b (S n)
+--   }
+
+relay2 :: Functor scope
+       => (a -> Eff2 effects scopes b)
+       -> (forall v . eff v -> (v -> Eff2 effects scopes b) -> Eff2 effects scopes b)
+       -> (forall v . scope v -> (v -> Eff2 effects scopes (Eff2 effects scopes v)) -> Eff2 effects scopes v)
+       -> (forall v . Eff2 effects scopes v -> (v -> Eff2 effects scopes b) -> Eff2 effects scopes (Eff2 effects scopes b))
+       -> Eff2 (eff ': effects) (scope : scopes) a
+       -> Eff2         effects           scopes  b
+relay2 pure' bind demote promote = loop
+ where
+  loop (Pure x)  = pure' x
+  loop (Eff u' q) = case decompose u' of
+    Right x -> bind x k
+    Left  u -> Eff u (tsingleton k)
+    where k = q >>>> loop
+  loop (Scope u' q) = case decompose u' of
+    Right x -> demote x k
+    where k = q >>>> loop
 
 -- | A queue of effects to apply from 'a' to 'b'.
 type Queue effects a b = FTCQueue (Eff effects) a b
