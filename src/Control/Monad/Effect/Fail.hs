@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, FlexibleContexts, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, TypeOperators #-}
 module Control.Monad.Effect.Fail
 ( Fail(..)
 , runFail
