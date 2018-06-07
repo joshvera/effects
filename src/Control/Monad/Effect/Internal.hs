@@ -78,6 +78,9 @@ type Arrow m a b = a -> m b
 
 data Request effect m a = forall b . Request (effect m b) (Arrow m b a)
 
+instance Functor m => Functor (Request effect m) where
+  fmap f (Request eff k) = Request eff (fmap f . k)
+
 requestMap :: (forall x . effect m x -> effect' m x) -> Request effect m a -> Request effect' m a
 requestMap f (Request effect q) = Request (f effect) q
 
