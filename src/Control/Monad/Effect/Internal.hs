@@ -74,10 +74,6 @@ data Request effect m a = forall b . Request (effect m b) (Arrow m b a)
 requestMap :: (forall x . effect m x -> effect' m x) -> Request effect m a -> Request effect' m a
 requestMap f (Request effect q) = Request (f effect) q
 
-toRequest :: Eff effects a -> Maybe (Request (Union effects) (Eff effects) a)
-toRequest (Val _) = Nothing
-toRequest (E u q) = Just (Request u (apply q))
-
 fromRequest :: Request (Union effects) (Eff effects) a -> Eff effects a
 fromRequest (Request u k) = E u (tsingleton k)
 
