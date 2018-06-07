@@ -286,3 +286,6 @@ newtype Fail (m :: * -> *) a = Fail { failMessage :: String }
 
 instance Member Fail fs => MonadFail (Eff fs) where
   fail = send . Fail
+
+instance Effect Fail where
+  handle _ _ (Fail s) = Fail s
