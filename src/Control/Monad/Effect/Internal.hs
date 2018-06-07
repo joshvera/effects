@@ -13,6 +13,7 @@ module Control.Monad.Effect.Internal (
   , Fail(..)
   , Lift(..)
   , Identity(..)
+  , Request(..)
   , Effect(..)
   , Effectful(..)
   , raiseHandler
@@ -67,9 +68,11 @@ type Queue = FTCQueue
 type Arrow m a b = a -> m b
 
 
+data Request effect m a = forall b . Request (effect m b) (Queue m b a)
+
 class Effect effect where
   -- FIXME: divide the work of handle between the effect and the queue s.t. we don’t have to change the type index of the effect but can still push state through the queue where appropriate
-  handle :: (Monad m, Monad n, Functor c) => c () -> (forall x . c (m x) -> n (c x)) -> (effect m a -> effect n (c a))
+  handle :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect (Eff effects) a -> Request effect (Eff effects') (c a))
 
 
 -- | Types wrapping 'Eff' actions.
@@ -142,7 +145,7 @@ run m = case lowerEff m of
 runM :: (Effectful m, Monad m1) => m '[Lift m1] a -> m1 a
 runM m = case lowerEff m of
   Val x -> pure x
-  E u q -> unLift (strengthen u) >>= runM . apply q . runIdentity
+  E u q -> unLift (strengthen u) >>= runM . apply q
 
 -- | Given an effect request, either handle it with the given 'pure' function,
 -- or relay it to the given 'bind' function.
@@ -260,16 +263,16 @@ instance Monad (Eff e) where
   {-# INLINE (>>=) #-}
 
 instance Member (Lift IO) e => MonadIO (Eff e) where
-  liftIO = send . Lift . fmap Identity
+  liftIO = send . Lift
   {-# INLINE liftIO #-}
 
 
 -- | Lift a first-order effect (e.g. a 'Monad' like 'IO') into an 'Eff'.
-newtype Lift effect m a = Lift { unLift :: effect (m a) }
+newtype Lift effect (m :: * -> *) a = Lift { unLift :: effect a }
   deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
 
 instance Functor effect => Effect (Lift effect) where
-  handle c dist = Lift . fmap (dist . (<$ c)) . unLift
+  handle c dist (Request (Lift op) q) = Request (Lift op) (tsingleton ((dist . (<$ c)) <<< q))
 
 
 -- | A data type for representing nondeterminstic choice
@@ -293,4 +296,4 @@ instance Member Fail fs => MonadFail (Eff fs) where
   fail = send . Fail
 
 instance Effect Fail where
-  handle _ _ (Fail s) = Fail s
+  handle c dist (Request (Fail s) q) = Request (Fail s) (tsingleton ((dist . (<$ c)) <<< q))
