@@ -27,13 +27,13 @@ universe.
 The data constructors of Union are not exported.
 -}
 
-module Data.Union (
-  Union,
-  decompose,
-  weaken,
-  inj,
-  prj,
-  Member,
+module Data.Union
+( Union
+, decompose
+, weaken
+, inj
+, prj
+, Member
 ) where
 
 import Unsafe.Coerce (unsafeCoerce)
