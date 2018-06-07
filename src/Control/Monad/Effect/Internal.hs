@@ -67,7 +67,7 @@ type Arrow m (effects :: [(* -> *) -> (* -> *)]) a b = a -> m effects b
 
 
 class Effect effect where
-  handle :: (Monad m, Monad n, Functor c) => c () -> (forall x . c (m x) -> n (c x)) -> (effect m x -> effect n (c x))
+  handle :: (Monad m, Monad n, Functor c) => c () -> (forall x . c (m x) -> n (c x)) -> (effect m a -> effect n (c a))
 
 
 -- | Types wrapping 'Eff' actions.
