@@ -10,6 +10,7 @@ module Control.Monad.Effect.Internal (
   , Fail(..)
   , Lift(..)
   , Request(..)
+  , requestMap
   , fromRequest
   , decomposeEff
   , Effect(..)
