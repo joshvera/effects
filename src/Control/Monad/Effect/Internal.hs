@@ -68,6 +68,7 @@ type Arrow m (effects :: [(* -> *) -> (* -> *)]) a b = a -> m effects b
 
 
 class Effect effect where
+  -- FIXME: divide the work of handle between the effect and the queue s.t. we don’t have to change the type index of the effect but can still push state through the queue where appropriate
   handle :: (Monad m, Monad n, Functor c) => c () -> (forall x . c (m x) -> n (c x)) -> (effect m a -> effect n (c a))
 
 
