@@ -13,6 +13,7 @@ module Control.Monad.Effect.Internal (
   , Fail(..)
   , Lift(..)
   , Identity(..)
+  , Effect(..)
   , Effectful(..)
   , raiseHandler
   -- * Decomposing Unions
