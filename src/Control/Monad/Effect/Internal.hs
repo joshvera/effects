@@ -8,7 +8,6 @@ module Control.Monad.Effect.Internal (
   , NonDet(..)
   , Fail(..)
   , Lift(..)
-  , Identity(..)
   , Request(..)
   , fromRequest
   , decomposeRequest
@@ -34,13 +33,13 @@ module Control.Monad.Effect.Internal (
   , run
   , runM
   -- * Relaying and Interposing Effects
-  , relay
-  , relayState
-  , interpose
-  , interposeState
-  , interpret
-  , reinterpret
-  , reinterpret2
+  -- , relay
+  -- , relayState
+  -- , interpose
+  -- , interposeState
+  -- , interpret
+  -- , reinterpret
+  -- , reinterpret2
 ) where
 
 import Control.Applicative (Alternative (..))
@@ -175,93 +174,93 @@ runM m = case lowerEff m of
 
 -- | Given an effect request, either handle it with the given 'pure' function,
 -- or relay it to the given 'bind' function.
-relay :: Effectful m
-      => Arrow (m e) a b -- ^ An 'pure' effectful arrow.
-      -- | A function to relay to, that binds a relayed 'eff v' to
-      -- an effectful arrow and returns a new effect.
-      -> (forall v. eff Identity v -> Arrow (m e) v b -> m e b)
-      -> m (eff ': e) a -- ^ The 'eff' to relay and consume.
-      -> m e b -- ^ The relayed effect with 'eff' consumed.
-relay pure' bind = raiseHandler loop
- where
-  loop (Val x)  = lowerEff (pure' x)
-  loop (E u' q) = case decompose u' of
-    Right x -> lowerEff (bind x (raiseEff . k))
-    Left  u -> E u (tsingleton k)
-   where k = q >>> loop
+-- relay :: (Effectful m, Effect (Union e))
+--       => Arrow (m e) a b -- ^ An 'pure' effectful arrow.
+--       -- | A function to relay to, that binds a relayed 'eff v' to
+--       -- an effectful arrow and returns a new effect.
+--       -> (forall v. eff (Eff (eff ': e)) v -> Arrow (m e) v b -> m e b)
+--       -> m (eff ': e) a -- ^ The 'eff' to relay and consume.
+--       -> m e b      -- ^ The relayed effect with 'eff' consumed.
+-- relay pure' bind m = raiseEff $ runIdentity <$> relayState (Identity ()) (fmap Identity . lowerEff . pure' . runIdentity) (\ eff yield -> Identity <$> lowerEff (bind (runIdentity eff) (raiseEff . fmap runIdentity . yield (Identity ())))) (lowerEff m)
+
+-- TODO: investigate why we can’t return (c b) from the bind function
 
 -- | Parameterized 'relay'
 -- Allows sending along some state to be handled for the target
 -- effect, or relayed to a handler that can handle the target effect.
-relayState :: Effectful m
-           => s
-           -> (s -> a -> m e b)
-           -> (forall v. s -> eff Identity v -> (s -> Arrow (m e) v b) -> m e b)
-           -> m (eff ': e) a
-           -> m e b
-relayState s' pure' bind = raiseHandler (loop s')
-  where
-    loop s (Val x)  = lowerEff (pure' s x)
-    loop s (E u' q) = case decompose u' of
-      Right x -> lowerEff (bind s x (fmap raiseEff . k))
-      Left  u -> E u (tsingleton (k s))
-     where k s'' = q >>> loop s''
+-- relayState :: forall c eff e a
+--            .  (Functor c, Effect (Union e))
+--            => c ()
+--            -> (forall v. c v                                                           -> Eff e (c b))
+--            -> (forall v. c (eff (Eff (eff ': e)) v) -> (c () -> Arrow (Eff e) v (c b)) -> Eff e (c b))
+--            -> Eff (eff ': e) a
+--            -> Eff e (c b)
+-- relayState s' pure' bind = raiseHandler (loop s')
+--   where
+--     loop :: forall a . c () -> Eff (eff ': e) a -> Eff e (c a)
+--     loop s (Val x)  = pure' (x <$ s)
+--     loop s (E u' q) = case decompose u' of
+--       Right x -> bind (x <$ s) (\ s'' -> loop s'' <<< q)
+--       Left  u -> case handle s loop (Request u q) of
+--         Request u' q' -> E u' q'
+        -- E u (tsingleton (k s))
+      -- handle :: Functor c => c () -> (forall x . c (Eff effects x) -> (c () -> Arrow (Eff effects') x (c b)) -> Eff effects' (c b)) -> (Request effect (Eff effects) a -> Request effect (Eff effects') (c b))
 
--- | Intercept the request and possibly reply to it, but leave it
--- unhandled
-interpose :: (Member eff e, Effectful m)
-          => Arrow (m e) a b
-          -> (forall v. eff Identity v -> Arrow (m e) v b -> m e b)
-          -> m e a -> m e b
-interpose pure' h = raiseHandler loop
- where
-   loop (Val x) = lowerEff (pure' x)
-   loop (E u q) = case prj u of
-     Just x -> lowerEff (h x (raiseEff . k))
-     _      -> E u (tsingleton k)
-    where k = q >>> loop
-
--- | Intercept an effect like 'interpose', but with an explicit state
--- parameter like 'relayState'.
-interposeState :: (Member eff e, Effectful m)
-               => s
-               -> (s -> Arrow (m e) a b)
-               -> (forall v. s -> eff Identity v -> (s -> Arrow (m e) v b) -> m e b)
-               -> m e a
-               -> m e b
-interposeState initial pure' handler = raiseHandler (loop initial)
-  where
-    loop state (Val x) = lowerEff (pure' state x)
-    loop state (E u q) = case prj u of
-      Just x -> lowerEff (handler state x (fmap raiseEff . k))
-      _      -> E u (tsingleton (k state))
-      where k state' = q >>> loop state'
+-- -- | Intercept the request and possibly reply to it, but leave it
+-- -- unhandled
+-- interpose :: (Member eff e, Effectful m)
+--           => Arrow (m e) a b
+--           -> (forall v. eff (Eff e) v -> Arrow (m e) v b -> m e b)
+--           -> m e a -> m e b
+-- interpose pure' h = raiseHandler loop
+--  where
+--    loop (Val x) = lowerEff (pure' x)
+--    loop (E u q) = case prj u of
+--      Just x -> lowerEff (h x (raiseEff . k))
+--      _      -> E u (tsingleton k)
+--     where k = q >>> loop
+--
+-- -- | Intercept an effect like 'interpose', but with an explicit state
+-- -- parameter like 'relayState'.
+-- interposeState :: (Member eff e, Effectful m)
+--                => s
+--                -> (s -> Arrow (m e) a b)
+--                -> (forall v. s -> eff (Eff e) v -> (s -> Arrow (m e) v b) -> m e b)
+--                -> m e a
+--                -> m e b
+-- interposeState initial pure' handler = raiseHandler (loop initial)
+--   where
+--     loop state (Val x) = lowerEff (pure' state x)
+--     loop state (E u q) = case prj u of
+--       Just x -> lowerEff (handler state x (fmap raiseEff . k))
+--       _      -> E u (tsingleton (k state))
+--       where k state' = q >>> loop state'
 
 -- | Handle the topmost effect by interpreting it into the underlying effects.
-interpret :: Effectful m => (forall a. eff Identity a -> m effs a) -> m (eff ': effs) b -> m effs b
-interpret handler = raiseHandler (relay pure (\ eff yield -> lowerEff (handler eff) >>= yield))
+-- interpret :: (Effectful m, Effect (Union effs)) => (forall a. eff (Eff effs) a -> m effs a) -> m (eff ': effs) b -> m effs b
+-- interpret handler = raiseHandler (relay pure (\ eff yield -> lowerEff (handler eff) >>= yield))
 
 -- | Interpret an effect by replacing it with another effect.
-reinterpret :: Effectful m
-            => (forall x. effect Identity x -> m (newEffect ': effs) x)
-            -> m (effect ': effs) a
-            -> m (newEffect ': effs) a
-reinterpret handler = raiseHandler loop
-  where loop (Val x)  = pure x
-        loop (E u' q) = case decompose u' of
-            Right eff -> lowerEff (handler eff) >>= q >>> loop
-            Left  u   -> E (weaken u) (tsingleton (q >>> loop))
+-- reinterpret :: Effectful m
+--             => (forall x. effect (Eff (newEffect ': effs)) x -> m (newEffect ': effs) x)
+--             -> m (effect ': effs) a
+--             -> m (newEffect ': effs) a
+-- reinterpret handler = raiseHandler loop
+--   where loop (Val x)  = pure x
+--         loop (E u' q) = case decompose u' of
+--             Right eff -> lowerEff (handler eff) >>= q >>> loop
+--             Left  u   -> E (weaken u) (tsingleton (q >>> loop))
 
 -- | Interpret an effect by replacing it with two new effects.
-reinterpret2 :: Effectful m
-             => (forall x. effect Identity x -> m (newEffect1 ': newEffect2 ': effs) x)
-             -> m (effect ': effs) a
-             -> m (newEffect1 ': newEffect2 ': effs) a
-reinterpret2 handler = raiseHandler loop
-  where loop (Val x)  = pure x
-        loop (E u' q) = case decompose u' of
-            Right eff -> lowerEff (handler eff) >>= q >>> loop
-            Left  u   -> E (weaken (weaken u)) (tsingleton (q >>> loop))
+-- reinterpret2 :: Effectful m
+--              => (forall x. effect (Eff (newEffect1 ': newEffect2 ': effs)) x -> m (newEffect1 ': newEffect2 ': effs) x)
+--              -> m (effect ': effs) a
+--              -> m (newEffect1 ': newEffect2 ': effs) a
+-- reinterpret2 handler = raiseHandler loop
+--   where loop (Val x)  = pure x
+--         loop (E u' q) = case decompose u' of
+--             Right eff -> lowerEff (handler eff) >>= q >>> loop
+--             Left  u   -> E (weaken (weaken u)) (tsingleton (q >>> loop))
 
 
 -- * Effect Instances
