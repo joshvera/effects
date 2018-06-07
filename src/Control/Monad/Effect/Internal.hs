@@ -288,6 +288,10 @@ instance Member NonDet a => MonadPlus (Eff a) where
   mzero       = send MZero
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
 
+instance Effect NonDet where
+  handle c dist (Request MZero q) = Request MZero (tsingleton ((dist . (<$ c)) <<< q))
+  handle c dist (Request MPlus q) = Request MPlus (tsingleton ((dist . (<$ c)) <<< q))
+
 
 -- | An effect representing failure.
 newtype Fail (m :: * -> *) a = Fail { failMessage :: String }
