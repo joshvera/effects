@@ -67,14 +67,14 @@ type Queue = FTCQueue
 type Arrow m a b = a -> m b
 
 
-data Request effect m a = forall b . Request (effect m b) (Queue m b a)
+data Request effect m a = forall b . Request (effect m b) (Arrow m b a)
 
 requestMap :: (forall x . effect m x -> effect' m x) -> Request effect m a -> Request effect' m a
 requestMap f (Request effect q) = Request (f effect) q
 
 toRequest :: Eff effects a -> Maybe (Request (Union effects) (Eff effects) a)
 toRequest (Val _) = Nothing
-toRequest (E u q) = Just (Request u q)
+toRequest (E u q) = Just (Request u (apply q))
 
 decomposeRequest :: Eff (effect ': effects) a -> Maybe (Either (Request (Union effects) (Eff (effect ': effects)) a) (Request effect (Eff (effect ': effects)) a))
 decomposeRequest (Val _) = Nothing
