@@ -21,13 +21,13 @@ catchResumable :: (Member (Resumable exc) e, Effectful m)
                => m e a
                -> (forall v. exc v -> m e v)
                -> m e a
-catchResumable m handle = handleResumable handle m
+catchResumable m handler = handleResumable handler m
 
 handleResumable :: (Member (Resumable exc) e, Effectful m)
                 => (forall v. exc v -> m e v)
                 -> m e a
                 -> m e a
-handleResumable handle = raiseHandler (interpose pure (\(Resumable e) yield -> lowerEff (handle e) >>= yield))
+handleResumable handler = raiseHandler (interpose pure (\(Resumable e) yield -> lowerEff (handler e) >>= yield))
 
 
 runResumable :: Effectful m => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)

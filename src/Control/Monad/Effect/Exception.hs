@@ -56,4 +56,4 @@ catchError = flip handleError
 -- in situations where the code for the handler is shorter, or when
 -- composing chains of handlers together.
 handleError :: (Member (Exc exc) e, Effectful m) => (exc -> m e a) -> m e a -> m e a
-handleError handle = raiseHandler (interpose pure (\(Exc e) _ -> lowerEff (handle e)))
+handleError handler = raiseHandler (interpose pure (\(Exc e) _ -> lowerEff (handler e)))
