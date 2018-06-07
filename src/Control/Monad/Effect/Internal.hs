@@ -215,10 +215,10 @@ reinterpret :: Effectful m
             => (forall x. effect Identity x -> m (newEffect ': effs) x)
             -> m (effect ': effs) a
             -> m (newEffect ': effs) a
-reinterpret handle = raiseHandler loop
+reinterpret handler = raiseHandler loop
   where loop (Val x)  = pure x
         loop (E u' q) = case decompose u' of
-            Right eff -> lowerEff (handle eff) >>= q >>> loop
+            Right eff -> lowerEff (handler eff) >>= q >>> loop
             Left  u   -> E (weaken u) (tsingleton (q >>> loop))
 
 -- | Interpret an effect by replacing it with two new effects.
@@ -226,10 +226,10 @@ reinterpret2 :: Effectful m
              => (forall x. effect Identity x -> m (newEffect1 ': newEffect2 ': effs) x)
              -> m (effect ': effs) a
              -> m (newEffect1 ': newEffect2 ': effs) a
-reinterpret2 handle = raiseHandler loop
+reinterpret2 handler = raiseHandler loop
   where loop (Val x)  = pure x
         loop (E u' q) = case decompose u' of
-            Right eff -> lowerEff (handle eff) >>= q >>> loop
+            Right eff -> lowerEff (handler eff) >>= q >>> loop
             Left  u   -> E (weaken (weaken u)) (tsingleton (q >>> loop))
 
 
