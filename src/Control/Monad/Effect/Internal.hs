@@ -9,6 +9,7 @@ module Control.Monad.Effect.Internal (
   , Lift(..)
   , Identity(..)
   , Request(..)
+  , decomposeRequest
   , Effect(..)
   , Effectful(..)
   , raiseHandler
