@@ -13,6 +13,7 @@ module Control.Monad.Effect.Internal (
   , fromRequest
   , decomposeEff
   , Effect(..)
+  , handle
   , Effectful(..)
   , raiseHandler
   -- * Decomposing Unions
@@ -48,6 +49,7 @@ import Control.Monad (MonadPlus (..))
 import Control.Monad.Fail (MonadFail (..))
 import Control.Monad.IO.Class (MonadIO (..))
 import Data.FTCQueue
+import Data.Functor.Identity
 import Data.Union
 
 -- | An effectful computation that returns 'b' and sends a list of 'effects'.
@@ -95,6 +97,9 @@ decomposeEff (E u q) = Right $ case decompose u of
 
 class Effect effect where
   handleState :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect (Eff effects) a -> Request effect (Eff effects') (c a))
+
+handle :: Effect effect => (forall x . Eff effects x -> Eff effects' x) -> (Request effect (Eff effects) a -> Request effect (Eff effects') a)
+handle handler r = runIdentity <$> handleState (Identity ()) (fmap Identity . handler . runIdentity) r
 
 instance Effect (Union '[]) where
   handleState _ _ _ = error "impossible: handleState on empty Union"
