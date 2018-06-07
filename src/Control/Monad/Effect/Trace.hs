@@ -30,6 +30,8 @@ module Control.Monad.Effect.Trace
 import Control.Monad.Effect.Internal
 import Control.Monad.Effect.State
 import Control.Monad.IO.Class
+import Data.Bifunctor (first)
+import Data.Union
 import System.IO
 
 -- | A Trace effect; takes a String and performs output
@@ -41,13 +43,23 @@ trace :: (Member Trace e, Effectful m) => String -> m e ()
 trace = send . Trace
 
 -- | An IO handler for Trace effects. Prints output to stderr.
-runPrintingTrace :: (Member (Lift IO) effects, Effectful m) => m (Trace ': effects) a -> m effects a
-runPrintingTrace = raiseHandler (relay pure (\ (Trace s) -> (liftIO (hPutStrLn stderr s) >>=)))
+runPrintingTrace :: (Member (Lift IO) effects, Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects a
+runPrintingTrace = raiseHandler go
+  where go (Return a)           = pure a
+        go (Effect (Trace s) k) = runPrintingTrace (liftIO (hPutStrLn stderr s) >>= k)
+        go (Other r)            = fromRequest (handle runPrintingTrace r)
 
 -- | Run a 'Trace' effect, discarding the traced values.
-runIgnoringTrace :: Effectful m => m (Trace ': effects) a -> m effects a
-runIgnoringTrace = raiseHandler (interpret (\ (Trace _) -> pure ()))
+runIgnoringTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects a
+runIgnoringTrace = raiseHandler go
+  where go (Return a)           = pure a
+        go (Effect (Trace _) k) = runIgnoringTrace (k ())
+        go (Other r)            = fromRequest (handle runIgnoringTrace r)
 
 -- | Run a 'Trace' effect, accumulating the traced values into a list like a 'Writer'.
-runReturningTrace :: Effectful m => m (Trace ': effects) a -> m effects (a, [String])
-runReturningTrace = raiseHandler (fmap (fmap reverse) . runState [] . reinterpret (\ (Trace s) -> modify' (s:)))
+runReturningTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects ([String], a)
+runReturningTrace = raiseHandler (fmap (first reverse) . runState [] . go)
+  where go :: Effect (Union effects) => Eff (Trace ': effects) a -> Eff (State [String] ': effects) a
+        go (Return a)            = pure a
+        go (Effect (Trace s) k)  = put [s] >> go (k ())
+        go (Other r) = fromRequest (handle go (weaken `requestMap` r))
