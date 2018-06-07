@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, DataKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, PatternSynonyms, RankNTypes, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes, DataKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, PatternSynonyms, RankNTypes, TypeOperators, UndecidableInstances, ViewPatterns #-}
 module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
   Eff(..)
@@ -56,6 +56,7 @@ data Eff effects b
   | forall a. E (Union effects (Eff effects) a) (Queue (Eff effects) a b)
 
 pattern Return a <- Val a
+pattern Other r <- (toRequest -> Just r)
 
 
 -- | A queue of effects to apply from 'a' to 'b'.
