@@ -31,6 +31,7 @@ module Data.Union
 ( Union
 , decompose
 , weaken
+, strengthen
 , inj
 , prj
 , Member
@@ -64,6 +65,9 @@ decompose (Union n v) = Left  $ Union (n-1) v
 
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
+
+strengthen :: Union '[last] a -> last a
+strengthen (Union _ t) = unsafeCoerce t
 
 
 -- Find an index of an element in an `r'.
