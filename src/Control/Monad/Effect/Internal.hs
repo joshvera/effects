@@ -74,6 +74,9 @@ class Effect effect where
   -- FIXME: divide the work of handle between the effect and the queue s.t. we don’t have to change the type index of the effect but can still push state through the queue where appropriate
   handle :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect (Eff effects) a -> Request effect (Eff effects') (c a))
 
+instance Effect (Union '[]) where
+  handle _ _ _ = error "impossible: handle on empty Union"
+
 instance (Effect effect, Effect (Union effects)) => Effect (Union (effect ': effects)) where
   handle c dist (Request u q) = case decompose u of
     Left u' -> case handle c dist (Request u' q) of
