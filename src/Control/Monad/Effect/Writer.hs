@@ -42,4 +42,4 @@ runWriter = raiseHandler (go mempty)
         go w (Tell o k) = go (w `mappend` o) (k ())
         go w (Other r)  = fromRequest (handle (w, ()) (uncurry go) r)
 
-pattern Tell o q <- (decomposeRequest -> Just (Right (Request (Writer o) q)))
+pattern Tell o q <- (decomposeRequest -> Right (Right (Request (Writer o) q)))
