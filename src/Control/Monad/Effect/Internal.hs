@@ -11,6 +11,8 @@ module Control.Monad.Effect.Internal (
   , send
   , NonDet(..)
   , Fail(..)
+  , Lift(..)
+  , Identity(..)
   , Effectful(..)
   , raiseHandler
   -- * Decomposing Unions
@@ -46,6 +48,7 @@ import Control.Monad (MonadPlus (..))
 import Control.Monad.Fail (MonadFail (..))
 import Control.Monad.IO.Class (MonadIO (..))
 import Data.FTCQueue
+import Data.Functor.Identity
 import Data.Union
 
 -- | An effectful computation that returns 'b' and sends a list of 'effects'.
@@ -53,14 +56,14 @@ data Eff effects b
   -- | Done with the value of type `b`.
   = Val b
   -- | Send an union of 'effects' and 'eff a' to handle, and a queues of effects to apply from 'a' to 'b'.
-  | forall a. E (Union effects a) (Queue effects a b)
+  | forall a. E (Union effects Identity a) (Queue effects a b)
 
 -- | A queue of effects to apply from 'a' to 'b'.
 type Queue effects a b = FTCQueue (Eff effects) a b
 
 -- | An effectful function from 'a' to 'b'
 --   that also performs a list of 'effects'.
-type Arrow m (effects :: [* -> *]) a b = a -> m effects b
+type Arrow m (effects :: [(* -> *) -> (* -> *)]) a b = a -> m effects b
 
 
 -- | Types wrapping 'Eff' actions.
@@ -108,7 +111,7 @@ apply q' x =
 -- * Sending and Running Effects
 
 -- | Send a effect and wait for a reply.
-send :: (Effectful m, Member eff e) => eff b -> m e b
+send :: (Effectful m, Member eff e) => eff Identity b -> m e b
 send t = raiseEff (E (inj t) (tsingleton Val))
 
 -- | Runs an effect whose effects has been consumed.
@@ -130,10 +133,10 @@ run m = case lowerEff m of
 -- and returns an 'm a'.
 --
 -- This is useful for plugging in traditional transformer stacks.
-runM :: (Effectful m, Monad m1) => m '[m1] a -> m1 a
+runM :: (Effectful m, Monad m1) => m '[Lift m1] a -> m1 a
 runM m = case lowerEff m of
   Val x -> pure x
-  E u q -> strengthen u >>= runM . apply q
+  E u q -> unLift (strengthen u) >>= runM . apply q . runIdentity
 
 -- | Given an effect request, either handle it with the given 'pure' function,
 -- or relay it to the given 'bind' function.
@@ -141,7 +144,7 @@ relay :: Effectful m
       => Arrow m e a b -- ^ An 'pure' effectful arrow.
       -- | A function to relay to, that binds a relayed 'eff v' to
       -- an effectful arrow and returns a new effect.
-      -> (forall v. eff v -> Arrow m e v b -> m e b)
+      -> (forall v. eff Identity v -> Arrow m e v b -> m e b)
       -> m (eff ': e) a -- ^ The 'eff' to relay and consume.
       -> m e b -- ^ The relayed effect with 'eff' consumed.
 relay pure' bind = raiseHandler loop
@@ -158,7 +161,7 @@ relay pure' bind = raiseHandler loop
 relayState :: Effectful m
            => s
            -> (s -> a -> m e b)
-           -> (forall v. s -> eff v -> (s -> Arrow m e v b) -> m e b)
+           -> (forall v. s -> eff Identity v -> (s -> Arrow m e v b) -> m e b)
            -> m (eff ': e) a
            -> m e b
 relayState s' pure' bind = raiseHandler (loop s')
@@ -173,7 +176,7 @@ relayState s' pure' bind = raiseHandler (loop s')
 -- unhandled
 interpose :: (Member eff e, Effectful m)
           => Arrow m e a b
-          -> (forall v. eff v -> Arrow m e v b -> m e b)
+          -> (forall v. eff Identity v -> Arrow m e v b -> m e b)
           -> m e a -> m e b
 interpose pure' h = raiseHandler loop
  where
@@ -188,7 +191,7 @@ interpose pure' h = raiseHandler loop
 interposeState :: (Member eff e, Effectful m)
                => s
                -> (s -> Arrow m e a b)
-               -> (forall v. s -> eff v -> (s -> Arrow m e v b) -> m e b)
+               -> (forall v. s -> eff Identity v -> (s -> Arrow m e v b) -> m e b)
                -> m e a
                -> m e b
 interposeState initial pure' handler = raiseHandler (loop initial)
@@ -200,12 +203,12 @@ interposeState initial pure' handler = raiseHandler (loop initial)
       where k state' = q >>> loop state'
 
 -- | Handle the topmost effect by interpreting it into the underlying effects.
-interpret :: Effectful m => (forall a. eff a -> m effs a) -> m (eff ': effs) b -> m effs b
+interpret :: Effectful m => (forall a. eff Identity a -> m effs a) -> m (eff ': effs) b -> m effs b
 interpret handler = raiseHandler (relay pure (\ eff yield -> lowerEff (handler eff) >>= yield))
 
 -- | Interpret an effect by replacing it with another effect.
 reinterpret :: Effectful m
-            => (forall x. effect x -> m (newEffect ': effs) x)
+            => (forall x. effect Identity x -> m (newEffect ': effs) x)
             -> m (effect ': effs) a
             -> m (newEffect ': effs) a
 reinterpret handle = raiseHandler loop
@@ -216,7 +219,7 @@ reinterpret handle = raiseHandler loop
 
 -- | Interpret an effect by replacing it with two new effects.
 reinterpret2 :: Effectful m
-             => (forall x. effect x -> m (newEffect1 ': newEffect2 ': effs) x)
+             => (forall x. effect Identity x -> m (newEffect1 ': newEffect2 ': effs) x)
              -> m (effect ': effs) a
              -> m (newEffect1 ': newEffect2 ': effs) a
 reinterpret2 handle = raiseHandler loop
@@ -250,15 +253,19 @@ instance Monad (Eff e) where
   E u q >>= k = E u (q |> k)
   {-# INLINE (>>=) #-}
 
-instance Member IO e => MonadIO (Eff e) where
-  liftIO = send
+instance Member (Lift IO) e => MonadIO (Eff e) where
+  liftIO = send . Lift . fmap Identity
   {-# INLINE liftIO #-}
 
 
+
+newtype Lift effect m a = Lift { unLift :: effect (m a) }
+
+
 -- | A data type for representing nondeterminstic choice
-data NonDet a where
-  MZero :: NonDet a
-  MPlus :: NonDet Bool
+data NonDet (m :: * -> *) a where
+  MZero :: NonDet m a
+  MPlus :: NonDet m Bool
 
 instance Member NonDet e => Alternative (Eff e) where
   empty = mzero
@@ -270,7 +277,7 @@ instance Member NonDet a => MonadPlus (Eff a) where
 
 
 -- | An effect representing failure.
-newtype Fail a = Fail { failMessage :: String }
+newtype Fail (m :: * -> *) a = Fail { failMessage :: String }
 
 instance Member Fail fs => MonadFail (Eff fs) where
   fail = send . Fail

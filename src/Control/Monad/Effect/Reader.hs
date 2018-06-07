@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, KindSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 {-|
@@ -38,8 +38,8 @@ module Control.Monad.Effect.Reader (
 import Control.Monad.Effect.Internal
 
 -- |
-data Reader v a where
-  Reader :: Reader a a
+data Reader v (m :: * -> *) a where
+  Reader :: Reader a m a
 
 -- | Request a value for the environment
 ask :: (Member (Reader v) e, Effectful m) => m e v
@@ -62,7 +62,7 @@ local :: forall v b m e. (Member (Reader v) e, Effectful m) =>
 local f m = raiseEff $ do
   e0 <- ask
   let e = f e0
-  let bind :: Reader v a -> Arrow Eff e a b -> Eff e b
+  let bind :: Reader v Identity a -> Arrow Eff e a b -> Eff e b
       bind Reader g = g e
   interpose pure bind (lowerEff m)
 

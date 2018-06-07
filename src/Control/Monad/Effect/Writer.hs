@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, KindSignatures #-}
 
 {-|
 Module      : Control.Monad.Effect.Writer
@@ -27,8 +27,8 @@ module Control.Monad.Effect.Writer (
 import Control.Monad.Effect.Internal
 
 -- | Writer effects - send outputs to an effect environment
-data Writer o x where
-  Writer :: o -> Writer o ()
+data Writer o (m :: * -> *) x where
+  Writer :: o -> Writer o m ()
 
 -- | Send a change to the attached environment
 tell :: (Member (Writer o) e, Effectful m) => o -> m e ()

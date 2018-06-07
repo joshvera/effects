@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, KindSignatures #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
 
@@ -33,15 +33,15 @@ import Control.Monad.IO.Class
 import System.IO
 
 -- | A Trace effect; takes a String and performs output
-data Trace v where
-  Trace :: String -> Trace ()
+data Trace (m :: * -> *) v where
+  Trace :: String -> Trace m ()
 
 -- | Printing a string in a trace
 trace :: (Member Trace e, Effectful m) => String -> m e ()
 trace = send . Trace
 
 -- | An IO handler for Trace effects. Prints output to stderr.
-runPrintingTrace :: (Member IO effects, Effectful m) => m (Trace ': effects) a -> m effects a
+runPrintingTrace :: (Member (Lift IO) effects, Effectful m) => m (Trace ': effects) a -> m effects a
 runPrintingTrace = raiseHandler (relay pure (\ (Trace s) -> (liftIO (hPutStrLn stderr s) >>=)))
 
 -- | Run a 'Trace' effect, discarding the traced values.

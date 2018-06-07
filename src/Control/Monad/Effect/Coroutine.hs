@@ -34,7 +34,7 @@ import Control.Monad.Effect.Internal
 -- a: The current type
 -- b: The input to the continuation function
 -- v: The output of the continuation
-data Yield a b v = Yield a (b -> v)
+data Yield a b (m :: * -> *) v = Yield a (b -> v)
     deriving (Functor)
 
 -- | Lifts a value and a function into the Coroutine effect
@@ -44,7 +44,7 @@ yield x f = send (Yield x f)
 -- |
 -- Status of a thread: done or reporting the value of the type a and
 -- resuming with the value of type b
-data Status m (e :: [* -> *]) a b w = Done w | Continue a (b -> m e (Status m e a b w))
+data Status m (e :: [(* -> *) -> (* -> *)]) a b w = Done w | Continue a (b -> m e (Status m e a b w))
   deriving (Functor)
 
 -- | Launch a thread and report its status

@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, Rank2Types, TypeApplications, TypeOperators #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, KindSignatures, Rank2Types, TypeApplications, TypeOperators #-}
 module Control.Monad.Effect.Resumable
   ( Resumable(..)
   , SomeExc(..)
@@ -12,7 +12,7 @@ module Control.Monad.Effect.Resumable
 import Control.Monad.Effect.Internal
 import Data.Functor.Classes
 
-data Resumable exc a = Resumable (exc a)
+data Resumable exc (m :: * -> *) a = Resumable (exc a)
 
 throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
 throwResumable = send . Resumable

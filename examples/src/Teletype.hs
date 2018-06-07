@@ -1,17 +1,17 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, KindSignatures #-}
 module Teletype where
 
 import Control.Monad.Effect
 import Control.Monad.Effect.Internal as I
 import System.Exit hiding (ExitSuccess)
 
-data Teletype s where
-  PutStrLn    :: String -> Teletype ()
-  GetLine     :: Teletype String
-  ExitSuccess :: Teletype ()
+data Teletype (m :: * -> *) s where
+  PutStrLn    :: String -> Teletype m ()
+  GetLine     :: Teletype m String
+  ExitSuccess :: Teletype m ()
 
 -- Takes a string and returns a teletype effect.
 putStrLn' :: Member Teletype e => String -> Eff e ()

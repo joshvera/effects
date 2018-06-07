@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, KindSignatures #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GADTs #-}
@@ -46,9 +46,9 @@ runState initial = relayState initial (\ s b -> raiseEff (pure (b, s))) (\ s eff
 
 
 -- | Strict State effects: one can either Get values or Put them
-data State s v where
-  Get :: State s s
-  Put :: !s -> State s ()
+data State s (m :: * -> *) v where
+  Get :: State s m s
+  Put :: !s -> State s m ()
 
 -- | Retrieve state
 get :: (Member (State s) e, Effectful m) => m e s
@@ -84,7 +84,7 @@ transactionState _ m = raiseEff $ do s <- get; loop s (lowerEff m)
  where
    loop :: s -> Eff e a -> Eff e a
    loop s (Val x) = put s >> pure x
-   loop s (E (u :: Union e b) q) = case prj u :: Maybe (State s b) of
+   loop s (E (u :: Union e Identity b) q) = case prj u :: Maybe (State s Identity b) of
      Just Get      -> loop s (apply q s)
      Just (Put s') -> loop s'(apply q ())
      _             -> E u (tsingleton k)

@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, KindSignatures #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
 
@@ -32,8 +32,8 @@ import Control.Monad.Effect.Internal
                              -- Fresh --
 --------------------------------------------------------------------------------
 -- | Fresh effect model
-data Fresh v where
-  Fresh :: Fresh Int
+data Fresh (m :: * -> *) v where
+  Fresh :: Fresh m Int
 
 -- | Request a fresh effect
 fresh :: (Member Fresh e, Effectful m) => m e Int
