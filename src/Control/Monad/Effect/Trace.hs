@@ -29,6 +29,7 @@ module Control.Monad.Effect.Trace
 
 import Control.Monad.Effect.Internal
 import Control.Monad.Effect.State
+import Control.Monad.IO.Class
 import System.IO
 
 -- | A Trace effect; takes a String and performs output
@@ -41,7 +42,7 @@ trace = send . Trace
 
 -- | An IO handler for Trace effects. Prints output to stderr.
 runPrintingTrace :: (Member IO effects, Effectful m) => m (Trace ': effects) a -> m effects a
-runPrintingTrace = raiseHandler (relay pure (\ (Trace s) -> (send (hPutStrLn stderr s) >>=)))
+runPrintingTrace = raiseHandler (relay pure (\ (Trace s) -> (liftIO (hPutStrLn stderr s) >>=)))
 
 -- | Run a 'Trace' effect, discarding the traced values.
 runIgnoringTrace :: Effectful m => m (Trace ': effects) a -> m effects a
