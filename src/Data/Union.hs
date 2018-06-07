@@ -1,10 +1,4 @@
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE DataKinds, FlexibleInstances, GADTs, KindSignatures, MultiParamTypeClasses, RankNTypes, ScopedTypeVariables, TypeOperators #-}
 
 {-|
 Module      : Data.Union
@@ -42,7 +36,7 @@ module Data.Union (
   Member,
 ) where
 
-import Unsafe.Coerce(unsafeCoerce)
+import Unsafe.Coerce (unsafeCoerce)
 
 -- Strong Sum (Existential with the evidence) is an open union
 -- t is can be a GADT and hence not necessarily a Functor.
