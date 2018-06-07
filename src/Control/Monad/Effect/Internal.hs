@@ -66,6 +66,10 @@ type Queue effects a b = FTCQueue (Eff effects) a b
 type Arrow m (effects :: [(* -> *) -> (* -> *)]) a b = a -> m effects b
 
 
+class Effect effect where
+  handle :: (Monad m, Monad n, Functor c) => c () -> (forall x . c (m x) -> n (c x)) -> (effect m x -> effect n (c x))
+
+
 -- | Types wrapping 'Eff' actions.
 --
 --   Most instances of 'Effectful' will be derived using @-XGeneralizedNewtypeDeriving@, with these ultimately bottoming out on the instance for 'Eff' (for which 'raise' and 'lower' are simply the identity). Because of this, types can be nested arbitrarily deeply and still call 'raiseEff'/'lowerEff' just once to get at the (ultimately) underlying 'Eff'.
