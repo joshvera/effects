@@ -292,7 +292,7 @@ newtype Lift effect (m :: * -> *) a = Lift { unLift :: effect a }
   deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
 
 instance Functor effect => Effect (Lift effect) where
-  handle c dist (Request (Lift op) q) = Request (Lift op) (tsingleton ((dist . (<$ c)) <<< q))
+  handle c dist (Request (Lift op) k) = Request (Lift op) (dist . (<$ c) . k)
 
 
 -- | A data type for representing nondeterminstic choice
@@ -309,8 +309,8 @@ instance Member NonDet a => MonadPlus (Eff a) where
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
 
 instance Effect NonDet where
-  handle c dist (Request MZero q) = Request MZero (tsingleton ((dist . (<$ c)) <<< q))
-  handle c dist (Request MPlus q) = Request MPlus (tsingleton ((dist . (<$ c)) <<< q))
+  handle c dist (Request MZero k) = Request MZero (dist . (<$ c) . k)
+  handle c dist (Request MPlus k) = Request MPlus (dist . (<$ c) . k)
 
 
 -- | An effect representing failure.
@@ -320,4 +320,4 @@ instance Member Fail fs => MonadFail (Eff fs) where
   fail = send . Fail
 
 instance Effect Fail where
-  handle c dist (Request (Fail s) q) = Request (Fail s) (tsingleton ((dist . (<$ c)) <<< q))
+  handle c dist (Request (Fail s) k) = Request (Fail s) (dist . (<$ c) . k)
