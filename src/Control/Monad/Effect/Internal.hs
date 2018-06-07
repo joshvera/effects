@@ -61,6 +61,7 @@ data Eff effects b
 pattern Return a <- Val a
 pattern Effect eff k <- (decomposeEff -> Right (Right (Request eff k)))
 pattern Other r <- (decomposeEff -> Right (Left r))
+{-# COMPLETE Other, Return, Effect #-}
 
 
 -- | A queue of effects to apply from 'a' to 'b'.
