@@ -66,7 +66,7 @@ decompose (Union n v) = Left  $ Union (n-1) v
 weaken :: Union r v -> Union (any ': r) v
 weaken (Union n v) = Union (n+1) v
 
-strengthen :: Union '[last] a -> last a
+strengthen :: Union '[last] v -> last v
 strengthen (Union _ t) = unsafeCoerce t
 
 
