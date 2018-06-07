@@ -1,7 +1,8 @@
-{-# LANGUAGE AllowAmbiguousTypes, DataKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, RankNTypes, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes, DataKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, PatternSynonyms, RankNTypes, TypeOperators, UndecidableInstances #-}
 module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
   Eff(..)
+  , pattern Return
   , send
   , NonDet(..)
   , Fail(..)
@@ -53,6 +54,9 @@ data Eff effects b
   = Val b
   -- | Send an union of 'effects' and 'eff a' to handle, and a queues of effects to apply from 'a' to 'b'.
   | forall a. E (Union effects Identity a) (Queue (Eff effects) a b)
+
+pattern Return a <- Val a
+
 
 -- | A queue of effects to apply from 'a' to 'b'.
 type Queue = FTCQueue
