@@ -267,6 +267,9 @@ instance Member (Lift IO) e => MonadIO (Eff e) where
 newtype Lift effect m a = Lift { unLift :: effect (m a) }
   deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
 
+instance Functor effect => Effect (Lift effect) where
+  handle c dist (Lift op) = Lift (fmap (\ p -> dist (p <$ c)) op)
+
 
 -- | A data type for representing nondeterminstic choice
 data NonDet (m :: * -> *) a where
