@@ -48,7 +48,6 @@ import Control.Monad (MonadPlus (..))
 import Control.Monad.Fail (MonadFail (..))
 import Control.Monad.IO.Class (MonadIO (..))
 import Data.FTCQueue
-import Data.Functor.Identity
 import Data.Union
 
 -- | An effectful computation that returns 'b' and sends a list of 'effects'.
