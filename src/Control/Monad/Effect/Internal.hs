@@ -10,6 +10,7 @@ module Control.Monad.Effect.Internal (
   , Lift(..)
   , Identity(..)
   , Request(..)
+  , fromRequest
   , decomposeRequest
   , Effect(..)
   , Effectful(..)
@@ -77,6 +78,9 @@ requestMap f (Request effect q) = Request (f effect) q
 toRequest :: Eff effects a -> Maybe (Request (Union effects) (Eff effects) a)
 toRequest (Val _) = Nothing
 toRequest (E u q) = Just (Request u (apply q))
+
+fromRequest :: Request (Union effects) (Eff effects) a -> Eff effects a
+fromRequest (Request u k) = E u (tsingleton k)
 
 decomposeRequest :: Eff (effect ': effects) a -> Maybe (Either (Request (Union effects) (Eff (effect ': effects)) a) (Request effect (Eff (effect ': effects)) a))
 decomposeRequest (Val _) = Nothing
