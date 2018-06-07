@@ -39,10 +39,12 @@ import Data.Proxy
 --------------------------------------------------------------------------------
 
 -- | Run a 'State s' effect given an effect and an initial state.
-runState :: Effectful m => s -> m (State s ': e) b -> m e (b, s)
-runState initial = relayState initial (\ s b -> raiseEff (pure (b, s))) (\ s eff yield -> case eff of
-  Get    -> yield s s
-  Put s' -> yield s' ())
+runState :: (Effectful m, Effect (Union e)) => s -> m (State s ': e) b -> m e (s, b)
+runState s = raiseHandler (go s)
+  where go s' (Return a)          = pure (s', a)
+        go s' (Effect Get k)      = runState s' (k s')
+        go _  (Effect (Put s') k) = runState s' (k ())
+        go s' (Other r)           = fromRequest (handle (s', ()) (uncurry runState) r)
 
 
 -- | Strict State effects: one can either Get values or Put them
