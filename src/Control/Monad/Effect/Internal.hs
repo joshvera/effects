@@ -1,10 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE AllowAmbiguousTypes, DataKinds, FlexibleContexts, GADTs, RankNTypes, TypeFamilies, TypeOperators #-}
 
 -- The following is needed to define MonadPlus instance. It is decidable
 -- (there is no recursion!), but GHC cannot see that.
@@ -47,12 +41,12 @@ module Control.Monad.Effect.Internal (
   , reinterpret2
 ) where
 
-import Control.Applicative (Alternative(..))
-import Control.Monad (MonadPlus(..))
-import Control.Monad.Fail (MonadFail(..))
-import Control.Monad.IO.Class (MonadIO(..))
-import Data.Union
+import Control.Applicative (Alternative (..))
+import Control.Monad (MonadPlus (..))
+import Control.Monad.Fail (MonadFail (..))
+import Control.Monad.IO.Class (MonadIO (..))
 import Data.FTCQueue
+import Data.Union
 
 -- | An effectful computation that returns 'b' and sends a list of 'effects'.
 data Eff effects b
