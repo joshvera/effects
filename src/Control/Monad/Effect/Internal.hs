@@ -17,11 +17,11 @@ module Control.Monad.Effect.Internal (
   , raiseHandler
   -- * Decomposing Unions
   , Member
+  , decompose
   -- | Inserts multiple effects into 'E'.
   , inj
   , prj
   -- * Constructing and Decomposing Queues of Effects
-  , decompose
   , Queue
   , tsingleton
   , Arrow
