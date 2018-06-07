@@ -76,6 +76,12 @@ toRequest :: Eff effects a -> Maybe (Request (Union effects) (Eff effects) a)
 toRequest (Val _) = Nothing
 toRequest (E u q) = Just (Request u q)
 
+decomposeRequest :: Eff (effect ': effects) a -> Maybe (Either (Request (Union effects) (Eff (effect ': effects)) a) (Request effect (Eff (effect ': effects)) a))
+decomposeRequest (Val _) = Nothing
+decomposeRequest (E u q) = Just $ case decompose u of
+  Left u' -> Left (Request u' (apply q))
+  Right eff -> Right (Request eff (apply q))
+
 class Effect effect where
   -- FIXME: divide the work of handle between the effect and the queue s.t. we don’t have to change the type index of the effect but can still push state through the queue where appropriate
   handle :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect (Eff effects) a -> Request effect (Eff effects') (c a))
