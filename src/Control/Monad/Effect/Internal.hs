@@ -57,8 +57,13 @@ data Eff effects b
   -- | Send an union of 'effects' and 'eff a' to handle, and a queues of effects to apply from 'a' to 'b'.
   | forall a. E (Union effects (Eff effects) a) (Queue (Eff effects) a b)
 
+pattern Return :: b -> Eff effects b
 pattern Return a <- Val a
+
+pattern Effect :: effect (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
 pattern Effect eff k <- (decomposeEff -> Right (Right (Request eff k)))
+
+pattern Other :: Request (Union effects) (Eff (effect : effects)) a -> Eff (effect : effects) a
 pattern Other r <- (decomposeEff -> Right (Left r))
 {-# COMPLETE Other, Return, Effect #-}
 
