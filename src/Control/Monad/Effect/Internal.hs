@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, DataKinds, FlexibleContexts, GADTs, KindSignatures, RankNTypes, TypeOperators #-}
+{-# LANGUAGE AllowAmbiguousTypes, DataKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, GADTs, GeneralizedNewtypeDeriving, KindSignatures, RankNTypes, TypeOperators #-}
 
 -- The following is needed to define MonadPlus instance. It is decidable
 -- (there is no recursion!), but GHC cannot see that.
@@ -265,7 +265,7 @@ instance Member (Lift IO) e => MonadIO (Eff e) where
 
 -- | Lift a first-order effect (e.g. a 'Monad' like 'IO') into an 'Eff'.
 newtype Lift effect m a = Lift { unLift :: effect (m a) }
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
 
 
 -- | A data type for representing nondeterminstic choice
