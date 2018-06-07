@@ -76,10 +76,8 @@ instance Effect (Union '[]) where
 
 instance (Effect effect, Effect (Union effects)) => Effect (Union (effect ': effects)) where
   handle c dist (Request u q) = case decompose u of
-    Left u' -> case handle c dist (Request u' q) of
-      Request u'' q' -> Request (weaken u'') q'
-    Right eff -> case handle c dist (Request eff q) of
-      Request eff' q' -> Request (inj eff') q'
+    Left u' -> weaken `requestMap` handle c dist (Request u' q)
+    Right eff -> inj `requestMap` handle c dist (Request eff q)
 
 
 -- | Types wrapping 'Eff' actions.
