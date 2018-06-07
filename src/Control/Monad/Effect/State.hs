@@ -44,7 +44,7 @@ runState s = raiseHandler (go s)
   where go s' (Return a)          = pure (s', a)
         go s' (Effect Get k)      = runState s' (k s')
         go _  (Effect (Put s') k) = runState s' (k ())
-        go s' (Other r)           = fromRequest (handle (s', ()) (uncurry runState) r)
+        go s' (Other r)           = fromRequest (handleState (s', ()) (uncurry runState) r)
 
 
 -- | Strict State effects: one can either Get values or Put them

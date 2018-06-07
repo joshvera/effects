@@ -91,15 +91,15 @@ decomposeEff (E u q) = Right $ case decompose u of
   Right eff -> Right (Request eff (apply q))
 
 class Effect effect where
-  handle :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect (Eff effects) a -> Request effect (Eff effects') (c a))
+  handleState :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect (Eff effects) a -> Request effect (Eff effects') (c a))
 
 instance Effect (Union '[]) where
-  handle _ _ _ = error "impossible: handle on empty Union"
+  handleState _ _ _ = error "impossible: handleState on empty Union"
 
 instance (Effect effect, Effect (Union effects)) => Effect (Union (effect ': effects)) where
-  handle c dist (Request u q) = case decompose u of
-    Left u' -> weaken `requestMap` handle c dist (Request u' q)
-    Right eff -> inj `requestMap` handle c dist (Request eff q)
+  handleState c dist (Request u q) = case decompose u of
+    Left u' -> weaken `requestMap` handleState c dist (Request u' q)
+    Right eff -> inj `requestMap` handleState c dist (Request eff q)
 
 
 -- | Types wrapping 'Eff' actions.
@@ -299,7 +299,7 @@ newtype Lift effect (m :: * -> *) a = Lift { unLift :: effect a }
   deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
 
 instance Functor effect => Effect (Lift effect) where
-  handle c dist (Request (Lift op) k) = Request (Lift op) (dist . (<$ c) . k)
+  handleState c dist (Request (Lift op) k) = Request (Lift op) (dist . (<$ c) . k)
 
 
 -- | A data type for representing nondeterminstic choice
@@ -316,8 +316,8 @@ instance Member NonDet a => MonadPlus (Eff a) where
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
 
 instance Effect NonDet where
-  handle c dist (Request MZero k) = Request MZero (dist . (<$ c) . k)
-  handle c dist (Request MPlus k) = Request MPlus (dist . (<$ c) . k)
+  handleState c dist (Request MZero k) = Request MZero (dist . (<$ c) . k)
+  handleState c dist (Request MPlus k) = Request MPlus (dist . (<$ c) . k)
 
 
 -- | An effect representing failure.
@@ -327,4 +327,4 @@ instance Member Fail fs => MonadFail (Eff fs) where
   fail = send . Fail
 
 instance Effect Fail where
-  handle c dist (Request (Fail s) k) = Request (Fail s) (dist . (<$ c) . k)
+  handleState c dist (Request (Fail s) k) = Request (Fail s) (dist . (<$ c) . k)
