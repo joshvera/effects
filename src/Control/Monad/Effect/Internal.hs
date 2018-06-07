@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, DataKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, GADTs, GeneralizedNewtypeDeriving, KindSignatures, RankNTypes, TypeOperators #-}
+{-# LANGUAGE AllowAmbiguousTypes, DataKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, RankNTypes, TypeOperators #-}
 
 -- The following is needed to define MonadPlus instance. It is decidable
 -- (there is no recursion!), but GHC cannot see that.
@@ -73,6 +73,13 @@ data Request effect m a = forall b . Request (effect m b) (Queue m b a)
 class Effect effect where
   -- FIXME: divide the work of handle between the effect and the queue s.t. we don’t have to change the type index of the effect but can still push state through the queue where appropriate
   handle :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect (Eff effects) a -> Request effect (Eff effects') (c a))
+
+instance (Effect effect, Effect (Union effects)) => Effect (Union (effect ': effects)) where
+  handle c dist (Request u q) = case decompose u of
+    Left u' -> case handle c dist (Request u' q) of
+      Request u'' q' -> Request (weaken u'') q'
+    Right eff -> case handle c dist (Request eff q) of
+      Request eff' q' -> Request (inj eff') q'
 
 
 -- | Types wrapping 'Eff' actions.
