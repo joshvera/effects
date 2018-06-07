@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators, TypeApplications, GADTs, FlexibleContexts, DataKinds, Rank2Types #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, Rank2Types, TypeApplications, TypeOperators #-}
 module Control.Monad.Effect.Resumable
   ( Resumable(..)
   , SomeExc(..)
@@ -9,8 +9,8 @@ module Control.Monad.Effect.Resumable
   , runResumableWith
   ) where
 
-import Data.Functor.Classes
 import Control.Monad.Effect.Internal
+import Data.Functor.Classes
 
 data Resumable exc a = Resumable (exc a)
 
