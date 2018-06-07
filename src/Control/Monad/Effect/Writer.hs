@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DataKinds, KindSignatures #-}
+{-# LANGUAGE DataKinds, KindSignatures, PatternSynonyms, ViewPatterns #-}
 
 {-|
 Module      : Control.Monad.Effect.Writer
@@ -35,5 +35,11 @@ tell :: (Member (Writer o) e, Effectful m) => o -> m e ()
 tell = send . Writer
 
 -- | Simple handler for Writer effects
-runWriter :: (Monoid o, Effectful m) => m (Writer o ': e) a -> m e (a,o)
-runWriter = raiseHandler (relay (\x -> pure (x, mempty)) (\ (Writer o) k -> k () >>= \ (x,l) -> pure (x, o `mappend` l)))
+runWriter :: (Monoid o, Effectful m, Effect (Union e)) => m (Writer o ': e) a -> m e (o, a)
+runWriter = raiseHandler (go mempty)
+  where go :: (Monoid o, Effect (Union e)) => o -> Eff (Writer o ': e) a -> Eff e (o, a)
+        go w (Return a) = pure (w, a)
+        go w (Tell o k) = go (w `mappend` o) (k ())
+        go w (Other r)  = fromRequest (handle (w, ()) (uncurry go) r)
+
+pattern Tell o q <- (decomposeRequest -> Just (Right (Request (Writer o) q)))
