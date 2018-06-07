@@ -1,10 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, DataKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, RankNTypes, TypeOperators #-}
-
--- The following is needed to define MonadPlus instance. It is decidable
--- (there is no recursion!), but GHC cannot see that.
--- TODO: remove once GHC can deduce the decidability of this instance
-{-# LANGUAGE UndecidableInstances #-}
-
+{-# LANGUAGE AllowAmbiguousTypes, DataKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, RankNTypes, TypeOperators, UndecidableInstances #-}
 module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
   Eff(..)
