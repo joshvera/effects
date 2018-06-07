@@ -53,7 +53,7 @@ data Eff effects b
   -- | Done with the value of type `b`.
   = Val b
   -- | Send an union of 'effects' and 'eff a' to handle, and a queues of effects to apply from 'a' to 'b'.
-  | forall a. E (Union effects Identity a) (Queue (Eff effects) a b)
+  | forall a. E (Union effects (Eff effects) a) (Queue (Eff effects) a b)
 
 pattern Return a <- Val a
 
