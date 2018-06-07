@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DataKinds, KindSignatures, PatternSynonyms, ViewPatterns #-}
+{-# LANGUAGE DataKinds, KindSignatures #-}
 
 {-|
 Module      : Control.Monad.Effect.Writer
