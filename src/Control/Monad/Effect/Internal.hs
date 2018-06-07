@@ -10,7 +10,7 @@ module Control.Monad.Effect.Internal (
   , Lift(..)
   , Request(..)
   , fromRequest
-  , decomposeRequest
+  , decomposeEff
   , Effect(..)
   , Effectful(..)
   , raiseHandler
@@ -58,7 +58,7 @@ data Eff effects b
   | forall a. E (Union effects (Eff effects) a) (Queue (Eff effects) a b)
 
 pattern Return a <- Val a
-pattern Other r <- (decomposeRequest -> Right (Left r))
+pattern Other r <- (decomposeEff -> Right (Left r))
 
 
 -- | A queue of effects to apply from 'a' to 'b'.
@@ -77,9 +77,9 @@ requestMap f (Request effect q) = Request (f effect) q
 fromRequest :: Request (Union effects) (Eff effects) a -> Eff effects a
 fromRequest (Request u k) = E u (tsingleton k)
 
-decomposeRequest :: Eff (effect ': effects) a -> Either a (Either (Request (Union effects) (Eff (effect ': effects)) a) (Request effect (Eff (effect ': effects)) a))
-decomposeRequest (Val a) = Left a
-decomposeRequest (E u q) = Right $ case decompose u of
+decomposeEff :: Eff (effect ': effects) a -> Either a (Either (Request (Union effects) (Eff (effect ': effects)) a) (Request effect (Eff (effect ': effects)) a))
+decomposeEff (Val a) = Left a
+decomposeEff (E u q) = Right $ case decompose u of
   Left u' -> Left (Request u' (apply q))
   Right eff -> Right (Request eff (apply q))
 
