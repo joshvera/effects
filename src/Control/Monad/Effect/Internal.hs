@@ -265,6 +265,7 @@ instance Member (Lift IO) e => MonadIO (Eff e) where
 
 -- | Lift a first-order effect (e.g. a 'Monad' like 'IO') into an 'Eff'.
 newtype Lift effect m a = Lift { unLift :: effect (m a) }
+  deriving (Eq, Ord, Show)
 
 
 -- | A data type for representing nondeterminstic choice
