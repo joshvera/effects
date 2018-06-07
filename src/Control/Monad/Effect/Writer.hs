@@ -39,7 +39,5 @@ runWriter :: (Monoid o, Effectful m, Effect (Union e)) => m (Writer o ': e) a ->
 runWriter = raiseHandler (go mempty)
   where go :: (Monoid o, Effect (Union e)) => o -> Eff (Writer o ': e) a -> Eff e (o, a)
         go w (Return a) = pure (w, a)
-        go w (Tell o k) = go (w `mappend` o) (k ())
+        go w (Effect (Writer o) k) = go (w `mappend` o) (k ())
         go w (Other r)  = fromRequest (handle (w, ()) (uncurry go) r)
-
-pattern Tell o k <- (decomposeEff -> Right (Right (Request (Writer o) k)))
