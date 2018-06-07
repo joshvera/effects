@@ -1,9 +1,9 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE ConstraintKinds, DataKinds #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 {-# LANGUAGE RankNTypes #-}
 
 {-|
