@@ -62,7 +62,7 @@ local :: forall v b m e. (Member (Reader v) e, Effectful m) =>
 local f m = raiseEff $ do
   e0 <- ask
   let e = f e0
-  let bind :: Reader v Identity a -> Arrow Eff e a b -> Eff e b
+  let bind :: Reader v Identity a -> Arrow (Eff e) a b -> Eff e b
       bind Reader g = g e
   interpose pure bind (lowerEff m)
 
