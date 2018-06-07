@@ -63,7 +63,7 @@ decompose (Union n v) = Left  $ Union (n-1) v
 {-# INLINE [2] decompose #-}
 
 
-weaken :: Union r w -> Union (any ': r) w
+weaken :: Union r v -> Union (any ': r) v
 weaken (Union n v) = Union (n+1) v
 
 strengthen :: Union '[last] a -> last a
