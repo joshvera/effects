@@ -45,17 +45,6 @@ import Unsafe.Coerce (unsafeCoerce)
 data Union (r :: [ * -> * ]) (v :: *) where
   Union :: {-# UNPACK #-} !Int -> t v -> Union r v
 
-{-# INLINE prj' #-}
-{-# INLINE inj' #-}
-inj' :: Int -> t v -> Union r v
-inj' = Union
-
-prj' :: Int -> Union r v -> Maybe (t v)
-prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
-                    | otherwise = Nothing
-
-newtype P (t :: * -> *) (r :: [* -> *]) = P { unP :: Int }
-
 -- | Inject a functor into a type-aligned union.
 inj :: forall e r v. Member e r => e v -> Union r v
 inj = inj' (unP (elemNo :: P e r))
@@ -73,13 +62,6 @@ decompose (Union n v) = Left  $ Union (n-1) v
 {-# INLINE [2] decompose #-}
 
 
--- | Specialized version of 'decompose'.
-decompose0 :: Union '[t] v -> Either (Union '[] v) (t v)
-decompose0 (Union _ v) = Right $ unsafeCoerce v
--- No other case is possible
-{-# RULES "decompose/singleton"  decompose = decompose0 #-}
-{-# INLINE decompose0 #-}
-
 weaken :: Union r w -> Union (any ': r) w
 weaken (Union n v) = Union (n+1) v
 
@@ -94,3 +76,25 @@ instance Member t (t ': r) where
 
 instance {-# OVERLAPPABLE #-} Member t r => Member t (t' ': r) where
   elemNo = P $ 1 + unP (elemNo :: P t r)
+
+
+-- Implementation details
+
+inj' :: Int -> t v -> Union r v
+inj' = Union
+{-# INLINE inj' #-}
+
+prj' :: Int -> Union r v -> Maybe (t v)
+prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
+                    | otherwise = Nothing
+{-# INLINE prj' #-}
+
+newtype P (t :: * -> *) (r :: [* -> *]) = P { unP :: Int }
+
+
+-- | Specialized version of 'decompose'.
+decompose0 :: Union '[t] v -> Either (Union '[] v) (t v)
+decompose0 (Union _ v) = Right $ unsafeCoerce v
+-- No other case is possible
+{-# RULES "decompose/singleton"  decompose = decompose0 #-}
+{-# INLINE decompose0 #-}
