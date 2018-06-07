@@ -139,9 +139,7 @@ run m = case lowerEff m of
 runM :: (Effectful m, Monad m1) => m '[m1] a -> m1 a
 runM m = case lowerEff m of
   Val x -> pure x
-  E u q -> case decompose u of
-    Right m' -> m' >>= runM . apply q
-    Left _   -> error "Internal:runM - This (Left) should never happen"
+  E u q -> strengthen u >>= runM . apply q
 
 -- | Given an effect request, either handle it with the given 'pure' function,
 -- or relay it to the given 'bind' function.
