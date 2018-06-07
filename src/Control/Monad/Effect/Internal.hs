@@ -3,6 +3,7 @@ module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
   Eff(..)
   , pattern Return
+  , pattern Effect
   , pattern Other
   , send
   , NonDet(..)
@@ -58,6 +59,7 @@ data Eff effects b
   | forall a. E (Union effects (Eff effects) a) (Queue (Eff effects) a b)
 
 pattern Return a <- Val a
+pattern Effect eff k <- (decomposeEff -> Right (Right (Request eff k)))
 pattern Other r <- (decomposeEff -> Right (Left r))
 
 
