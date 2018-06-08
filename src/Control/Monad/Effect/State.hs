@@ -40,11 +40,11 @@ import Data.Proxy
 
 -- | Run a 'State s' effect given an effect and an initial state.
 runState :: (Effectful m, Effect (Union e)) => s -> m (State s ': e) b -> m e (s, b)
-runState s = raiseHandler (go s)
-  where go s' (Return a)          = pure (s', a)
-        go s' (Effect Get k)      = runState s' (k s')
-        go _  (Effect (Put s') k) = runState s' (k ())
-        go s' (Other r)           = fromRequest (handleState (s', ()) (uncurry runState) r)
+runState = raiseHandler . go
+  where go s (Return a)         = pure (s, a)
+        go s (Effect Get k)     = runState s (k s)
+        go _ (Effect (Put s) k) = runState s (k ())
+        go s (Other r)          = fromRequest (handleState (s, ()) (uncurry runState) r)
 
 
 -- | Strict State effects: one can either Get values or Put them
