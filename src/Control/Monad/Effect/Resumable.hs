@@ -33,7 +33,6 @@ handleResumable handler m = catchResumable m handler
 
 
 runResumable :: (Effectful m, Effect (Union e)) => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
--- runResumable = raiseHandler (relay (pure . Right) (\ (Resumable e) _ -> pure (Left (SomeExc e))))
 runResumable = raiseHandler go
   where go (Return a)           = pure (Right a)
         go (Effect (Throw e) _) = pure (Left (SomeExc e))
