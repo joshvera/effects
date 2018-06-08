@@ -22,7 +22,6 @@ module Control.Monad.Effect.NonDet (
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Effect.Internal
-import Data.Bifunctor (second)
 import Data.Monoid (Alt(..))
 
 --------------------------------------------------------------------------------
@@ -50,7 +49,7 @@ runNonDetA = raiseHandler (fmap getAlt . runNonDetM (Alt . pure))
 
 msplit :: (Member NonDet e, Effectful m)
        => m e a -> m e (Maybe (a, m e a))
-msplit = raiseHandler (fmap (fmap (second raiseEff)) . loop [])
+msplit = raiseHandler (fmap (fmap (fmap raiseEff)) . loop [])
   where loop jq (Val x) = pure (Just (x, msum jq))
         loop jq (E u q) =
           case prj u of
