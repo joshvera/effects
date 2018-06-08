@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, KindSignatures, Rank2Types, TypeApplications, TypeOperators #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, Rank2Types, TypeOperators #-}
 module Control.Monad.Effect.Resumable
   ( Resumable(..)
   , SomeExc(..)
@@ -12,7 +12,7 @@ module Control.Monad.Effect.Resumable
 import Control.Monad.Effect.Internal
 import Data.Functor.Classes
 
-data Resumable exc (m :: * -> *) a where
+data Resumable exc m a where
   Throw :: exc a                 -> Resumable exc m a
   Catch :: m a -> (forall b . exc b -> m b) -> Resumable exc m a
 
