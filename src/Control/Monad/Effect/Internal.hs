@@ -58,7 +58,7 @@ pattern Return a <- Val a
 pattern Effect :: effect (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
 pattern Effect eff k <- (decomposeEff -> Right (Right (Request eff k)))
 
-pattern Other :: Request (Union effects) (Eff (effect : effects)) a -> Eff (effect : effects) a
+pattern Other :: Request (Union effects) (Eff (effect ': effects)) a -> Eff (effect ': effects) a
 pattern Other r <- (decomposeEff -> Right (Left r))
 {-# COMPLETE Return, Effect, Other #-}
 
