@@ -40,6 +40,7 @@ import Control.Monad.Effect.Internal
 -- |
 data Reader v (m :: * -> *) a where
   Reader :: Reader a m a
+  Local :: (v -> v) -> m a -> Reader v m a
 
 -- | Request a value for the environment
 ask :: (Member (Reader v) e, Effectful m) => m e v
@@ -50,8 +51,13 @@ asks :: (Member (Reader v) e, Effectful m) => (v -> a) -> m e a
 asks f = raiseEff (f <$> ask)
 
 -- | Handler for reader effects
-runReader :: Effectful m => v -> m (Reader v ': e) a -> m e a
-runReader e = raiseHandler (interpret (\ Reader -> pure e))
+runReader :: (Effectful m, Effect (Union e)) => v -> m (Reader v ': e) a -> m e a
+runReader = raiseHandler . go
+  where go :: Effect (Union e) => v -> Eff (Reader v ': e) a -> Eff e a
+        go _ (Return a)             = pure a
+        go e (Effect Reader k)      = go e (k e)
+        go e (Effect (Local f m) k) = go (f e) (m >>= k)
+        go e (Other r)              = fromRequest (handle (go e) r)
 
 -- |
 -- Locally rebind the value in the dynamic environment
@@ -59,12 +65,7 @@ runReader e = raiseHandler (interpret (\ Reader -> pure e))
 -- and a requestor of them
 local :: forall v b m e. (Member (Reader v) e, Effectful m) =>
          (v -> v) -> m e b -> m e b
-local f m = raiseEff $ do
-  e0 <- ask
-  let e = f e0
-  let bind :: Reader v Identity a -> Arrow (Eff e) a b -> Eff e b
-      bind Reader g = g e
-  interpose pure bind (lowerEff m)
+local f m = send (Local f (lowerEff m))
 
 
 {- $simpleReaderExample
