@@ -16,14 +16,6 @@ module Control.Monad.Effect (
   , run
   , runM
   , send
-  -- * Handling Effects
-  , relay
-  , relayState
-  , interpose
-  , interposeState
-  , interpret
-  , reinterpret
-  , reinterpret2
   -- * Checking a List of Effects#
   , Member
   , Lift(..)
