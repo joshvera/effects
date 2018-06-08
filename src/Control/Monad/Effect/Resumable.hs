@@ -13,7 +13,8 @@ import Control.Monad.Effect.Internal
 import Data.Functor.Classes
 
 data Resumable exc (m :: * -> *) a where
-  Resumable :: exc a -> Resumable exc m a
+  Resumable :: exc a                 -> Resumable exc m a
+  Catch     :: m a -> (exc b -> m a) -> Resumable exc m a
 
 throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
 throwResumable = send . Resumable
@@ -22,13 +23,13 @@ catchResumable :: (Member (Resumable exc) e, Effectful m)
                => m e a
                -> (forall v. exc v -> m e v)
                -> m e a
-catchResumable m handler = handleResumable handler m
+catchResumable m handler = send (Catch (lowerEff m) (lowerEff . handler))
 
 handleResumable :: (Member (Resumable exc) e, Effectful m)
                 => (forall v. exc v -> m e v)
                 -> m e a
                 -> m e a
-handleResumable handler = raiseHandler (interpose pure (\(Resumable e) yield -> lowerEff (handler e) >>= yield))
+handleResumable handler m = catchResumable m handler
 
 
 runResumable :: (Effectful m, Effect (Union e)) => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
