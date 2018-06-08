@@ -14,7 +14,7 @@ import Data.Functor.Classes
 
 data Resumable exc (m :: * -> *) a where
   Throw :: exc a                 -> Resumable exc m a
-  Catch :: m a -> (exc b -> m a) -> Resumable exc m a
+  Catch :: m a -> (forall b . exc b -> m b) -> Resumable exc m a
 
 throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
 throwResumable = send . Throw
