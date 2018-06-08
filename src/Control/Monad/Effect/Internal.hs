@@ -24,7 +24,6 @@ module Control.Monad.Effect.Internal (
   -- * Decomposing Unions
   , Member
   , decompose
-  -- | Inserts multiple effects into 'E'.
   , inj
   , prj
   -- * Constructing and Decomposing Queues of Effects
