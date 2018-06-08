@@ -33,14 +33,11 @@ import Control.Monad.Effect.Writer
 import Control.Monad.Effect.Internal
 
 -- | State handler, using Reader/Writer effects
-runStateR :: Effectful m => s -> m (Writer s ': Reader s ': e) a -> m e (a, s)
-runStateR s = raiseHandler (loop s)
- where
-   loop :: s -> Eff (Writer s ': Reader s ': e) a -> Eff e (a, s)
-   loop s' (Val x) = pure (x,s')
-   loop s' (E u q) = case decompose u of
-     Right (Writer o) -> k o ()
-     Left  u'  -> case decompose u' of
-       Right Reader -> k s' s'
-       Left u'' -> E u'' (tsingleton (k s'))
-    where k s'' = q >>> loop s''
+runStateR :: (Effectful m, Effect (Union e)) => s -> m (Writer s ': Reader s ': e) a -> m e (s, a)
+runStateR = raiseHandler . go
+  where go :: Effect (Union e) => s -> Eff (Writer s ': Reader s ': e) a -> Eff e (s, a)
+        go s (Return a)                = pure (s, a)
+        go _ (Effect2_1 (Writer s) k)  = go s (k ())
+        go s (Effect2_2 Reader k)      = go s (k s)
+        go s (Effect2_2 (Local f m) k) = go (f s) (m >>= k)
+        go s (Other2 r)                = fromRequest (handleState (s, ()) (uncurry runStateR) r)
