@@ -5,6 +5,9 @@ module Control.Monad.Effect.Internal (
   , pattern Return
   , pattern Effect
   , pattern Other
+  , pattern Effect2_1
+  , pattern Effect2_2
+  , pattern Other2
   , send
   , NonDet(..)
   , Fail(..)
@@ -13,6 +16,7 @@ module Control.Monad.Effect.Internal (
   , requestMap
   , fromRequest
   , decomposeEff
+  , decomposeEff2
   , Effect(..)
   , handle
   , Effectful(..)
@@ -62,6 +66,16 @@ pattern Other :: Request (Union effects) (Eff (effect ': effects)) a -> Eff (eff
 pattern Other r <- (decomposeEff -> Right (Left r))
 {-# COMPLETE Return, Effect, Other #-}
 
+pattern Effect2_1 :: effect1 (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
+pattern Effect2_1 eff k <- (decomposeEff2 -> Right (Right (Left (Request eff k))))
+
+pattern Effect2_2 :: effect2 (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
+pattern Effect2_2 eff k <- (decomposeEff2 -> Right (Right (Right (Request eff k))))
+
+pattern Other2 :: Request (Union effects) (Eff (effect1 ': effect2 ': effects)) a -> Eff (effect1 ': effect2 ': effects) a
+pattern Other2 r <- (decomposeEff2 -> Right (Left r))
+{-# COMPLETE Return, Effect2_1, Effect2_2, Other2 #-}
+
 
 -- | A queue of effects to apply from 'a' to 'b'.
 type Queue = FTCQueue
@@ -87,6 +101,14 @@ decomposeEff (Val a) = Left a
 decomposeEff (E u q) = Right $ case decompose u of
   Left u' -> Left (Request u' (apply q))
   Right eff -> Right (Request eff (apply q))
+
+decomposeEff2 :: Eff (effect1 ': effect2 ': effects) a -> Either a (Either (Request (Union effects) (Eff (effect1 ': effect2 ': effects)) a) (Either (Request effect1 (Eff (effect1 ': effect2 ': effects)) a) (Request effect2 (Eff (effect1 ': effect2 ': effects)) a)))
+decomposeEff2 (Val a) = Left a
+decomposeEff2 (E u q) = Right $ case decompose u of
+  Left u' -> case decompose u' of
+    Left u'' -> Left (Request u'' (apply q))
+    Right eff2 -> Right (Right (Request eff2 (apply q)))
+  Right eff1 -> Right (Left (Request eff1 (apply q)))
 
 class Effect effect where
   handleState :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect (Eff effects) a -> Request effect (Eff effects') (c a))
