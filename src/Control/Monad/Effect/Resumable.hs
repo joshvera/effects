@@ -13,11 +13,11 @@ import Control.Monad.Effect.Internal
 import Data.Functor.Classes
 
 data Resumable exc (m :: * -> *) a where
-  Resumable :: exc a                 -> Resumable exc m a
-  Catch     :: m a -> (exc b -> m a) -> Resumable exc m a
+  Throw :: exc a                 -> Resumable exc m a
+  Catch :: m a -> (exc b -> m a) -> Resumable exc m a
 
 throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
-throwResumable = send . Resumable
+throwResumable = send . Throw
 
 catchResumable :: (Member (Resumable exc) e, Effectful m)
                => m e a
@@ -35,16 +35,16 @@ handleResumable handler m = catchResumable m handler
 runResumable :: (Effectful m, Effect (Union e)) => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
 -- runResumable = raiseHandler (relay (pure . Right) (\ (Resumable e) _ -> pure (Left (SomeExc e))))
 runResumable = raiseHandler go
-  where go (Return a)               = pure (Right a)
-        go (Effect (Resumable e) _) = pure (Left (SomeExc e))
-        go (Other r)                = fromRequest (handleState (Right ()) (either (pure . Left) runResumable) r)
+  where go (Return a)           = pure (Right a)
+        go (Effect (Throw e) _) = pure (Left (SomeExc e))
+        go (Other r)            = fromRequest (handleState (Right ()) (either (pure . Left) runResumable) r)
 
 -- | Run a 'Resumable' effect in an 'Effectful' context, using a handler to resume computation.
 runResumableWith :: (Effectful m, Effect (Union effects)) => (forall resume . exc resume -> m (Resumable exc ': effects) resume) -> m (Resumable exc ': effects) a -> m effects a
 runResumableWith handler = raiseHandler go
-  where go (Return a)               = pure a
-        go (Effect (Resumable e) k) = runResumableWith (lowerEff . handler) (lowerEff (handler e) >>= k)
-        go (Other r)                = fromRequest (handle (runResumableWith (lowerEff . handler)) r)
+  where go (Return a)           = pure a
+        go (Effect (Throw e) k) = runResumableWith (lowerEff . handler) (lowerEff (handler e) >>= k)
+        go (Other r)            = fromRequest (handle (runResumableWith (lowerEff . handler)) r)
 
 
 data SomeExc exc where
