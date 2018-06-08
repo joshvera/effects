@@ -33,10 +33,14 @@ handleResumable handler m = catchResumable m handler
 
 
 runResumable :: (Effectful m, Effect (Union e)) => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
-runResumable = raiseHandler go
-  where go (Return a)           = pure (Right a)
-        go (Effect (Throw e) _) = pure (Left (SomeExc e))
-        go (Other r)            = fromRequest (handleState (Right ()) (either (pure . Left) runResumable) r)
+runResumable = raiseHandler (go Nothing)
+  where go :: Effect (Union effects) => Maybe (Handler exc effects) -> Eff (Resumable exc ': effects) a -> Eff effects (Either (SomeExc exc) a)
+        go _ (Return a)             = pure (Right a)
+        go h (Effect (Throw e) k)   = maybe (pure (Left (SomeExc e))) (\ h' -> go h (runHandler h' e >>= k)) h
+        go _ (Effect (Catch m h) k) = go (Just (Handler h)) (m >>= k)
+        go h (Other r)              = fromRequest (handleState (Right ()) (either (pure . Left) (go h)) r)
+
+newtype Handler exc effects = Handler { runHandler :: forall resume . exc resume -> Eff (Resumable exc ': effects) resume }
 
 -- | Run a 'Resumable' effect in an 'Effectful' context, using a handler to resume computation.
 runResumableWith :: (Effectful m, Effect (Union effects)) => (forall resume . exc resume -> m (Resumable exc ': effects) resume) -> m (Resumable exc ': effects) a -> m effects a
