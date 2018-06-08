@@ -16,6 +16,9 @@ module Control.Monad.Effect (
   , run
   , runM
   , send
+  -- * Handling effects
+  , interpose
+  , interposeState
   -- * Checking a List of Effects
   , Member
   -- * Effects

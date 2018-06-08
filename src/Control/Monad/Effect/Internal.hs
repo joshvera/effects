@@ -2,16 +2,17 @@
 module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
   Eff(..)
+  , send
+  , NonDet(..)
+  , Fail(..)
+  , Lift(..)
+  -- * Handling effects
   , pattern Return
   , pattern Effect
   , pattern Other
   , pattern Effect2_1
   , pattern Effect2_2
   , pattern Other2
-  , send
-  , NonDet(..)
-  , Fail(..)
-  , Lift(..)
   , Request(..)
   , requestMap
   , fromRequest
@@ -21,6 +22,8 @@ module Control.Monad.Effect.Internal (
   , handle
   , Effectful(..)
   , raiseHandler
+  , interpose
+  , interposeState
   -- * Decomposing Unions
   , Member
   , decompose
@@ -195,6 +198,39 @@ runM :: (Effectful m, Monad m1) => m '[Lift m1] a -> m1 a
 runM m = case lowerEff m of
   Val x -> pure x
   E u q -> unLift (strengthen u) >>= runM . apply q
+
+
+-- * Local handlers
+
+-- | Intercept the request and possibly reply to it, but leave it
+-- unhandled
+interpose :: (Member eff e, Effectful m)
+          => Arrow (m e) a b
+          -> (forall v. eff (Eff e) v -> Arrow (m e) v b -> m e b)
+          -> m e a -> m e b
+interpose pure' h = raiseHandler loop
+ where
+   loop (Val x) = lowerEff (pure' x)
+   loop (E u q) = case prj u of
+     Just x -> lowerEff (h x (raiseEff . k))
+     _      -> E u (tsingleton k)
+    where k = q >>> loop
+
+-- | Intercept an effect like 'interpose', but with an explicit state
+-- parameter like 'relayState'.
+interposeState :: (Member eff e, Effectful m)
+               => s
+               -> (s -> Arrow (m e) a b)
+               -> (forall v. s -> eff (Eff e) v -> (s -> Arrow (m e) v b) -> m e b)
+               -> m e a
+               -> m e b
+interposeState initial pure' handler = raiseHandler (loop initial)
+  where
+    loop state (Val x) = lowerEff (pure' state x)
+    loop state (E u q) = case prj u of
+      Just x -> lowerEff (handler state x (fmap raiseEff . k))
+      _      -> E u (tsingleton (k state))
+      where k state' = q >>> loop state'
 
 
 -- * Effect Instances
