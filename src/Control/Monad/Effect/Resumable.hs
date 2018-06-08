@@ -30,12 +30,19 @@ handleResumable :: (Member (Resumable exc) e, Effectful m)
 handleResumable handler = raiseHandler (interpose pure (\(Resumable e) yield -> lowerEff (handler e) >>= yield))
 
 
-runResumable :: Effectful m => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
-runResumable = raiseHandler (relay (pure . Right) (\ (Resumable e) _ -> pure (Left (SomeExc e))))
+runResumable :: (Effectful m, Effect (Union e)) => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
+-- runResumable = raiseHandler (relay (pure . Right) (\ (Resumable e) _ -> pure (Left (SomeExc e))))
+runResumable = raiseHandler go
+  where go (Return a)               = pure (Right a)
+        go (Effect (Resumable e) _) = pure (Left (SomeExc e))
+        go (Other r)                = fromRequest (handleState (Right ()) (either (pure . Left) runResumable) r)
 
 -- | Run a 'Resumable' effect in an 'Effectful' context, using a handler to resume computation.
-runResumableWith :: Effectful m => (forall resume . exc resume -> m effects resume) -> m (Resumable exc ': effects) a -> m effects a
-runResumableWith handler = raiseHandler (relay pure (\ (Resumable err) yield -> lowerEff (handler err) >>= yield))
+runResumableWith :: (Effectful m, Effect (Union effects)) => (forall resume . exc resume -> m (Resumable exc ': effects) resume) -> m (Resumable exc ': effects) a -> m effects a
+runResumableWith handler = raiseHandler go
+  where go (Return a)               = pure a
+        go (Effect (Resumable e) k) = runResumableWith (lowerEff . handler) (lowerEff (handler e) >>= k)
+        go (Other r)                = fromRequest (handle (runResumableWith (lowerEff . handler)) r)
 
 
 data SomeExc exc where
