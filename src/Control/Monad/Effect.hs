@@ -16,8 +16,9 @@ module Control.Monad.Effect (
   , run
   , runM
   , send
-  -- * Checking a List of Effects#
+  -- * Checking a List of Effects
   , Member
+  -- * Effects
   , Lift(..)
   , Embedded
   , Exc
