@@ -60,7 +60,7 @@ pattern Effect eff k <- (decomposeEff -> Right (Right (Request eff k)))
 
 pattern Other :: Request (Union effects) (Eff (effect : effects)) a -> Eff (effect : effects) a
 pattern Other r <- (decomposeEff -> Right (Left r))
-{-# COMPLETE Other, Return, Effect #-}
+{-# COMPLETE Return, Effect, Other #-}
 
 
 -- | A queue of effects to apply from 'a' to 'b'.
