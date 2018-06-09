@@ -22,6 +22,7 @@ module Control.Monad.Effect.Internal (
   , handle
   , Effectful(..)
   , raiseHandler
+  , interpret
   , interpose
   , interposeState
   -- * Decomposing Unions
@@ -198,6 +199,17 @@ runM :: (Effectful m, Monad m1) => m '[Lift m1] a -> m1 a
 runM m = case lowerEff m of
   Val x -> pure x
   E u q -> unLift (strengthen u) >>= runM . apply q
+
+
+-- | Handle the topmost effect by interpreting it into the underlying effects.
+interpret :: (Effectful m, Effect (Union effs))
+          => (forall v. eff (Eff (eff ': effs)) v -> m effs v)
+          -> m (eff ': effs) a
+          -> m effs a
+interpret bind = raiseHandler loop
+  where loop (Return a)     = pure a
+        loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
+        loop (Other r)      = fromRequest (handle (interpret (lowerEff . bind)) r)
 
 
 -- * Local handlers
