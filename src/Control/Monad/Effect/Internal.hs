@@ -22,7 +22,10 @@ module Control.Monad.Effect.Internal (
   , handle
   , Effectful(..)
   , raiseHandler
+  -- * Effect handlers
   , interpret
+  , reinterpret
+  -- * Local effect handlers
   , interpose
   , interposeState
   -- * Decomposing Unions
@@ -219,6 +222,17 @@ interpret bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
         loop (Other r)      = fromRequest (handle (interpret (lowerEff . bind)) r)
+
+
+-- | Interpret an effect by replacing it with another effect.
+reinterpret :: (Effectful m, Effect (Union (newEffect ': effs)))
+            => (forall v. effect (Eff (effect ': effs)) v -> m (newEffect ': effs) v)
+            -> m (effect ': effs) a
+            -> m (newEffect ': effs) a
+reinterpret bind = raiseHandler loop
+  where loop (Return a)     = pure a
+        loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
+        loop (Other r)      = fromRequest (handle (reinterpret (lowerEff . bind)) (weaken `requestMap` r))
 
 
 -- * Local handlers

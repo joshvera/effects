@@ -16,8 +16,10 @@ module Control.Monad.Effect (
   , run
   , runM
   , send
-  -- * Handling effects
+  -- * Effect handlers
   , interpret
+  , reinterpret
+  -- * Local effect handlers
   , interpose
   , interposeState
   -- * Checking a List of Effects
