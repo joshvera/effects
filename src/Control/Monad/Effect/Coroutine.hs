@@ -47,12 +47,19 @@ yield x f = send (Yield x f)
 data Status m (e :: [(* -> *) -> (* -> *)]) a b w = Done w | Continue a (b -> m e (Status m e a b w))
   deriving (Functor)
 
+raiseStatus :: Effectful m => Status Eff e a b w -> Status m e a b w
+raiseStatus (Done a) = Done a
+raiseStatus (Continue a f) = Continue a (raiseEff . fmap raiseStatus . f)
+
 -- | Launch a thread and report its status
-runC :: Effectful m => m (Yield a b ': e) w -> m e (Status m e a b w)
-runC = relay (raiseEff . pure . Done) (\ (Yield a k) arr -> raiseEff (pure (Continue a (arr . k))))
+runC :: (Effectful m, Effect (Union effs)) => m (Yield a b ': effs) w -> m effs (Status m effs a b w)
+runC = raiseHandler (fmap raiseStatus . go)
+  where go (Return a)             = pure (Done a)
+        go (Effect (Yield a f) k) = pure (Continue a (runC . k . f))
+        go (Other r)              = fromRequest (handleF runC r)
 
 -- | Launch a thread and run it to completion using a helper function to provide new inputs.
-runCoro :: Effectful m => (a -> b) -> m (Yield a b ': e) w -> m e w
+runCoro :: (Effectful m, Effect (Union effs)) => (a -> b) -> m (Yield a b ': effs) w -> m effs w
 runCoro f = raiseHandler (loop <=< runC)
   where loop (Done a)       = pure a
         loop (Continue a k) = k (f a) >>= loop
