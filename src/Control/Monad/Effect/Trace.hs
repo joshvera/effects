@@ -63,3 +63,8 @@ runReturningTrace = raiseHandler (fmap (first reverse) . runState [] . go)
         go (Return a)            = pure a
         go (Effect (Trace s) k)  = put [s] >> go (k ())
         go (Other r)             = fromRequest (handle go (weaken `requestMap` r))
+
+
+instance Effect Trace where
+  handleState c dist (Request (Trace s) k) = Request (Trace s) (dist . (<$ c) . k)
+  handleF dist (Request (Trace s) k) = Request (Trace s) (dist . k)
