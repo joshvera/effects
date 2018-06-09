@@ -36,7 +36,7 @@ newtype Exc exc (m :: * -> *) a = Exc exc
 
 -- | Throws an error carrying information of type 'exc'.
 throwError :: (Member (Exc exc) e, Effectful m) => exc -> m e a
-throwError e = send (Exc e)
+throwError = send . Exc
 
 -- | Handler for exception effects
 -- If there are no exceptions thrown, returns Right If exceptions are
