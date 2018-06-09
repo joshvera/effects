@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, TypeApplications, TypeOperators, UndecidableInstances #-}
 
 {-|
 Module      : Control.Monad.Effect.NonDet
@@ -27,10 +27,8 @@ import Control.Monad.Effect.Internal
                     -- Nondeterministic Choice --
 --------------------------------------------------------------------------------
 
-runNonDetM :: (Monoid b, Effectful m) => (a -> b) -> m (NonDet ': e) a -> m e b
-runNonDetM f = raiseHandler (relay (pure . f) (\ m k -> case m of
-  MZero -> pure mempty
-  MPlus -> mappend <$> k True <*> k False))
+runNonDetM :: (Monoid b, Effectful m, Effect (Union e)) => (a -> b) -> m (NonDet ': e) a -> m e b
+runNonDetM unit = raiseHandler (fmap (foldMap unit) . runNonDetA @[])
 
 gatherM :: (Monoid b, Member NonDet e, Effectful m)
         => (a -> b) -- ^ A function constructing a 'Monoid'al value from a single computed result. This might typically be @unit@ (for @Reducer@s), 'pure' (for 'Applicative's), or some similar singleton constructor.
