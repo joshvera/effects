@@ -8,5 +8,8 @@ module Control.Monad.Effect.Fail
 import Control.Monad.Effect.Internal
 import Control.Monad.Fail
 
-runFail :: Effectful m => m (Fail ': fs) a -> m fs (Either String a)
-runFail = raiseHandler (relay (pure . Right) (const . pure . Left . failMessage))
+runFail :: (Effectful m, Effect (Union effs)) => m (Fail ': effs) a -> m effs (Either String a)
+runFail = raiseHandler go
+  where go (Return a)          = pure (Right a)
+        go (Effect (Fail s) _) = pure (Left s)
+        go (Other r)           = fromRequest (handleState (Right ()) (either (pure . Left) runFail) r)
