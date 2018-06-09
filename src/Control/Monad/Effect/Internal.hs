@@ -64,7 +64,7 @@ pattern Return a <- Val a
 pattern Effect :: effect (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
 pattern Effect eff k <- (decomposeEff -> Right (Right (Request eff k)))
 
-pattern Other :: Request (Union effects) (effect ': effects) a -> Eff (effect ': effects) a
+pattern Other :: Request (Union effects) (Eff (effect ': effects)) a -> Eff (effect ': effects) a
 pattern Other r <- (decomposeEff -> Right (Left r))
 {-# COMPLETE Return, Effect, Other #-}
 
@@ -74,7 +74,7 @@ pattern Effect2_1 eff k <- (decomposeEff2 -> Right (Right (Left (Request eff k))
 pattern Effect2_2 :: effect2 (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
 pattern Effect2_2 eff k <- (decomposeEff2 -> Right (Right (Right (Request eff k))))
 
-pattern Other2 :: Request (Union effects) (effect1 ': effect2 ': effects) a -> Eff (effect1 ': effect2 ': effects) a
+pattern Other2 :: Request (Union effects) (Eff (effect1 ': effect2 ': effects)) a -> Eff (effect1 ': effect2 ': effects) a
 pattern Other2 r <- (decomposeEff2 -> Right (Left r))
 {-# COMPLETE Return, Effect2_1, Effect2_2, Other2 #-}
 
@@ -87,24 +87,24 @@ type Queue = FTCQueue
 type Arrow m a b = a -> m b
 
 
-data Request effect effects a = forall b . Request (effect (Eff effects) b) (Arrow (Eff effects) b a)
+data Request effect m a = forall b . Request (effect m b) (Arrow m b a)
 
-instance Functor (Request effect effects) where
+instance Functor m => Functor (Request effect m) where
   fmap f (Request eff k) = Request eff (fmap f . k)
 
-requestMap :: (forall x . effect (Eff effects) x -> effect' (Eff effects) x) -> Request effect effects a -> Request effect' effects a
+requestMap :: (forall x . effect m x -> effect' m x) -> Request effect m a -> Request effect' m a
 requestMap f (Request effect q) = Request (f effect) q
 
-fromRequest :: Request (Union effects) effects a -> Eff effects a
+fromRequest :: Request (Union effects) (Eff effects) a -> Eff effects a
 fromRequest (Request u k) = E u (tsingleton k)
 
-decomposeEff :: Eff (effect ': effects) a -> Either a (Either (Request (Union effects) (effect ': effects) a) (Request effect (effect ': effects) a))
+decomposeEff :: Eff (effect ': effects) a -> Either a (Either (Request (Union effects) (Eff (effect ': effects)) a) (Request effect (Eff (effect ': effects)) a))
 decomposeEff (Val a) = Left a
 decomposeEff (E u q) = Right $ case decompose u of
   Left u' -> Left (Request u' (apply q))
   Right eff -> Right (Request eff (apply q))
 
-decomposeEff2 :: Eff (effect1 ': effect2 ': effects) a -> Either a (Either (Request (Union effects) (effect1 ': effect2 ': effects) a) (Either (Request effect1 (effect1 ': effect2 ': effects) a) (Request effect2 (effect1 ': effect2 ': effects) a)))
+decomposeEff2 :: Eff (effect1 ': effect2 ': effects) a -> Either a (Either (Request (Union effects) (Eff (effect1 ': effect2 ': effects)) a) (Either (Request effect1 (Eff (effect1 ': effect2 ': effects)) a) (Request effect2 (Eff (effect1 ': effect2 ': effects)) a)))
 decomposeEff2 (Val a) = Left a
 decomposeEff2 (E u q) = Right $ case decompose u of
   Left u' -> case decompose u' of
@@ -113,9 +113,9 @@ decomposeEff2 (E u q) = Right $ case decompose u of
   Right eff1 -> Right (Left (Request eff1 (apply q)))
 
 class Effect effect where
-  handleState :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect effects a -> Request effect effects' (c a))
+  handleState :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect (Eff effects) a -> Request effect (Eff effects') (c a))
 
-handle :: Effect effect => (forall x . Eff effects x -> Eff effects' x) -> (Request effect effects a -> Request effect effects' a)
+handle :: Effect effect => (forall x . Eff effects x -> Eff effects' x) -> (Request effect (Eff effects) a -> Request effect (Eff effects') a)
 handle handler r = runIdentity <$> handleState (Identity ()) (fmap Identity . handler . runIdentity) r
 
 instance Effect (Union '[]) where
