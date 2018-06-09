@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, DataKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, PatternSynonyms, RankNTypes, TypeOperators, UndecidableInstances, ViewPatterns #-}
+{-# LANGUAGE AllowAmbiguousTypes, ConstraintKinds, DataKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, PatternSynonyms, RankNTypes, TypeOperators, UndecidableInstances, ViewPatterns #-}
 module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
   Eff(..)
@@ -20,7 +20,9 @@ module Control.Monad.Effect.Internal (
   , decomposeEff2
   , Effect(..)
   , handle
-  , Effectful(..)
+  , Effectful
+  , raiseEff
+  , lowerEff
   , raiseHandler
   -- * Effect handlers
   , interpret
@@ -52,6 +54,7 @@ import Control.Applicative (Alternative (..))
 import Control.Monad (MonadPlus (..))
 import Control.Monad.Fail (MonadFail (..))
 import Control.Monad.IO.Class (MonadIO (..))
+import Data.Coerce
 import Data.FTCQueue
 import Data.Functor.Identity
 import Data.Union
@@ -142,15 +145,16 @@ instance (Effect effect, Effect (Union effects)) => Effect (Union (effect ': eff
 -- | Types wrapping 'Eff' actions.
 --
 --   Most instances of 'Effectful' will be derived using @-XGeneralizedNewtypeDeriving@, with these ultimately bottoming out on the instance for 'Eff' (for which 'raise' and 'lower' are simply the identity). Because of this, types can be nested arbitrarily deeply and still call 'raiseEff'/'lowerEff' just once to get at the (ultimately) underlying 'Eff'.
-class Effectful m where
-  -- | Raise an action in 'Eff' into an action in @m@.
-  raiseEff :: Eff effects a -> m   effects a
-  -- | Lower an action in @m@ into an action in 'Eff'.
-  lowerEff :: m   effects a -> Eff effects a
+type Effectful = Coercible Eff
 
-instance Effectful Eff where
-  raiseEff = id
-  lowerEff = id
+-- | Raise an action in 'Eff' into an action in @m@.
+raiseEff :: Effectful m => Eff effects a -> m   effects a
+raiseEff = coerce
+
+-- | Lower an action in @m@ into an action in 'Eff'.
+lowerEff :: Effectful m => m   effects a -> Eff effects a
+lowerEff = coerce
+
 
 -- | Raise a handler on 'Eff' to a handler on some 'Effectful' @m@.
 raiseHandler :: Effectful m => (Eff effectsA a -> Eff effectsB b) -> m effectsA a -> m effectsB b
