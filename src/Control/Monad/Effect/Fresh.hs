@@ -27,6 +27,7 @@ module Control.Monad.Effect.Fresh
 ) where
 
 import Control.Monad.Effect.Internal
+import Control.Monad.Effect.State
 
 --------------------------------------------------------------------------------
                              -- Fresh --
@@ -43,5 +44,7 @@ resetFresh :: (Effectful m, Member Fresh effects) => Int -> m effects a -> m eff
 resetFresh start = raiseHandler (interposeState start (const pure) (\ counter Fresh yield -> (yield $! succ counter) counter))
 
 -- | Handler for Fresh effects, with an Int for a starting value
-runFresh :: Effectful m => Int -> m (Fresh ': e) a -> m e a
-runFresh s = raiseHandler (relayState s (const pure) (\s' Fresh k -> (k $! s'+1) s'))
+runFresh :: (Effectful m, Effect (Union e)) => Int -> m (Fresh ': e) a -> m e a
+runFresh s = raiseHandler $ fmap snd . runState s . reinterpret (\ Fresh -> do
+  s' <- get
+  s' <$ (put $! succ s'))
