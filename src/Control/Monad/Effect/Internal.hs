@@ -3,6 +3,7 @@ module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
   Eff(..)
   , send
+  , sendU
   , NonDet(..)
   , Fail(..)
   , Lift(..)
@@ -187,9 +188,13 @@ apply q' x =
 
 -- * Sending and Running Effects
 
--- | Send a effect and wait for a reply.
+-- | Send an effect and wait for a reply.
 send :: (Effectful m, Member eff e) => eff (Eff e) b -> m e b
-send t = raiseEff (E (inj t) (tsingleton Val))
+send = sendU . inj
+
+-- | Send a 'Union' of effects and wait for a reply.
+sendU :: Effectful m => Union e (Eff e) b -> m e b
+sendU u = raiseEff (E u (tsingleton Val))
 
 -- | Runs an effect whose effects has been consumed.
 --
