@@ -31,7 +31,7 @@ embed :: (Member (Embedded ms) effects, Effectful m) => m ms () -> m effects ()
 embed = send . Embed . lowerEff
 
 class Raisable ms r where
-  raiseUnion :: Effectful m => Union ms Identity a -> m r a
+  raiseUnion :: Effectful m => Union ms (Eff r) a -> m r a
 
 instance Raisable '[] r where
   raiseUnion _ = error "absurd: raiseUnion run on an empty union"
