@@ -115,8 +115,8 @@ decomposeEff2 (E u q) = Right $ case decompose u of
 class Effect effect where
   handleState :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect effects a -> Request effect effects' (c a))
 
-handle :: Effect (Union effects') => (forall x . Eff effects x -> Eff effects' x) -> (Request (Union effects') effects a -> Eff effects' a)
-handle handler r = fromRequest (runIdentity <$> handleState (Identity ()) (fmap Identity . handler . runIdentity) r)
+handle :: Effect effect => (forall x . Eff effects x -> Eff effects' x) -> (Request effect effects a -> Request effect effects' a)
+handle handler r = runIdentity <$> handleState (Identity ()) (fmap Identity . handler . runIdentity) r
 
 instance Effect (Union '[]) where
   handleState _ _ _ = error "impossible: handleState on empty Union"
