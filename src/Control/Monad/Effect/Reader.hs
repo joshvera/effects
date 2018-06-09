@@ -57,7 +57,7 @@ runReader = raiseHandler . go
         go _ (Return a)             = pure a
         go e (Effect Reader k)      = go e (k e)
         go e (Effect (Local f m) k) = go (f e) (m >>= k)
-        go e (Other r)              = fromRequest (handle (go e) r)
+        go e (Other r)              = handle (go e) r
 
 -- |
 -- Locally rebind the value in the dynamic environment

@@ -49,7 +49,7 @@ runResumableWith handler = raiseHandler (go (lowerEff . handler))
         go _ (Return a)             = pure a
         go h (Effect (Throw e) k)   = runResumableWith h (h e >>= k)
         go _ (Effect (Catch m h) k) = runResumableWith h (m >>= k)
-        go h (Other r)              = fromRequest (handle (runResumableWith h) r)
+        go h (Other r)              = handle (runResumableWith h) r
 
 
 data SomeExc exc where
