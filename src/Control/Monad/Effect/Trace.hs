@@ -62,4 +62,4 @@ runReturningTrace = raiseHandler (fmap (first reverse) . runState [] . go)
   where go :: Effect (Union effects) => Eff (Trace ': effects) a -> Eff (State [String] ': effects) a
         go (Return a)            = pure a
         go (Effect (Trace s) k)  = put [s] >> go (k ())
-        go (Other r) = fromRequest (handle go (weaken `requestMap` r))
+        go (Other r)             = fromRequest (handle go (weaken `requestMap` r))
