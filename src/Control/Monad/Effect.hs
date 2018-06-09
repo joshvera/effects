@@ -19,6 +19,7 @@ module Control.Monad.Effect (
   -- * Effect handlers
   , interpret
   , reinterpret
+  , reinterpret2
   -- * Local effect handlers
   , interpose
   , interposeState
