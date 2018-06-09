@@ -22,7 +22,6 @@ module Control.Monad.Effect.NonDet (
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Effect.Internal
-import Data.Monoid (Alt(..))
 
 --------------------------------------------------------------------------------
                     -- Nondeterministic Choice --
@@ -42,10 +41,14 @@ gatherM f = raiseHandler (interpose (pure . f) (\ m k -> case m of
   MPlus -> mappend <$> k True <*> k False))
 
 -- | A handler for nondeterminstic effects
-runNonDetA :: (Alternative f, Effectful m)
+runNonDetA :: (Alternative f, Effectful m, Effect (Union e))
             => m (NonDet ': e) a
             -> m e (f a)
-runNonDetA = raiseHandler (fmap getAlt . runNonDetM (Alt . pure))
+runNonDetA = raiseHandler go
+  where go (Return a)       = pure (pure a)
+        go (Effect MZero _) = pure empty
+        go (Effect MPlus k) = liftA2 (<|>) (runNonDetA (k True)) (runNonDetA (k False))
+        go (Other r)        = fromRequest (handleF runNonDetA r)
 
 msplit :: (Member NonDet e, Effectful m)
        => m e a -> m e (Maybe (a, m e a))
