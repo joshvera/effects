@@ -201,6 +201,8 @@ runM m = case lowerEff m of
   E u q -> unLift (strengthen u) >>= runM . apply q
 
 
+-- * Effect handlers
+
 -- | Handle the topmost effect by interpreting it into the underlying effects.
 interpret :: (Effectful m, Effect (Union effs))
           => (forall v. eff (Eff (eff ': effs)) v -> m effs v)
