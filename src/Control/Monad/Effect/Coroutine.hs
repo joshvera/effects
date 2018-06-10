@@ -48,8 +48,11 @@ data Status m (e :: [(* -> *) -> (* -> *)]) a b w = Done w | Continue a (b -> m 
   deriving (Functor)
 
 raiseStatus :: Effectful m => Status Eff e a b w -> Status m e a b w
-raiseStatus (Done a) = Done a
-raiseStatus (Continue a f) = Continue a (raiseEff . fmap raiseStatus . f)
+raiseStatus = status Done (\ a f -> Continue a (raiseEff . fmap raiseStatus . f))
+
+status :: (w -> x) -> (a -> (b -> m e (Status m e a b w)) -> x) -> Status m e a b w -> x
+status f _ (Done w) = f w
+status _ g (Continue a f) = g a f
 
 -- | Launch a thread and report its status
 runC :: (Effectful m, Effect (Union effs)) => m (Yield a b ': effs) w -> m effs (Status m effs a b w)
