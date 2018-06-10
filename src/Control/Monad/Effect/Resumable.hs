@@ -13,7 +13,7 @@ import Control.Monad.Effect.Internal
 import Data.Functor.Classes
 
 data Resumable exc m a where
-  Throw :: exc a                 -> Resumable exc m a
+  Throw :: exc a                            -> Resumable exc m a
   Catch :: m a -> (forall b . exc b -> m b) -> Resumable exc m a
 
 throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
