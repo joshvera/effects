@@ -21,4 +21,4 @@ testIfte = do
   where gen = msum . fmap return $ [2..30]
 
 testIfteRun :: [Int]
-testIfteRun = run . runNonDetA $ testIfte
+testIfteRun = run . runNonDet $ testIfte

@@ -14,7 +14,7 @@ Portability : POSIX
 module Control.Monad.Effect.NonDet (
   NonDet(..),
   gatherM,
-  runNonDetA,
+  runNonDet,
   msplit
 ) where
 
@@ -35,14 +35,14 @@ gatherM f = raiseHandler (interpose (pure . f) (\ m k -> case m of
   MPlus -> mappend <$> k True <*> k False))
 
 -- | A handler for nondeterminstic effects
-runNonDetA :: (Effectful m, Effect (Union e))
-            => m (NonDet ': e) a
-            -> m e [a]
-runNonDetA = raiseHandler go
+runNonDet :: (Effectful m, Effect (Union e))
+          => m (NonDet ': e) a
+          -> m e [a]
+runNonDet = raiseHandler go
   where go (Return a)       = pure [a]
         go (Effect MZero _) = pure []
-        go (Effect MPlus k) = liftA2 (++) (runNonDetA (k True)) (runNonDetA (k False))
-        go (Other r)        = fromRequest (handleState [] (fmap join . traverse runNonDetA) r)
+        go (Effect MPlus k) = liftA2 (++) (runNonDet (k True)) (runNonDet (k False))
+        go (Other r)        = fromRequest (handleState [] (fmap join . traverse runNonDet) r)
 
 msplit :: (Member NonDet e, Effectful m)
        => m e a -> m e (Maybe (a, m e a))
