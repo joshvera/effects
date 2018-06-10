@@ -28,7 +28,7 @@ import Control.Monad.Effect.Internal
 --------------------------------------------------------------------------------
 
 runNonDetM :: (Monoid b, Effectful m, Effect (Union e)) => (a -> b) -> m (NonDet ': e) a -> m e b
-runNonDetM unit = raiseHandler (fmap (foldMap unit) . runNonDetA @[])
+runNonDetM unit = raiseHandler (fmap (foldMap unit) . runNonDetA)
 
 gatherM :: (Monoid b, Member NonDet e, Effectful m)
         => (a -> b) -- ^ A function constructing a 'Monoid'al value from a single computed result. This might typically be @unit@ (for @Reducer@s), 'pure' (for 'Applicative's), or some similar singleton constructor.
@@ -39,14 +39,14 @@ gatherM f = raiseHandler (interpose (pure . f) (\ m k -> case m of
   MPlus -> mappend <$> k True <*> k False))
 
 -- | A handler for nondeterminstic effects
-runNonDetA :: (Alternative f, Effectful m, Effect (Union e))
+runNonDetA :: (Effectful m, Effect (Union e))
             => m (NonDet ': e) a
-            -> m e (f a)
+            -> m e [a]
 runNonDetA = raiseHandler go
-  where go (Return a)       = pure (pure a)
-        go (Effect MZero _) = pure empty
-        go (Effect MPlus k) = liftA2 (<|>) (runNonDetA (k True)) (runNonDetA (k False))
-        go (Other r)        = fromRequest (handleF runNonDetA r)
+  where go (Return a)       = pure [a]
+        go (Effect MZero _) = pure []
+        go (Effect MPlus k) = liftA2 (++) (runNonDetA (k True)) (runNonDetA (k False))
+        go (Other r)        = fromRequest (handleState [] (fmap join . traverse runNonDetA) r)
 
 msplit :: (Member NonDet e, Effectful m)
        => m e a -> m e (Maybe (a, m e a))
