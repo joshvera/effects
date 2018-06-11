@@ -69,3 +69,7 @@ runCoro :: (Effectful m, Effect (Union effs)) => (a -> b) -> m (Yield a b ': eff
 runCoro f = raiseHandler (loop <=< runC)
   where loop (Done a)       = pure a
         loop (Continue a k) = k (f a) >>= loop
+
+
+instance Effect (Yield a bs) where
+  handleState c dist (Request (Yield a f) k) = Request (Yield a f) (dist . (<$ c) . k)
