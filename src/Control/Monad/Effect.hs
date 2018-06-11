@@ -20,7 +20,6 @@ module Control.Monad.Effect
   , runM
   , send
   -- * Effect handlers
-  , pattern Return
   , pattern Effect
   , pattern Other
   , pattern Effect2_1

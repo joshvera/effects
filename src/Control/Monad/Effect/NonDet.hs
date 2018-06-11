@@ -47,7 +47,7 @@ runNonDet = raiseHandler go
 msplit :: (Member NonDet e, Effectful m)
        => m e a -> m e (Maybe (a, m e a))
 msplit = raiseHandler (fmap (fmap (fmap raiseEff)) . loop [])
-  where loop jq (Val x) = pure (Just (x, msum jq))
+  where loop jq (Return x) = pure (Just (x, msum jq))
         loop jq (E u q) =
           case prj u of
             Just MZero ->

@@ -8,7 +8,6 @@ module Control.Monad.Effect.Internal (
   , Fail(..)
   , Lift(..)
   -- * Handling effects
-  , pattern Return
   , pattern Effect
   , pattern Other
   , pattern Effect2_1
@@ -65,12 +64,9 @@ import Data.Union
 -- | An effectful computation that returns 'b' and sends a list of 'effects'.
 data Eff effects b
   -- | Done with the value of type `b`.
-  = Val b
+  = Return b
   -- | Send an union of 'effects' and 'eff a' to handle, and a queues of effects to apply from 'a' to 'b'.
   | forall a. E (Union effects (Eff effects) a) (Queue (Eff effects) a b)
-
-pattern Return :: b -> Eff effects b
-pattern Return a <- Val a
 
 pattern Effect :: effect (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
 pattern Effect eff k <- (decomposeEff -> Right (Right (Request eff k)))
@@ -110,13 +106,13 @@ fromRequest :: Request (Union effects) (Eff effects) a -> Eff effects a
 fromRequest (Request u k) = E u (tsingleton k)
 
 decomposeEff :: Eff (effect ': effects) a -> Either a (Either (Request (Union effects) (Eff (effect ': effects)) a) (Request effect (Eff (effect ': effects)) a))
-decomposeEff (Val a) = Left a
+decomposeEff (Return a) = Left a
 decomposeEff (E u q) = Right $ case decompose u of
   Left u' -> Left (Request u' (apply q))
   Right eff -> Right (Request eff (apply q))
 
 decomposeEff2 :: Eff (effect1 ': effect2 ': effects) a -> Either a (Either (Request (Union effects) (Eff (effect1 ': effect2 ': effects)) a) (Either (Request effect1 (Eff (effect1 ': effect2 ': effects)) a) (Request effect2 (Eff (effect1 ': effect2 ': effects)) a)))
-decomposeEff2 (Val a) = Left a
+decomposeEff2 (Return a) = Left a
 decomposeEff2 (E u q) = Right $ case decompose u of
   Left u' -> case decompose u' of
     Left u'' -> Left (Request u'' (apply q))
@@ -172,7 +168,7 @@ apply q' x =
    case tviewl q' of
    TOne k  -> k x
    k :< t -> case k x of
-     Val y -> t `apply` y
+     Return y -> t `apply` y
      E u q -> E u (q >< t)
 
 -- | Compose queues left to right.
@@ -195,7 +191,7 @@ send = sendU . inj
 
 -- | Send a 'Union' of effects and wait for a reply.
 sendU :: Effectful m => Union e (Eff e) b -> m e b
-sendU u = raiseEff (E u (tsingleton Val))
+sendU u = raiseEff (E u (tsingleton Return))
 
 -- | Runs an effect whose effects has been consumed.
 --
@@ -206,7 +202,7 @@ sendU u = raiseEff (E u (tsingleton Val))
 -- @
 run :: Effectful m => m '[] b -> b
 run m = case lowerEff m of
-  Val x -> x
+  Return x -> x
   _     -> error "Internal:run - This (E) should never happen"
 -- the other case is unreachable since Union [] a cannot be
 -- constructed. Therefore, run is a total function if its argument
@@ -218,7 +214,7 @@ run m = case lowerEff m of
 -- This is useful for plugging in traditional transformer stacks.
 runM :: (Effectful m, Monad m1) => m '[Lift m1] a -> m1 a
 runM m = case lowerEff m of
-  Val x -> pure x
+  Return x -> pure x
   E u q -> unLift (strengthen u) >>= runM . apply q
 
 
@@ -266,7 +262,7 @@ interpose :: (Member eff e, Effectful m)
           -> m e a -> m e b
 interpose pure' h = raiseHandler loop
  where
-   loop (Val x) = lowerEff (pure' x)
+   loop (Return x) = lowerEff (pure' x)
    loop (E u q) = case prj u of
      Just x -> lowerEff (h x (raiseEff . k))
      _      -> E u (tsingleton k)
@@ -282,7 +278,7 @@ interposeState :: (Member eff e, Effectful m)
                -> m e b
 interposeState initial pure' handler = raiseHandler (loop initial)
   where
-    loop state (Val x) = lowerEff (pure' state x)
+    loop state (Return x) = lowerEff (pure' state x)
     loop state (E u q) = case prj u of
       Just x -> lowerEff (handler state x (fmap raiseEff . k))
       _      -> E u (tsingleton (k state))
@@ -292,24 +288,24 @@ interposeState initial pure' handler = raiseHandler (loop initial)
 -- * Effect Instances
 
 instance Functor (Eff e) where
-  fmap f (Val x) = Val (f x)
-  fmap f (E u q) = E u (q |> (Val . f))
+  fmap f (Return x) = Return (f x)
+  fmap f (E u q) = E u (q |> (Return . f))
   {-# INLINE fmap #-}
 
 instance Applicative (Eff e) where
-  pure = Val
+  pure = Return
   {-# INLINE pure #-}
 
-  Val f <*> Val x = Val $ f x
-  Val f <*> E u q = E u (q |> (Val . f))
+  Return f <*> Return x = Return $ f x
+  Return f <*> E u q = E u (q |> (Return . f))
   E u q <*> m     = E u (q |> (`fmap` m))
   {-# INLINE (<*>) #-}
 
 instance Monad (Eff e) where
-  return = Val
+  return = Return
   {-# INLINE return #-}
 
-  Val x >>= k = k x
+  Return x >>= k = k x
   E u q >>= k = E u (q |> k)
   {-# INLINE (>>=) #-}
 
