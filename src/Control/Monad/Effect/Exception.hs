@@ -1,6 +1,4 @@
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DataKinds, KindSignatures #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, KindSignatures, TypeOperators #-}
 
 {-|
 Module      : Control.Monad.Effect.Exception
