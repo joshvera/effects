@@ -58,3 +58,7 @@ catchError = flip handleError
 -- composing chains of handlers together.
 handleError :: (Member (Exc exc) e, Effectful m) => (exc -> m e a) -> m e a -> m e a
 handleError handler = raiseHandler (interpose pure (\(Throw e) _ -> lowerEff (handler e)))
+
+
+instance Effect (Exc exc) where
+  handleState c dist (Request (Throw exc) k) = Request (Throw exc) (dist . (<$ c) . k)
