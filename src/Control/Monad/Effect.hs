@@ -26,10 +26,6 @@ module Control.Monad.Effect
   , pattern Effect2_2
   , pattern Other2
   , Request(..)
-  , requestMap
-  , fromRequest
-  , decomposeEff
-  , decomposeEff2
   , interpret
   , reinterpret
   , reinterpret2
