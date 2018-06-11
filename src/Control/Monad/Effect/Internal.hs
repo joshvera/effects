@@ -125,8 +125,8 @@ decomposeEff2 (E u q) = Right $ case decompose u of
 class Effect effect where
   handleState :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect (Eff effects) a -> Request effect (Eff effects') (c a))
 
-handle :: Effects effects' => (forall x . Eff effects x -> Eff effects' x) -> (Request (Union effects') (Eff effects) a -> Eff effects' a)
-handle handler r = fromRequest (runIdentity <$> handleState (Identity ()) (fmap Identity . handler . runIdentity) r)
+handle :: Effect effect => (forall x . Eff effects x -> Eff effects' x) -> (Request effect (Eff effects) a -> Request effect (Eff effects') a)
+handle handler r = runIdentity <$> handleState (Identity ()) (fmap Identity . handler . runIdentity) r
 
 instance Effect (Union '[]) where
   handleState _ _ _ = error "impossible: handleState on empty Union"
@@ -228,7 +228,7 @@ interpret :: (Effectful m, Effect (Union effs))
 interpret bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
-        loop (Other r)      = handle (interpret (lowerEff . bind)) r
+        loop (Other r)      = fromRequest (handle (interpret (lowerEff . bind)) r)
 
 
 -- | Interpret an effect by replacing it with another effect.
@@ -239,7 +239,7 @@ reinterpret :: (Effectful m, Effect (Union (newEffect ': effs)))
 reinterpret bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
-        loop (Other r)      = handle (reinterpret (lowerEff . bind)) (weaken `requestMap` r)
+        loop (Other r)      = fromRequest (handle (reinterpret (lowerEff . bind)) (weaken `requestMap` r))
 
 -- | Interpret an effect by replacing it with two new effects.
 reinterpret2 :: (Effectful m, Effect (Union (newEffect1 ': newEffect2 ': effs)))
@@ -249,7 +249,7 @@ reinterpret2 :: (Effectful m, Effect (Union (newEffect1 ': newEffect2 ': effs)))
 reinterpret2 bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
-        loop (Other r)      = handle (reinterpret2 (lowerEff . bind)) ((weaken . weaken) `requestMap` r)
+        loop (Other r)      = fromRequest (handle (reinterpret2 (lowerEff . bind)) ((weaken . weaken) `requestMap` r))
 
 
 -- * Local handlers
