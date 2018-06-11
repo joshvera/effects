@@ -146,10 +146,12 @@ type Effectful = Coercible Eff
 -- | Raise an action in 'Eff' into an action in @m@.
 raiseEff :: Effectful m => Eff effects a -> m   effects a
 raiseEff = coerce
+{-# INLINABLE raiseEff #-}
 
 -- | Lower an action in @m@ into an action in 'Eff'.
 lowerEff :: Effectful m => m   effects a -> Eff effects a
 lowerEff = coerce
+{-# INLINABLE lowerEff #-}
 
 
 -- | Raise a handler on 'Eff' to a handler on some 'Effectful' @m@.
