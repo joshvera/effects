@@ -38,9 +38,9 @@ tell = send . Writer
 runWriter :: (Monoid o, Effectful m, Effect (Union e)) => m (Writer o ': e) a -> m e (o, a)
 runWriter = raiseHandler (go mempty)
   where go :: (Monoid o, Effect (Union e)) => o -> Eff (Writer o ': e) a -> Eff e (o, a)
-        go w (Return a) = pure (w, a)
+        go w (Return a)            = pure (w, a)
         go w (Effect (Writer o) k) = go (w `mappend` o) (k ())
-        go w (Other r)  = handleStateful (w, ()) (uncurry go) r
+        go w (Other u k)           = handleStateful (w, ()) (uncurry go) u k
 
 
 instance Effect (Writer o) where

@@ -75,8 +75,8 @@ pattern Return a <- Val a
 pattern Effect :: effect (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
 pattern Effect eff k <- (decomposeEff -> Right (Right (Request eff k)))
 
-pattern Other :: Request (Union effects) (Eff (effect ': effects)) a -> Eff (effect ': effects) a
-pattern Other r <- (decomposeEff -> Right (Left r))
+pattern Other :: Union effects (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
+pattern Other u k <- (decomposeEff -> Right (Left (Request u k)))
 {-# COMPLETE Return, Effect, Other #-}
 
 pattern Effect2_1 :: effect1 (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
@@ -85,8 +85,8 @@ pattern Effect2_1 eff k <- (decomposeEff2 -> Right (Right (Left (Request eff k))
 pattern Effect2_2 :: effect2 (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
 pattern Effect2_2 eff k <- (decomposeEff2 -> Right (Right (Right (Request eff k))))
 
-pattern Other2 :: Request (Union effects) (Eff (effect1 ': effect2 ': effects)) a -> Eff (effect1 ': effect2 ': effects) a
-pattern Other2 r <- (decomposeEff2 -> Right (Left r))
+pattern Other2 :: Union effects (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
+pattern Other2 u k <- (decomposeEff2 -> Right (Left (Request u k)))
 {-# COMPLETE Return, Effect2_1, Effect2_2, Other2 #-}
 
 
@@ -126,11 +126,11 @@ decomposeEff2 (E u q) = Right $ case decompose u of
 class Effect effect where
   handleState :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect (Eff effects) a -> Request effect (Eff effects') (c a))
 
-handleStateful :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request (Union effects') (Eff effects) a -> Eff effects' (c a))
-handleStateful c dist = fromRequest . handleState c dist
+handleStateful :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' (c a))
+handleStateful c handler u k = fromRequest (handleState c handler (Request u k))
 
-handle :: Effects effects' => (forall x . Eff effects x -> Eff effects' x) -> (Request (Union effects') (Eff effects) a -> Eff effects' a)
-handle handler r = runIdentity <$> handleStateful (Identity ()) (fmap Identity . handler . runIdentity) r
+handle :: Effects effects' => (forall x . Eff effects x -> Eff effects' x) -> (Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' a)
+handle handler u k = runIdentity <$> handleStateful (Identity ()) (fmap Identity . handler . runIdentity) u k
 
 instance Effect (Union '[]) where
   handleState _ _ _ = error "impossible: handleState on empty Union"
@@ -232,7 +232,7 @@ interpret :: (Effectful m, Effect (Union effs))
 interpret bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
-        loop (Other r)      = handle (interpret (lowerEff . bind)) r
+        loop (Other u k)    = handle (interpret (lowerEff . bind)) u k
 
 
 -- | Interpret an effect by replacing it with another effect.
@@ -243,7 +243,7 @@ reinterpret :: (Effectful m, Effect (Union (newEffect ': effs)))
 reinterpret bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
-        loop (Other r)      = handle (reinterpret (lowerEff . bind)) (weaken `requestMap` r)
+        loop (Other u k)    = handle (reinterpret (lowerEff . bind)) (weaken u) k
 
 -- | Interpret an effect by replacing it with two new effects.
 reinterpret2 :: (Effectful m, Effect (Union (newEffect1 ': newEffect2 ': effs)))
@@ -253,7 +253,7 @@ reinterpret2 :: (Effectful m, Effect (Union (newEffect1 ': newEffect2 ': effs)))
 reinterpret2 bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
-        loop (Other r)      = handle (reinterpret2 (lowerEff . bind)) ((weaken . weaken) `requestMap` r)
+        loop (Other u k)    = handle (reinterpret2 (lowerEff . bind)) (weaken (weaken u)) k
 
 
 -- * Local handlers

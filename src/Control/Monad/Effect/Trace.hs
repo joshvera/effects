@@ -47,14 +47,14 @@ runPrintingTrace :: (Member (Lift IO) effects, Effectful m, Effect (Union effect
 runPrintingTrace = raiseHandler go
   where go (Return a)           = pure a
         go (Effect (Trace s) k) = runPrintingTrace (liftIO (hPutStrLn stderr s) >>= k)
-        go (Other r)            = handle runPrintingTrace r
+        go (Other u k)          = handle runPrintingTrace u k
 
 -- | Run a 'Trace' effect, discarding the traced values.
 runIgnoringTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects a
 runIgnoringTrace = raiseHandler go
   where go (Return a)           = pure a
         go (Effect (Trace _) k) = runIgnoringTrace (k ())
-        go (Other r)            = handle runIgnoringTrace r
+        go (Other u k)          = handle runIgnoringTrace u k
 
 -- | Run a 'Trace' effect, accumulating the traced values into a list like a 'Writer'.
 runReturningTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects ([String], a)
@@ -62,7 +62,7 @@ runReturningTrace = raiseHandler (fmap (first reverse) . runState [] . go)
   where go :: Effect (Union effects) => Eff (Trace ': effects) a -> Eff (State [String] ': effects) a
         go (Return a)            = pure a
         go (Effect (Trace s) k)  = put [s] >> go (k ())
-        go (Other r)             = handle go (weaken `requestMap` r)
+        go (Other u k)           = handle go (weaken u) k
 
 
 instance Effect Trace where
