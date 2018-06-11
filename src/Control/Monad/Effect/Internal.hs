@@ -173,12 +173,12 @@ apply q' x =
 
 -- | Compose queues left to right.
 (>>>) :: Queue (Eff effects) a b
-      -> (Eff effects b -> Eff effects' c) -- ^ An function to compose.
+      -> (Eff effects b -> Eff effects' c) -- ^ A function to compose.
       -> Arrow (Eff effects') a c
 (>>>) queue f = f . apply queue
 
 -- | Compose queues right to left.
-(<<<) :: (Eff effects b -> Eff effects' c) -- ^ An function to compose.
+(<<<) :: (Eff effects b -> Eff effects' c) -- ^ A function to compose.
       -> Queue (Eff effects)  a b
       -> Arrow (Eff effects') a c
 (<<<) f queue  = f . apply queue
