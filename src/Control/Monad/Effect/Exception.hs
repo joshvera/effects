@@ -32,11 +32,11 @@ import Control.Monad.Effect.Internal
                            -- Exceptions --
 --------------------------------------------------------------------------------
 -- | Exceptions of the type 'exc'; no resumption
-newtype Exc exc (m :: * -> *) a = Exc exc
+newtype Exc exc (m :: * -> *) a = Throw exc
 
 -- | Throws an error carrying information of type 'exc'.
 throwError :: (Member (Exc exc) e, Effectful m) => exc -> m e a
-throwError = send . Exc
+throwError = send . Throw
 
 -- | Handler for exception effects
 -- If there are no exceptions thrown, returns Right If exceptions are
@@ -44,9 +44,9 @@ throwError = send . Exc
 -- any other effect handlers.
 runError :: (Effectful m, Effect (Union e)) => m (Exc exc ': e) a -> m e (Either exc a)
 runError = raiseHandler go
-  where go (Return a)         = pure (Right a)
-        go (Effect (Exc e) _) = pure (Left e)
-        go (Other r)          = fromRequest (handleState (Right ()) (either (pure . Left) runError) r)
+  where go (Return a)           = pure (Right a)
+        go (Effect (Throw e) _) = pure (Left e)
+        go (Other r)            = fromRequest (handleState (Right ()) (either (pure . Left) runError) r)
 
 -- | A catcher for Exceptions. Handlers are allowed to rethrow
 -- exceptions.
@@ -58,4 +58,4 @@ catchError = flip handleError
 -- in situations where the code for the handler is shorter, or when
 -- composing chains of handlers together.
 handleError :: (Member (Exc exc) e, Effectful m) => (exc -> m e a) -> m e a -> m e a
-handleError handler = raiseHandler (interpose pure (\(Exc e) _ -> lowerEff (handler e)))
+handleError handler = raiseHandler (interpose pure (\(Throw e) _ -> lowerEff (handler e)))
