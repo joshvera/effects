@@ -48,12 +48,12 @@ data Union (r :: [ (* -> *) -> (* -> *) ]) (f :: * -> *) (v :: *) where
 
 -- | Inject a functor into a type-aligned union.
 inj :: forall e r f v. Member e r => e f v -> Union r f v
-inj = inj' (unP (offset :: P e r))
+inj = inj' (unP (offset :: Offset e r))
 {-# INLINE inj #-}
 
 -- | Maybe project a functor out of a type-aligned union.
 prj :: forall e r f v. Member e r => Union r f v -> Maybe (e f v)
-prj = prj' (unP (offset :: P e r))
+prj = prj' (unP (offset :: Offset e r))
 {-# INLINE prj #-}
 
 
@@ -73,13 +73,13 @@ strengthen (Union _ t) = unsafeCoerce t
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
 class Member t r where
-  offset :: P t r
+  offset :: Offset t r
 
 instance Member t (t ': r) where
-  offset = P 0
+  offset = Offset 0
 
 instance {-# OVERLAPPABLE #-} Member t r => Member t (t' ': r) where
-  offset = P $ 1 + unP (offset :: P t r)
+  offset = Offset $ 1 + unP (offset :: Offset t r)
 
 
 -- Implementation details
@@ -93,7 +93,7 @@ prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
                     | otherwise = Nothing
 {-# INLINE prj' #-}
 
-newtype P (t :: (* -> *) -> (* -> *)) (r :: [(* -> *) -> (* -> *)]) = P { unP :: Int }
+newtype Offset (t :: (* -> *) -> (* -> *)) (r :: [(* -> *) -> (* -> *)]) = Offset { unP :: Int }
 
 
 -- | Specialized version of 'decompose'.
