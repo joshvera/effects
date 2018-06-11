@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE PatternSynonyms, TypeOperators #-}
 {-|
 Module      : Control.Monad.Effect
 Description : Effects - an extensible effects library
@@ -20,6 +20,17 @@ module Control.Monad.Effect
   , runM
   , send
   -- * Effect handlers
+  , pattern Return
+  , pattern Effect
+  , pattern Other
+  , pattern Effect2_1
+  , pattern Effect2_2
+  , pattern Other2
+  , Request(..)
+  , requestMap
+  , fromRequest
+  , decomposeEff
+  , decomposeEff2
   , interpret
   , reinterpret
   , reinterpret2
