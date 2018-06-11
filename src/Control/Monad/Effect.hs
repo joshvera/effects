@@ -29,6 +29,7 @@ module Control.Monad.Effect
   -- * Checking a List of Effects
   , Member
   -- * Effects
+  , Effect(..)
   , Lift(..)
   , Embedded
   , Exc
