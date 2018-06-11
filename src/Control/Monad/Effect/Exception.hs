@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, FlexibleContexts, KindSignatures, TypeOperators #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, KindSignatures, TypeOperators #-}
 
 {-|
 Module      : Control.Monad.Effect.Exception
@@ -30,7 +30,8 @@ import Control.Monad.Effect.Internal
                            -- Exceptions --
 --------------------------------------------------------------------------------
 -- | Exceptions of the type 'exc'; no resumption
-newtype Exc exc (m :: * -> *) a = Throw exc
+newtype Exc exc (m :: * -> *) a where
+  Throw :: exc -> Exc exc m a
 
 -- | Throws an error carrying information of type 'exc'.
 throwError :: (Member (Exc exc) e, Effectful m) => exc -> m e a
