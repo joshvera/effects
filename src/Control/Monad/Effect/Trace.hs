@@ -31,7 +31,6 @@ import Control.Monad.Effect.Internal
 import Control.Monad.Effect.State
 import Control.Monad.IO.Class
 import Data.Bifunctor (first)
-import Data.Union
 import System.IO
 
 -- | A Trace effect; takes a String and performs output
@@ -58,11 +57,7 @@ runIgnoringTrace = raiseHandler go
 
 -- | Run a 'Trace' effect, accumulating the traced values into a list like a 'Writer'.
 runReturningTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects ([String], a)
-runReturningTrace = raiseHandler (fmap (first reverse) . runState [] . go)
-  where go :: Effect (Union effects) => Eff (Trace ': effects) a -> Eff (State [String] ': effects) a
-        go (Return a)            = pure a
-        go (Effect (Trace s) k)  = modify' (s:) >> go (k ())
-        go (Other u k)           = handle go (weaken u) k
+runReturningTrace = raiseHandler (fmap (first reverse) . runState [] . reinterpret (\ (Trace s) -> modify' (s:)))
 
 
 instance Effect Trace where
