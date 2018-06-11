@@ -9,9 +9,10 @@ Stability   : experimental
 Portability : POSIX
 
 -}
-module Control.Monad.Effect (
+module Control.Monad.Effect
+  (
   -- * Running and Sending Effects
-  Eff
+    Eff
   , Effectful
   , raiseEff
   , lowerEff
