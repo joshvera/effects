@@ -124,8 +124,8 @@ class Effect effect where
 handleStateful :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' (c a)
 handleStateful c handler u k = fromRequest (handleState c handler (Request u k))
 
-handle :: Effects effects' => (forall x . Eff effects x -> Eff effects' x) -> Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' a
-handle handler u k = runIdentity <$> handleStateful (Identity ()) (fmap Identity . handler . runIdentity) u k
+handle :: (Effectful m, Effects effects') => (forall x . m effects x -> m effects' x) -> Union effects' (Eff effects) b -> Arrow (m effects) b a -> m effects' a
+handle handler u k = raiseEff $ runIdentity <$> handleStateful (Identity ()) (fmap Identity . lowerHandler handler . runIdentity) u (lowerEff . k)
 
 instance Effect (Union '[]) where
   handleState _ _ _ = error "impossible: handleState on empty Union"
