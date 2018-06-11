@@ -19,6 +19,7 @@ module Control.Monad.Effect.Internal (
   , fromRequest
   , decomposeEff
   , decomposeEff2
+  , Effects
   , Effect(..)
   , handle
   , Effectful
@@ -134,6 +135,9 @@ instance (Effect effect, Effect (Union effects)) => Effect (Union (effect ': eff
   handleState c dist (Request u q) = case decompose u of
     Left u' -> weaken `requestMap` handleState c dist (Request u' q)
     Right eff -> inj `requestMap` handleState c dist (Request eff q)
+
+
+type Effects effects = Effect (Union effects)
 
 
 -- | Types wrapping 'Eff' actions.
