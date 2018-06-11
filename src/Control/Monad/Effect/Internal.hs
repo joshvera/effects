@@ -21,6 +21,7 @@ module Control.Monad.Effect.Internal (
   , decomposeEff2
   , Effects
   , Effect(..)
+  , handleStateful
   , handle
   , Effectful
   , raiseEff
@@ -125,8 +126,11 @@ decomposeEff2 (E u q) = Right $ case decompose u of
 class Effect effect where
   handleState :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect (Eff effects) a -> Request effect (Eff effects') (c a))
 
+handleStateful :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request (Union effects') (Eff effects) a -> Eff effects' (c a))
+handleStateful c dist = fromRequest . handleState c dist
+
 handle :: Effects effects' => (forall x . Eff effects x -> Eff effects' x) -> (Request (Union effects') (Eff effects) a -> Eff effects' a)
-handle handler r = fromRequest (runIdentity <$> handleState (Identity ()) (fmap Identity . handler . runIdentity) r)
+handle handler r = runIdentity <$> handleStateful (Identity ()) (fmap Identity . handler . runIdentity) r
 
 instance Effect (Union '[]) where
   handleState _ _ _ = error "impossible: handleState on empty Union"
