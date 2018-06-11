@@ -48,3 +48,7 @@ runFresh :: (Effectful m, Effect (Union e)) => Int -> m (Fresh ': e) a -> m e a
 runFresh s = raiseHandler $ fmap snd . runState s . reinterpret (\ Fresh -> do
   s' <- get
   s' <$ (put $! succ s'))
+
+
+instance Effect Fresh where
+  handleState c dist (Request Fresh k) = Request Fresh (dist . (<$ c) . k)
