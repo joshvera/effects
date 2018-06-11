@@ -67,4 +67,3 @@ runReturningTrace = raiseHandler (fmap (first reverse) . runState [] . go)
 
 instance Effect Trace where
   handleState c dist (Request (Trace s) k) = Request (Trace s) (dist . (<$ c) . k)
-  handleF dist (Request (Trace s) k) = Request (Trace s) (dist . k)
