@@ -24,6 +24,7 @@ module Control.Monad.Effect.Internal (
   , raiseEff
   , lowerEff
   , raiseHandler
+  , lowerHandler
   -- * Effect handlers
   , interpret
   , reinterpret
@@ -158,6 +159,11 @@ lowerEff = coerce
 raiseHandler :: Effectful m => (Eff effectsA a -> Eff effectsB b) -> m effectsA a -> m effectsB b
 raiseHandler = coerce
 {-# INLINE raiseHandler #-}
+
+-- | Lower a handler on some 'Effectful' @m@ to a handler on 'Eff'.
+lowerHandler :: Effectful m => (m effectsA a -> m effectsB b) -> Eff effectsA a -> Eff effectsB b
+lowerHandler = coerce
+{-# INLINE lowerHandler #-}
 
 
 -- * Composing and Applying Effects
