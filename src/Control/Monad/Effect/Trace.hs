@@ -61,7 +61,7 @@ runReturningTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effect
 runReturningTrace = raiseHandler (fmap (first reverse) . runState [] . go)
   where go :: Effect (Union effects) => Eff (Trace ': effects) a -> Eff (State [String] ': effects) a
         go (Return a)            = pure a
-        go (Effect (Trace s) k)  = put [s] >> go (k ())
+        go (Effect (Trace s) k)  = modify' (s:) >> go (k ())
         go (Other u k)           = handle go (weaken u) k
 
 
