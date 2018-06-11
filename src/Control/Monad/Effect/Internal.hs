@@ -119,12 +119,12 @@ decomposeEff2 (E u q) = Right $ case decompose u of
   Right eff1 -> Right (Left (Request eff1 (apply q)))
 
 class Effect effect where
-  handleState :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Request effect (Eff effects) a -> Request effect (Eff effects') (c a))
+  handleState :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> Request effect (Eff effects) a -> Request effect (Eff effects') (c a)
 
-handleStateful :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> (Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' (c a))
+handleStateful :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' (c a)
 handleStateful c handler u k = fromRequest (handleState c handler (Request u k))
 
-handle :: Effects effects' => (forall x . Eff effects x -> Eff effects' x) -> (Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' a)
+handle :: Effects effects' => (forall x . Eff effects x -> Eff effects' x) -> Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' a
 handle handler u k = runIdentity <$> handleStateful (Identity ()) (fmap Identity . handler . runIdentity) u k
 
 instance Effect (Union '[]) where
