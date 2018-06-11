@@ -42,7 +42,7 @@ runNonDet = raiseHandler go
   where go (Return a)       = pure [a]
         go (Effect MZero _) = pure []
         go (Effect MPlus k) = liftA2 (++) (runNonDet (k True)) (runNonDet (k False))
-        go (Other r)        = fromRequest (handleState [] (fmap join . traverse runNonDet) r)
+        go (Other r)        = handleStateful [] (fmap join . traverse runNonDet) r
 
 msplit :: (Member NonDet e, Effectful m)
        => m e a -> m e (Maybe (a, m e a))

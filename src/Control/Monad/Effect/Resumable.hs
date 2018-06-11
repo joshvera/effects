@@ -38,7 +38,7 @@ runResumable = raiseHandler (go Nothing)
         go _ (Return a)             = pure (Right a)
         go h (Effect (Throw e) k)   = maybe (pure (Left (SomeExc e))) (\ h' -> go h (runHandler h' e >>= k)) h
         go _ (Effect (Catch m h) k) = go (Just (Handler h)) (m >>= k)
-        go h (Other r)              = fromRequest (handleState (Right ()) (either (pure . Left) (go h)) r)
+        go h (Other r)              = handleStateful (Right ()) (either (pure . Left) (go h)) r
 
 newtype Handler exc effects = Handler { runHandler :: forall resume . exc resume -> Eff (Resumable exc ': effects) resume }
 

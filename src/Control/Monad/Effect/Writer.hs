@@ -40,7 +40,7 @@ runWriter = raiseHandler (go mempty)
   where go :: (Monoid o, Effect (Union e)) => o -> Eff (Writer o ': e) a -> Eff e (o, a)
         go w (Return a) = pure (w, a)
         go w (Effect (Writer o) k) = go (w `mappend` o) (k ())
-        go w (Other r)  = fromRequest (handleState (w, ()) (uncurry go) r)
+        go w (Other r)  = handleStateful (w, ()) (uncurry go) r
 
 
 instance Effect (Writer o) where

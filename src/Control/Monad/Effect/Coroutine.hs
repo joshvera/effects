@@ -62,7 +62,7 @@ runC :: (Effectful m, Effect (Union effs)) => m (Yield a b ': effs) w -> m effs 
 runC = raiseHandler (fmap raiseStatus . go)
   where go (Return a)             = pure (Done a)
         go (Effect (Yield a f) k) = pure (Continue a (runC . k . f))
-        go (Other r)              = fromRequest (handleState (Done ()) joinStatus r)
+        go (Other r)              = handleStateful (Done ()) joinStatus r
 
 -- | Launch a thread and run it to completion using a helper function to provide new inputs.
 runCoro :: (Effectful m, Effect (Union effs)) => (a -> b) -> m (Yield a b ': effs) w -> m effs w
