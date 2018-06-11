@@ -41,3 +41,7 @@ runWriter = raiseHandler (go mempty)
         go w (Return a) = pure (w, a)
         go w (Effect (Writer o) k) = go (w `mappend` o) (k ())
         go w (Other r)  = fromRequest (handleState (w, ()) (uncurry go) r)
+
+
+instance Effect (Writer o) where
+  handleState c dist (Request (Writer o) k) = Request (Writer o) (dist . (<$ c) . k)
