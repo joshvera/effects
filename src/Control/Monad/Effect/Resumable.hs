@@ -37,11 +37,8 @@ runResumable = raiseHandler go
         go (Other u k)              = handleStateful (Right ()) (either (pure . Left) runResumable) u k
 
 -- | Run a 'Resumable' effect in an 'Effectful' context, using a handler to resume computation.
-runResumableWith :: (Effectful m, Effect (Union effects)) => (forall resume . exc resume -> m (Resumable exc ': effects) resume) -> m (Resumable exc ': effects) a -> m effects a
-runResumableWith handler = go . lowerEff
-  where go (Return a)               = raiseEff (pure a)
-        go (Effect (Resumable e) k) = runResumableWith handler (raiseEff (lowerEff (handler e) >>= k))
-        go (Other u k)              = handle (runResumableWith handler) u (raiseEff . k)
+runResumableWith :: (Effectful m, Effect (Union effects)) => (forall resume . exc resume -> m effects resume) -> m (Resumable exc ': effects) a -> m effects a
+runResumableWith handler = interpret (\ (Resumable e) -> handler e)
 
 
 data SomeExc exc where
