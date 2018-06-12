@@ -19,9 +19,7 @@ module Control.Monad.Effect.Internal (
   , Effect(..)
   , handleStateful
   , handle
-  , Effectful
-  , raiseEff
-  , lowerEff
+  , Effectful(..)
   , raiseHandler
   , lowerHandler
   -- * Effect handlers
@@ -141,27 +139,28 @@ type Effects effects = Effect (Union effects)
 -- | Types wrapping 'Eff' actions.
 --
 --   Most instances of 'Effectful' will be derived using @-XGeneralizedNewtypeDeriving@, with these ultimately bottoming out on the instance for 'Eff' (for which 'raise' and 'lower' are simply the identity). Because of this, types can be nested arbitrarily deeply and still call 'raiseEff'/'lowerEff' just once to get at the (ultimately) underlying 'Eff'.
-type Effectful = Coercible Eff
+class Effectful m where
+  -- | Raise an action in 'Eff' into an action in @m@.
+  raiseEff :: Eff effects a -> m   effects a
 
--- | Raise an action in 'Eff' into an action in @m@.
-raiseEff :: Effectful m => Eff effects a -> m   effects a
-raiseEff = coerce
-{-# INLINABLE raiseEff #-}
+  -- | Lower an action in @m@ into an action in 'Eff'.
+  lowerEff :: m   effects a -> Eff effects a
 
--- | Lower an action in @m@ into an action in 'Eff'.
-lowerEff :: Effectful m => m   effects a -> Eff effects a
-lowerEff = coerce
-{-# INLINABLE lowerEff #-}
+instance Effectful Eff where
+  raiseEff = coerce
+  {-# INLINE raiseEff #-}
 
+  lowerEff = coerce
+  {-# INLINE lowerEff #-}
 
 -- | Raise a handler on 'Eff' to a handler on some 'Effectful' @m@.
 raiseHandler :: Effectful m => (Eff effectsA a -> Eff effectsB b) -> m effectsA a -> m effectsB b
-raiseHandler = coerce
+raiseHandler handler = raiseEff . handler . lowerEff
 {-# INLINE raiseHandler #-}
 
 -- | Lower a handler on some 'Effectful' @m@ to a handler on 'Eff'.
 lowerHandler :: Effectful m => (m effectsA a -> m effectsB b) -> Eff effectsA a -> Eff effectsB b
-lowerHandler = coerce
+lowerHandler handler = lowerEff . handler . raiseEff
 {-# INLINE lowerHandler #-}
 
 
