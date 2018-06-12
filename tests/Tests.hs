@@ -53,13 +53,13 @@ exceptionTests :: TestTree
 exceptionTests = testGroup "Exception Eff tests"
   [ testProperty "Exc takes precedence" (\x y -> testExceptionTakesPriority x y == Left y)
   , testCase "uncaught: runState (runError t)" $
-      ter1 @?= (Left "exc", 2)
+      ter1 @?= (2, Left "exc")
   , testCase "uncaught: runError (runState t)" $
       ter2 @?= Left "exc"
   , testCase "caught: runState (runError t)" $
-      ter3 @?= (Right "exc", 2)
+      ter3 @?= (2, Right "exc")
   , testCase "caught: runError (runState t)" $
-      ter4 @?= Right ("exc", 2)
+      ter4 @?= Right (2, "exc")
   , testCase "success: runReader (runErrBig t)" (ex2rr @?= Right 5)
   , testCase "uncaught: runReader (runErrBig t)" $
       ex2rr1 @?= Left (TooBig 7)
