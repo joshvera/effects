@@ -39,7 +39,13 @@ gatherM f = raiseHandler (interpose (pure . f) (\ m k -> case m of
 runNonDetA :: (Alternative f, Effectful m, Effect (Union e))
            => m (NonDet ': e) a
            -> m e (f a)
-runNonDetA = raiseHandler (fmap (asum . map pure) . go)
+runNonDetA = raiseHandler (fmap (asum . map pure) . runNonDet)
+
+-- | A handler for nondeterminstic effects
+runNonDet :: (Effectful m, Effect (Union e))
+           => m (NonDet ': e) a
+           -> m e [a]
+runNonDet = raiseHandler go
   where go (Return a)       = pure [a]
         go (Effect MZero _) = pure []
         go (Effect MPlus k) = liftA2 (++) (runNonDetA (k True)) (runNonDetA (k False))
