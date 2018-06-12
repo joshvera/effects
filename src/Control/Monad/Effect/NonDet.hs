@@ -59,6 +59,8 @@ runNonDet = raiseHandler go
         go (Effect MPlus k) = liftA2 (++) (runNonDetA (k True)) (runNonDetA (k False))
         go (Other u k)      = handleStateful [] (fmap join . traverse runNonDetA) u k
 
+-- FIXME: It would probably be more efficient to define these in terms of a binary tree rather than a list.
+
 msplit :: (Member NonDet e, Effectful m)
        => m e a -> m e (Maybe (a, m e a))
 msplit = raiseHandler (fmap (fmap (fmap raiseEff)) . loop [])
