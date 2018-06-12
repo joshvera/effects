@@ -1,15 +1,17 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, KindSignatures #-}
 module Tests.Union where
 
-import Data.Functor.Const
 import Data.Functor.Identity
 import Data.Union
 
-testUnaryUnion :: Int -> Union '[Identity] Int
-testUnaryUnion n = inj (Identity n)
+newtype I (m :: * -> *) a = I { getI :: a }
+newtype K s (m :: * -> *) a = K { getK :: s }
 
-testBinaryUnion0 :: Int -> Union '[Identity, Const String] Int
-testBinaryUnion0 n = inj (Identity n)
+testUnaryUnion :: Int -> Union '[I] Identity Int
+testUnaryUnion n = inj (I n)
 
-testBinaryUnion1 :: String -> Union '[Identity, Const String] Int
-testBinaryUnion1 s = inj (Const s)
+testBinaryUnion0 :: Int -> Union '[I, K String] Identity Int
+testBinaryUnion0 n = inj (I n)
+
+testBinaryUnion1 :: String -> Union '[I, K String] Identity Int
+testBinaryUnion1 s = inj (K s)
