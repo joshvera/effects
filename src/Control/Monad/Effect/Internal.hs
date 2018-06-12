@@ -324,7 +324,7 @@ instance Member (Lift IO) e => MonadIO (Eff e) where
 newtype Lift effect (m :: * -> *) a = Lift { unLift :: effect a }
   deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
 
-instance Functor effect => Effect (Lift effect) where
+instance Effect (Lift effect) where
   handleState c dist (Request (Lift op) k) = Request (Lift op) (dist . (<$ c) . k)
 
 
