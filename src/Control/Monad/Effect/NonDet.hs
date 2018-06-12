@@ -13,6 +13,7 @@ Portability : POSIX
 
 module Control.Monad.Effect.NonDet (
   NonDet(..),
+  runNonDetM,
   gatherM,
   runNonDetA,
   msplit
@@ -26,6 +27,12 @@ import Data.Foldable (asum)
 --------------------------------------------------------------------------------
                     -- Nondeterministic Choice --
 --------------------------------------------------------------------------------
+
+runNonDetM :: (Monoid b, Effectful m, Effect (Union e))
+           => (a -> b)
+           -> m (NonDet ': e) a
+           -> m e b
+runNonDetM unit = raiseHandler (fmap (foldMap unit) . runNonDet)
 
 gatherM :: (Monoid b, Member NonDet e, Effectful m)
         => (a -> b) -- ^ A function constructing a 'Monoid'al value from a single computed result. This might typically be @unit@ (for @Reducer@s), 'pure' (for 'Applicative's), or some similar singleton constructor.
