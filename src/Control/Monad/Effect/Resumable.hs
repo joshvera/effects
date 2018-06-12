@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, Rank2Types, TypeOperators #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, KindSignatures, Rank2Types, TypeOperators #-}
 module Control.Monad.Effect.Resumable
   ( Resumable(..)
   , SomeExc(..)
@@ -12,9 +12,8 @@ module Control.Monad.Effect.Resumable
 import Control.Monad.Effect.Internal
 import Data.Functor.Classes
 
-data Resumable exc m a where
-  Throw :: exc a                            -> Resumable exc m a
-  Catch :: m a -> (forall b . exc b -> m b) -> Resumable exc m a
+data Resumable exc (m :: * -> *) a where
+  Throw :: exc a -> Resumable exc m a
 
 throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
 throwResumable = send . Throw
@@ -23,33 +22,27 @@ catchResumable :: (Member (Resumable exc) e, Effectful m)
                => m e a
                -> (forall v. exc v -> m e v)
                -> m e a
-catchResumable m handler = send (Catch (lowerEff m) (lowerEff . handler))
+catchResumable m handler = handleResumable handler m
 
 handleResumable :: (Member (Resumable exc) e, Effectful m)
                 => (forall v. exc v -> m e v)
                 -> m e a
                 -> m e a
-handleResumable handler m = catchResumable m handler
+handleResumable handler = raiseHandler (interpose pure (\(Throw e) yield -> lowerEff (handler e) >>= yield))
 
 
 runResumable :: (Effectful m, Effect (Union e)) => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
-runResumable = raiseHandler (go Nothing)
-  where go :: Effect (Union effects) => Maybe (Handler exc effects) -> Eff (Resumable exc ': effects) a -> Eff effects (Either (SomeExc exc) a)
-        go _ (Return a)             = pure (Right a)
-        go h (Effect (Throw e) k)   = maybe (pure (Left (SomeExc e))) (\ h' -> go h (runHandler h' e >>= k)) h
-        go _ (Effect (Catch m h) k) = go (Just (Handler h)) (m >>= k)
-        go h (Other u k)            = handleStateful (Right ()) (either (pure . Left) (go h)) u k
-
-newtype Handler exc effects = Handler { runHandler :: forall resume . exc resume -> Eff (Resumable exc ': effects) resume }
+runResumable = raiseHandler go
+  where go (Return a)           = pure (Right a)
+        go (Effect (Throw e) _) = pure (Left (SomeExc e))
+        go (Other u k)          = handleStateful (Right ()) (either (pure . Left) runResumable) u k
 
 -- | Run a 'Resumable' effect in an 'Effectful' context, using a handler to resume computation.
 runResumableWith :: (Effectful m, Effect (Union effects)) => (forall resume . exc resume -> m (Resumable exc ': effects) resume) -> m (Resumable exc ': effects) a -> m effects a
-runResumableWith handler = raiseHandler (go (lowerEff . handler))
-  where go :: Effect (Union effects) => (forall resume . exc resume -> Eff (Resumable exc ': effects) resume) -> Eff (Resumable exc ': effects) a -> Eff effects a
-        go _ (Return a)             = pure a
-        go h (Effect (Throw e) k)   = runResumableWith h (h e >>= k)
-        go _ (Effect (Catch m h) k) = runResumableWith h (m >>= k)
-        go h (Other u k)            = handle (runResumableWith h) u k
+runResumableWith handler = go . lowerEff
+  where go (Return a)           = raiseEff (pure a)
+        go (Effect (Throw e) k) = runResumableWith handler (raiseEff (lowerEff (handler e) >>= k))
+        go (Other u k)          = handle (runResumableWith handler) u (raiseEff . k)
 
 
 data SomeExc exc where
