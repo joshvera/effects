@@ -29,7 +29,7 @@ import Data.Foldable (asum)
                     -- Nondeterministic Choice --
 --------------------------------------------------------------------------------
 
-runNonDetM :: (Monoid b, Effectful m, Effect (Union e))
+runNonDetM :: (Monoid b, Effectful m, Effects e)
            => (a -> b)
            -> m (NonDet ': e) a
            -> m e b
@@ -44,13 +44,13 @@ gatherM f = raiseHandler (interpose (pure . f) (\ m k -> case m of
   MPlus -> mappend <$> k True <*> k False))
 
 -- | A handler for nondeterminstic effects
-runNonDetA :: (Alternative f, Effectful m, Effect (Union e))
+runNonDetA :: (Alternative f, Effectful m, Effects e)
            => m (NonDet ': e) a
            -> m e (f a)
 runNonDetA = raiseHandler (fmap (asum . map pure) . runNonDet)
 
 -- | A handler for nondeterminstic effects
-runNonDet :: (Effectful m, Effect (Union e))
+runNonDet :: (Effectful m, Effects e)
            => m (NonDet ': e) a
            -> m e [a]
 runNonDet = raiseHandler go
