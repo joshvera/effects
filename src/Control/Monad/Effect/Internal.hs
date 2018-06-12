@@ -227,7 +227,7 @@ runM m = case lowerEff m of
 -- * Effect handlers
 
 -- | Handle the topmost effect by interpreting it into the underlying effects.
-interpret :: (Effectful m, Effect (Union effs))
+interpret :: (Effectful m, Effects effs)
           => (forall v. eff (Eff (eff ': effs)) v -> m effs v)
           -> m (eff ': effs) a
           -> m effs a
@@ -238,7 +238,7 @@ interpret bind = raiseHandler loop
 
 
 -- | Interpret an effect by replacing it with another effect.
-reinterpret :: (Effectful m, Effect (Union (newEffect ': effs)))
+reinterpret :: (Effectful m, Effects (newEffect ': effs))
             => (forall v. effect (Eff (effect ': effs)) v -> m (newEffect ': effs) v)
             -> m (effect ': effs) a
             -> m (newEffect ': effs) a
@@ -248,7 +248,7 @@ reinterpret bind = raiseHandler loop
         loop (Other u k)    = handle (reinterpret (lowerEff . bind)) (weaken u) k
 
 -- | Interpret an effect by replacing it with two new effects.
-reinterpret2 :: (Effectful m, Effect (Union (newEffect1 ': newEffect2 ': effs)))
+reinterpret2 :: (Effectful m, Effects (newEffect1 ': newEffect2 ': effs))
              => (forall v. effect (Eff (effect ': effs)) v -> m (newEffect1 ': newEffect2 ': effs) v)
              -> m (effect ': effs) a
              -> m (newEffect1 ': newEffect2 ': effs) a
