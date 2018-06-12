@@ -14,13 +14,14 @@ Portability : POSIX
 module Control.Monad.Effect.NonDet (
   NonDet(..),
   gatherM,
-  runNonDet,
+  runNonDetA,
   msplit
 ) where
 
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Effect.Internal
+import Data.Foldable (asum)
 
 --------------------------------------------------------------------------------
                     -- Nondeterministic Choice --
@@ -35,14 +36,14 @@ gatherM f = raiseHandler (interpose (pure . f) (\ m k -> case m of
   MPlus -> mappend <$> k True <*> k False))
 
 -- | A handler for nondeterminstic effects
-runNonDet :: (Effectful m, Effect (Union e))
-          => m (NonDet ': e) a
-          -> m e [a]
-runNonDet = raiseHandler go
+runNonDetA :: (Alternative f, Effectful m, Effect (Union e))
+           => m (NonDet ': e) a
+           -> m e (f a)
+runNonDetA = raiseHandler (fmap (asum . map pure) . go)
   where go (Return a)       = pure [a]
         go (Effect MZero _) = pure []
-        go (Effect MPlus k) = liftA2 (++) (runNonDet (k True)) (runNonDet (k False))
-        go (Other u k)      = handleStateful [] (fmap join . traverse runNonDet) u k
+        go (Effect MPlus k) = liftA2 (++) (runNonDetA (k True)) (runNonDetA (k False))
+        go (Other u k)      = handleStateful [] (fmap join . traverse runNonDetA) u k
 
 msplit :: (Member NonDet e, Effectful m)
        => m e a -> m e (Maybe (a, m e a))
