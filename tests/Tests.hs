@@ -112,7 +112,7 @@ stateTests :: TestTree
 stateTests = testGroup "State tests"
   [ testProperty "get after put n yields (n,n)" (\n -> testPutGet n 0 == (n,n))
   , testProperty "Final put determines stored state" $
-    \p1 p2 start -> testPutGetPutGetPlus p1 p2 start == (p1+p2, p2)
+    \p1 p2 start -> testPutGetPutGetPlus p1 p2 start == (p2, p1+p2)
   , testProperty "If only getting, start state determines outcome" $
     \start -> testGetStart start == (start,start)
   , testProperty "testPutGet: State == StateRW" $
