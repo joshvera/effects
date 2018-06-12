@@ -47,10 +47,7 @@ runPrintingTrace = raiseHandler (interpret (\ (Trace s) -> liftIO (liftIO (hPutS
 
 -- | Run a 'Trace' effect, discarding the traced values.
 runIgnoringTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects a
-runIgnoringTrace = raiseHandler go
-  where go (Return a)           = pure a
-        go (Effect (Trace _) k) = runIgnoringTrace (k ())
-        go (Other u k)          = handle runIgnoringTrace u k
+runIgnoringTrace = raiseHandler (interpret (\ (Trace _) -> pure ()))
 
 -- | Run a 'Trace' effect, accumulating the traced values into a list like a 'Writer'.
 runReturningTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects ([String], a)
