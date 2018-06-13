@@ -72,7 +72,7 @@ pattern Other u k <- (decomposeEff -> Right (Request (decompose -> Left u) k))
 {-# COMPLETE Return, Effect, Other #-}
 
 pattern Effect2_1 :: effect1 (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
-pattern Effect2_1 eff k <- (decomposeEff2 -> Right (Right (Left (Request eff k))))
+pattern Effect2_1 eff k <- (decomposeEff -> Right (Request (decompose -> Right eff) k))
 
 pattern Effect2_2 :: effect2 (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
 pattern Effect2_2 eff k <- (decomposeEff2 -> Right (Right (Right (Request eff k))))
