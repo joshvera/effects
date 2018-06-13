@@ -65,7 +65,7 @@ data Eff effects b
   | forall a. E (Union effects (Eff effects) a) (Queue (Eff effects) a b)
 
 pattern Effect :: effect (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
-pattern Effect eff k <- (decomposeEff -> Right (Right (Request eff k)))
+pattern Effect eff k <- (decomposeEff0 -> Right (Request (decompose -> Right eff) k))
 
 pattern Other :: Union effects (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
 pattern Other u k <- (decomposeEff -> Right (Left (Request u k)))
