@@ -13,6 +13,7 @@ module Control.Monad.Effect.Internal (
   , pattern Effect2_2
   , pattern Other2
   , Request(..)
+  , decomposeEff0
   , decomposeEff2
   , Effects
   , Effect(..)
