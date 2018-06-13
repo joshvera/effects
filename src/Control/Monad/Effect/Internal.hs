@@ -14,7 +14,6 @@ module Control.Monad.Effect.Internal (
   , pattern Other2
   , Request(..)
   , decomposeEff
-  , decomposeEff2
   , Effects
   , Effect(..)
   , liftStatefulHandler
@@ -104,14 +103,6 @@ fromRequest (Request u k) = E u (tsingleton k)
 decomposeEff :: Eff effects a -> Either a (Request (Union effects) (Eff effects) a)
 decomposeEff (Return a) = Left a
 decomposeEff (E u q) = Right (Request u (apply q))
-
-decomposeEff2 :: Eff (effect1 ': effect2 ': effects) a -> Either a (Either (Request (Union effects) (Eff (effect1 ': effect2 ': effects)) a) (Either (Request effect1 (Eff (effect1 ': effect2 ': effects)) a) (Request effect2 (Eff (effect1 ': effect2 ': effects)) a)))
-decomposeEff2 (Return a) = Left a
-decomposeEff2 (E u q) = Right $ case decompose u of
-  Left u' -> case decompose u' of
-    Left u'' -> Left (Request u'' (apply q))
-    Right eff2 -> Right (Right (Request eff2 (apply q)))
-  Right eff1 -> Right (Left (Request eff1 (apply q)))
 
 class Effect effect where
   handleState :: Functor c
