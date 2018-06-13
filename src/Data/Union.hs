@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, FlexibleInstances, GADTs, KindSignatures, MultiParamTypeClasses, RankNTypes, ScopedTypeVariables, TypeOperators #-}
+{-# LANGUAGE DataKinds, FlexibleInstances, GADTs, KindSignatures, MultiParamTypeClasses, RankNTypes, RoleAnnotations, ScopedTypeVariables, TypeOperators #-}
 
 {-|
 Module      : Data.Union
@@ -38,6 +38,8 @@ module Data.Union
 ) where
 
 import Unsafe.Coerce (unsafeCoerce)
+
+type role Union nominal nominal nominal
 
 -- Strong Sum (Existential with the evidence) is an open union
 -- t is can be a GADT and hence not necessarily a Functor.
