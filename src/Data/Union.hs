@@ -5,6 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RoleAnnotations #-}
 
 -- Only for MemberU below, when emulating Monad Transformers
 {-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
@@ -49,8 +50,9 @@ module Data.Union (
 ) where
 
 import Unsafe.Coerce(unsafeCoerce)
-import GHC.Exts (Constraint)
 
+
+type role Union nominal nominal
 
 -- Strong Sum (Existential with the evidence) is an open union
 -- t is can be a GADT and hence not necessarily a Functor.
