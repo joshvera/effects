@@ -183,7 +183,7 @@ apply q' x =
 -- * Sending and Running Effects
 
 -- | Send an effect and wait for a reply.
-send :: (Effectful m, Member eff e) => eff (Eff e) b -> m e b
+send :: (Member eff e, Effectful m) => eff (Eff e) b -> m e b
 send t = raiseEff (E (inj t) (tsingleton Return))
 
 -- | Runs an effect whose effects has been consumed.
