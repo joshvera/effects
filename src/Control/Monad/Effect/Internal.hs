@@ -13,7 +13,7 @@ module Control.Monad.Effect.Internal (
   , pattern Effect2_2
   , pattern Other2
   , Request(..)
-  , decomposeEff0
+  , decomposeEff
   , decomposeEff2
   , Effects
   , Effect(..)
@@ -65,10 +65,10 @@ data Eff effects b
   | forall a. E (Union effects (Eff effects) a) (Queue (Eff effects) a b)
 
 pattern Effect :: effect (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
-pattern Effect eff k <- (decomposeEff0 -> Right (Request (decompose -> Right eff) k))
+pattern Effect eff k <- (decomposeEff -> Right (Request (decompose -> Right eff) k))
 
 pattern Other :: Union effects (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
-pattern Other u k <- (decomposeEff0 -> Right (Request (decompose -> Left u) k))
+pattern Other u k <- (decomposeEff -> Right (Request (decompose -> Left u) k))
 {-# COMPLETE Return, Effect, Other #-}
 
 pattern Effect2_1 :: effect1 (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
@@ -101,9 +101,9 @@ requestMap f (Request effect q) = Request (f effect) q
 fromRequest :: Request (Union effects) (Eff effects) a -> Eff effects a
 fromRequest (Request u k) = E u (tsingleton k)
 
-decomposeEff0 :: Eff effects a -> Either a (Request (Union effects) (Eff effects) a)
-decomposeEff0 (Return a) = Left a
-decomposeEff0 (E u q) = Right (Request u (apply q))
+decomposeEff :: Eff effects a -> Either a (Request (Union effects) (Eff effects) a)
+decomposeEff (Return a) = Left a
+decomposeEff (E u q) = Right (Request u (apply q))
 
 decomposeEff2 :: Eff (effect1 ': effect2 ': effects) a -> Either a (Either (Request (Union effects) (Eff (effect1 ': effect2 ': effects)) a) (Either (Request effect1 (Eff (effect1 ': effect2 ': effects)) a) (Request effect2 (Eff (effect1 ': effect2 ': effects)) a)))
 decomposeEff2 (Return a) = Left a
