@@ -5,6 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RoleAnnotations #-}
 
 -- Only for MemberU below, when emulating Monad Transformers
 {-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
@@ -45,13 +46,13 @@ module Data.Union (
   inj,
   prj,
   Member,
-  Members,
   MemberU2,
 ) where
 
 import Unsafe.Coerce(unsafeCoerce)
-import GHC.Exts (Constraint)
 
+
+type role Union nominal nominal
 
 -- Strong Sum (Existential with the evidence) is an open union
 -- t is can be a GADT and hence not necessarily a Functor.
@@ -70,11 +71,6 @@ prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
                     | otherwise = Nothing
 
 newtype P (t :: * -> *) (r :: [* -> *]) = P { unP :: Int }
-
--- | Find a list of members 'ms' in an open union 'r'.
-type family Members ms r :: Constraint where
-  Members (t ': cs) r = (Member t r, Members cs r)
-  Members '[] r = ()
 
 -- | Inject a functor into a type-aligned union.
 inj :: forall e r v. Member e r => e v -> Union r v

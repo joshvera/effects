@@ -21,7 +21,6 @@ module Control.Monad.Effect.Internal (
   , raiseHandler
   -- * Decomposing Unions
   , Member
-  , Members
   -- | Inserts multiple effects into 'E'.
   , inj
   , prj
