@@ -44,7 +44,7 @@ runState = raiseHandler . go
   where go s (Return a)         = pure (s, a)
         go s (Effect Get k)     = runState s (k s)
         go _ (Effect (Put s) k) = runState s (k ())
-        go s (Other u k)        = handleStateful (s, ()) (uncurry runState) u k
+        go s (Other u k)        = liftStatefulHandler (s, ()) (uncurry runState) u k
 
 
 -- | Strict State effects: one can either Get values or Put them

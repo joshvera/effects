@@ -25,8 +25,8 @@ module Control.Monad.Effect
   , pattern Effect2_1
   , pattern Effect2_2
   , pattern Other2
-  , handleStateful
-  , handle
+  , liftStatefulHandler
+  , liftHandler
   , Request(..)
   , interpret
   , reinterpret

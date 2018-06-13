@@ -12,4 +12,4 @@ runFail :: (Effectful m, Effect (Union effs)) => m (Fail ': effs) a -> m effs (E
 runFail = raiseHandler go
   where go (Return a)          = pure (Right a)
         go (Effect (Fail s) _) = pure (Left s)
-        go (Other u k)         = handleStateful (Right ()) (either (pure . Left) runFail) u k
+        go (Other u k)         = liftStatefulHandler (Right ()) (either (pure . Left) runFail) u k

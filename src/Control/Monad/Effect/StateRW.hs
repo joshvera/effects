@@ -40,4 +40,4 @@ runStateR = raiseHandler . go
         go _ (Effect2_1 (Writer s) k)  = go s (k ())
         go s (Effect2_2 Reader k)      = go s (k s)
         go s (Effect2_2 (Local f m) k) = go (f s) (m >>= k)
-        go s (Other2 u k)              = handleStateful (s, ()) (uncurry runStateR) u k
+        go s (Other2 u k)              = liftStatefulHandler (s, ()) (uncurry runStateR) u k

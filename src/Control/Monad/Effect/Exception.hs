@@ -45,7 +45,7 @@ runError :: (Effectful m, Effect (Union e)) => m (Exc exc ': e) a -> m e (Either
 runError = raiseHandler go
   where go (Return a)           = pure (Right a)
         go (Effect (Throw e) _) = pure (Left e)
-        go (Other u k)          = handleStateful (Right ()) (either (pure . Left) runError) u k
+        go (Other u k)          = liftStatefulHandler (Right ()) (either (pure . Left) runError) u k
 
 -- | A catcher for Exceptions. Handlers are allowed to rethrow
 -- exceptions.

@@ -17,8 +17,8 @@ module Control.Monad.Effect.Internal (
   , decomposeEff2
   , Effects
   , Effect(..)
-  , handleStateful
-  , handle
+  , liftStatefulHandler
+  , liftHandler
   , Effectful(..)
   , raiseHandler
   , lowerHandler
@@ -118,11 +118,11 @@ decomposeEff2 (E u q) = Right $ case decompose u of
 class Effect effect where
   handleState :: Functor c => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> Request effect (Eff effects) a -> Request effect (Eff effects') (c a)
 
-handleStateful :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' (c a)
-handleStateful c handler u k = fromRequest (handleState c handler (Request u k))
+liftStatefulHandler :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' (c a)
+liftStatefulHandler c handler u k = fromRequest (handleState c handler (Request u k))
 
-handle :: (Effectful m, Effects effects') => (forall x . m effects x -> m effects' x) -> Union effects' (Eff effects) b -> Arrow (m effects) b a -> m effects' a
-handle handler u k = raiseEff $ runIdentity <$> handleStateful (Identity ()) (fmap Identity . lowerHandler handler . runIdentity) u (lowerEff . k)
+liftHandler :: (Effectful m, Effects effects') => (forall x . m effects x -> m effects' x) -> Union effects' (Eff effects) b -> Arrow (m effects) b a -> m effects' a
+liftHandler handler u k = raiseEff $ runIdentity <$> liftStatefulHandler (Identity ()) (fmap Identity . lowerHandler handler . runIdentity) u (lowerEff . k)
 
 instance Effect (Union '[]) where
   handleState _ _ _ = error "impossible: handleState on empty Union"
@@ -228,7 +228,7 @@ interpret :: (Effectful m, Effects effs)
 interpret bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
-        loop (Other u k)    = handle (interpret (lowerEff . bind)) u k
+        loop (Other u k)    = liftHandler (interpret (lowerEff . bind)) u k
 
 
 -- | Interpret an effect by replacing it with another effect.
@@ -239,7 +239,7 @@ reinterpret :: (Effectful m, Effects (newEffect ': effs))
 reinterpret bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
-        loop (Other u k)    = handle (reinterpret (lowerEff . bind)) (weaken u) k
+        loop (Other u k)    = liftHandler (reinterpret (lowerEff . bind)) (weaken u) k
 
 -- | Interpret an effect by replacing it with two new effects.
 reinterpret2 :: (Effectful m, Effects (newEffect1 ': newEffect2 ': effs))
@@ -249,7 +249,7 @@ reinterpret2 :: (Effectful m, Effects (newEffect1 ': newEffect2 ': effs))
 reinterpret2 bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
-        loop (Other u k)    = handle (reinterpret2 (lowerEff . bind)) (weaken (weaken u)) k
+        loop (Other u k)    = liftHandler (reinterpret2 (lowerEff . bind)) (weaken (weaken u)) k
 
 
 -- * Local handlers
