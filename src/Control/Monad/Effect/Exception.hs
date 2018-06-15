@@ -94,6 +94,7 @@ handleIO :: ( Exc.Exception exc
 handleIO handler = raiseHandler (interpose pure (\ go yield -> send (Exc.try go) >>= either (lowerEff . handler) yield))
 
 -- | Lift an 'IO' action into 'Eff', catching and rethrowing any exceptions it throws into an 'Exc' effect.
+-- If you need more granular control over the types of exceptions caught, use 'catchIO' and rethrow in the handler.
 rethrowing :: ( Member (Exc Exc.SomeException) e
               , Member IO e
               , Effectful m
