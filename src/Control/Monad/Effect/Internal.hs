@@ -63,19 +63,24 @@ data Eff effects b
   -- | Send an union of 'effects' and 'eff a' to handle, and a queues of effects to apply from 'a' to 'b'.
   | forall a. E (Union effects (Eff effects) a) (Queue (Eff effects) a b)
 
+-- | The topmost effect, and the continuation following it.
 pattern Effect :: effect (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
 pattern Effect eff k <- (decomposeEff -> Right (Request (decompose -> Right eff) k))
 
+-- | Another effect in the 'Union', and the continuation following it.
 pattern Other :: Union effects (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
 pattern Other u k <- (decomposeEff -> Right (Request (decompose -> Left u) k))
 {-# COMPLETE Return, Effect, Other #-}
 
+-- | The first of the topmost two effects in the 'Union', and the continuation following it.
 pattern Effect2_1 :: effect1 (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
 pattern Effect2_1 eff k <- (decomposeEff -> Right (Request (decompose -> Right eff) k))
 
+-- | The second of the topmost two effects in the 'Union', and the continuation following it.
 pattern Effect2_2 :: effect2 (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
 pattern Effect2_2 eff k <- (decomposeEff -> Right (Request (decompose -> Left (decompose -> Right eff)) k))
 
+-- | Another effect in the 'Union', and the continuation following it.
 pattern Other2 :: Union effects (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
 pattern Other2 u k <- (decomposeEff -> Right (Request (decompose -> Left (decompose -> Left u)) k))
 {-# COMPLETE Return, Effect2_1, Effect2_2, Other2 #-}
