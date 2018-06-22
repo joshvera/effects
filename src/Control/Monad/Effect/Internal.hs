@@ -228,6 +228,39 @@ runM m = case lowerEff m of
   E u q -> unLift (strengthen u) >>= runM . apply q
 
 
+-- * Local handlers
+
+-- | Intercept the request and possibly reply to it, but leave it
+-- unhandled
+interpose :: (Member eff e, Effectful m)
+          => Arrow (m e) a b
+          -> (forall v. eff (Eff e) v -> Arrow (m e) v b -> m e b)
+          -> m e a -> m e b
+interpose pure' h = raiseHandler loop
+ where
+   loop (Return x) = lowerEff (pure' x)
+   loop (E u q) = case prj u of
+     Just x -> lowerEff (h x (raiseEff . k))
+     _      -> E u (tsingleton k)
+    where k = q >>> loop
+
+-- | Intercept an effect like 'interpose', but with an explicit state
+-- parameter like 'relayState'.
+interposeState :: (Member eff e, Effectful m)
+               => s
+               -> (s -> Arrow (m e) a b)
+               -> (forall v. s -> eff (Eff e) v -> (s -> Arrow (m e) v b) -> m e b)
+               -> m e a
+               -> m e b
+interposeState initial pure' handler = raiseHandler (loop initial)
+  where
+    loop state (Return x) = lowerEff (pure' state x)
+    loop state (E u q) = case prj u of
+      Just x -> lowerEff (handler state x (fmap raiseEff . k))
+      _      -> E u (tsingleton (k state))
+      where k state' = q >>> loop state'
+
+
 -- * Effect handlers
 
 -- | Handle the topmost effect by interpreting it into the underlying effects.
@@ -260,39 +293,6 @@ reinterpret2 bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
         loop (Other u k)    = liftHandler (reinterpret2 (lowerEff . bind)) (weaken (weaken u)) k
-
-
--- * Local handlers
-
--- | Intercept the request and possibly reply to it, but leave it
--- unhandled
-interpose :: (Member eff e, Effectful m)
-          => Arrow (m e) a b
-          -> (forall v. eff (Eff e) v -> Arrow (m e) v b -> m e b)
-          -> m e a -> m e b
-interpose pure' h = raiseHandler loop
- where
-   loop (Return x) = lowerEff (pure' x)
-   loop (E u q) = case prj u of
-     Just x -> lowerEff (h x (raiseEff . k))
-     _      -> E u (tsingleton k)
-    where k = q >>> loop
-
--- | Intercept an effect like 'interpose', but with an explicit state
--- parameter like 'relayState'.
-interposeState :: (Member eff e, Effectful m)
-               => s
-               -> (s -> Arrow (m e) a b)
-               -> (forall v. s -> eff (Eff e) v -> (s -> Arrow (m e) v b) -> m e b)
-               -> m e a
-               -> m e b
-interposeState initial pure' handler = raiseHandler (loop initial)
-  where
-    loop state (Return x) = lowerEff (pure' state x)
-    loop state (E u q) = case prj u of
-      Just x -> lowerEff (handler state x (fmap raiseEff . k))
-      _      -> E u (tsingleton (k state))
-      where k state' = q >>> loop state'
 
 
 -- * Effect Instances
