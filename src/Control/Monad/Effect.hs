@@ -40,7 +40,6 @@ module Control.Monad.Effect
   , Effects
   , Effect(..)
   , Lift(..)
-  , Embedded
   , Exc
   , Fail
   , NonDet
@@ -54,7 +53,6 @@ module Control.Monad.Effect
 
 import Control.Monad.Effect.Internal
 
-import Control.Monad.Effect.Embedded (Embedded)
 import Control.Monad.Effect.Exception (Exc)
 import Control.Monad.Effect.Fail (Fail)
 import Control.Monad.Effect.NonDet (NonDet)

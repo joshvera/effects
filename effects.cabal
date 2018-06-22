@@ -38,7 +38,6 @@ library
   exposed-modules:     Control.Monad.Effect
                      , Control.Monad.Effect.Coroutine
                      , Control.Monad.Effect.Cut
-                     , Control.Monad.Effect.Embedded
                      , Control.Monad.Effect.Exception
                      , Control.Monad.Effect.Fail
                      , Control.Monad.Effect.Fresh
