@@ -123,7 +123,7 @@ class Effect effect where
 
 -- | Lift a stateful effect handler through other effects in the 'Union'.
 --
---   Useful when defining effect handlers which maintain some state (such as @State@) or which must return values in some carrier functor encapsulating the effects (such as @Exc@).
+--   Useful when defining effect handlers which maintain some state (such as @runState@) or which must return values in some carrier functor encapsulating the effects (such as @runError@).
 liftStatefulHandler :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' (c a)
 liftStatefulHandler c handler u k = fromRequest (handleState c handler (Request u k))
 
