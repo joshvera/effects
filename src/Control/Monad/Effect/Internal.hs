@@ -112,6 +112,9 @@ decomposeEff (E u q) = Right (Request u (apply q))
 
 -- | Effects are higher-order (may themselves contain effectful actions), and as such must be able to thread an effect handler (structured as a distributive law) through themselves.
 class Effect effect where
+  -- | Lift some initial state and a handler for some effect through another effect.
+  --
+  --   First-order effects (ones not using the @m@ parameter) have relatively simple definitions, more or less just pushing the distributive law through the continuation. Higher-order effects (like @Reader@’s @Local@ constructor) must additionally apply the handler to their scoped actions.
   handleState :: Functor c
               => c ()
               -> (forall x . c (Eff effects x) -> Eff effects' (c x))
