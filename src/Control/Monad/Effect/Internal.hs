@@ -21,13 +21,13 @@ module Control.Monad.Effect.Internal (
   , Effectful(..)
   , raiseHandler
   , lowerHandler
+  -- * Local effect handlers
+  , interpose
+  , interposeState
   -- * Effect handlers
   , interpret
   , reinterpret
   , reinterpret2
-  -- * Local effect handlers
-  , interpose
-  , interposeState
   -- * Decomposing Unions
   , Member
   , decompose
