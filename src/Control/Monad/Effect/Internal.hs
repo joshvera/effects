@@ -110,6 +110,7 @@ decomposeEff :: Eff effects a -> Either a (Request (Union effects) (Eff effects)
 decomposeEff (Return a) = Left a
 decomposeEff (E u q) = Right (Request u (apply q))
 
+-- | Effects are higher-order (may themselves contain effectful actions), and as such must be able to thread an effect handler (structured as a distributive law) through themselves.
 class Effect effect where
   handleState :: Functor c
               => c ()
