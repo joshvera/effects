@@ -105,6 +105,7 @@ requestMap f (Request effect q) = Request (f effect) q
 fromRequest :: Request (Union effects) (Eff effects) a -> Eff effects a
 fromRequest (Request u k) = E u (tsingleton k)
 
+-- | Decompose an 'Eff' into 'Either' a value or a 'Request' for one of a 'Union' of effects.
 decomposeEff :: Eff effects a -> Either a (Request (Union effects) (Eff effects) a)
 decomposeEff (Return a) = Left a
 decomposeEff (E u q) = Right (Request u (apply q))
