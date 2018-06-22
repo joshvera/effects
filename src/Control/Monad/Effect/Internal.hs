@@ -142,6 +142,7 @@ instance (Effect effect, Effect (Union effects)) => Effect (Union (effect ': eff
     Right eff -> inj `requestMap` handleState c dist (Request eff k)
 
 
+-- | Require an 'Effect' instance for each effect in the list.
 type Effects effects = Effect (Union effects)
 
 
