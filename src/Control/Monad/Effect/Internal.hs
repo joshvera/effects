@@ -21,13 +21,6 @@ module Control.Monad.Effect.Internal (
   , Effectful(..)
   , raiseHandler
   , lowerHandler
-  -- * Local effect handlers
-  , interpose
-  , interposeState
-  -- * Effect handlers
-  , interpret
-  , reinterpret
-  , reinterpret2
   -- * Decomposing Unions
   , Member
   , decompose
@@ -45,6 +38,13 @@ module Control.Monad.Effect.Internal (
   -- * Running Effects
   , run
   , runM
+  -- * Local effect handlers
+  , interpose
+  , interposeState
+  -- * Effect handlers
+  , interpret
+  , reinterpret
+  , reinterpret2
 ) where
 
 import Control.Applicative (Alternative (..))
