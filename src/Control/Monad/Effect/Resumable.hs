@@ -12,7 +12,8 @@ module Control.Monad.Effect.Resumable
 import Control.Monad.Effect.Internal
 import Data.Functor.Classes
 
-data Resumable exc (m :: * -> *) a = Resumable (exc a)
+data Resumable exc (m :: * -> *) a where
+  Resumable :: exc a -> Resumable exc m a
 
 throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
 throwResumable = send . Resumable
