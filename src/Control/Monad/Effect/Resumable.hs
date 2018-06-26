@@ -13,10 +13,10 @@ import Control.Monad.Effect.Internal
 import Data.Functor.Classes
 
 data Resumable exc (m :: * -> *) a where
-  Resumable :: exc a -> Resumable exc m a
+  Throw :: exc a -> Resumable exc m a
 
 throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
-throwResumable = send . Resumable
+throwResumable = send . Throw
 
 catchResumable :: (Member (Resumable exc) e, Effectful m)
                => m e a
@@ -28,18 +28,18 @@ handleResumable :: (Member (Resumable exc) e, Effectful m)
                 => (forall v. exc v -> m e v)
                 -> m e a
                 -> m e a
-handleResumable handler = raiseHandler (interpose (\(Resumable e) yield -> lowerEff (handler e) >>= yield))
+handleResumable handler = raiseHandler (interpose (\(Throw e) yield -> lowerEff (handler e) >>= yield))
 
 
 runResumable :: (Effectful m, Effect (Union e)) => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
 runResumable = raiseHandler go
-  where go (Return a)               = pure (Right a)
-        go (Effect (Resumable e) _) = pure (Left (SomeExc e))
-        go (Other u k)              = liftStatefulHandler (Right ()) (either (pure . Left) runResumable) u k
+  where go (Return a)           = pure (Right a)
+        go (Effect (Throw e) _) = pure (Left (SomeExc e))
+        go (Other u k)          = liftStatefulHandler (Right ()) (either (pure . Left) runResumable) u k
 
 -- | Run a 'Resumable' effect in an 'Effectful' context, using a handler to resume computation.
 runResumableWith :: (Effectful m, Effect (Union effects)) => (forall resume . exc resume -> m effects resume) -> m (Resumable exc ': effects) a -> m effects a
-runResumableWith handler = interpret (\ (Resumable e) -> handler e)
+runResumableWith handler = interpret (\ (Throw e) -> handler e)
 
 
 data SomeExc exc where
@@ -53,4 +53,4 @@ instance (Show1 exc) => Show (SomeExc exc) where
 
 
 instance Effect (Resumable exc) where
-  handleState c dist (Request (Resumable exc) k) = Request (Resumable exc) (dist . (<$ c) . k)
+  handleState c dist (Request (Throw exc) k) = Request (Throw exc) (dist . (<$ c) . k)
