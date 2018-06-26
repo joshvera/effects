@@ -59,7 +59,7 @@ exceptionTests = testGroup "Exception Eff tests"
   , testCase "caught: runState (runError t)" $
       ter3 @?= (2, Right "exc")
   , testCase "caught: runError (runState t)" $
-      ter4 @?= Right (2, "exc")
+      ter4 @?= Right (1, "exc")
   , testCase "success: runReader (runErrBig t)" (ex2rr @?= Right 5)
   , testCase "uncaught: runReader (runErrBig t)" $
       ex2rr1 @?= Left (TooBig 7)
