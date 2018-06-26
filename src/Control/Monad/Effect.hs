@@ -33,7 +33,6 @@ module Control.Monad.Effect
   , reinterpret2
   -- * Local effect handlers
   , interpose
-  , interposeState
   -- * Checking a List of Effects
   , Member
   -- * Effects

@@ -40,7 +40,6 @@ module Control.Monad.Effect.Internal (
   , runM
   -- * Local effect handlers
   , interpose
-  , interposeState
   -- * Effect handlers
   , interpret
   , reinterpret
@@ -242,21 +241,6 @@ interpose h = raiseHandler loop
      Just x -> lowerEff (h x (raiseEff . k))
      _      -> E u (tsingleton k)
     where k = q >>> loop
-
--- | Intercept an effect like 'interpose', but with an explicit state
--- parameter like 'relayState'.
-interposeState :: (Member eff e, Effectful m)
-               => s
-               -> (forall v. s -> eff (Eff e) v -> (s -> Arrow (m e) v a) -> m e a)
-               -> m e a
-               -> m e a
-interposeState initial handler = raiseHandler (loop initial)
-  where
-    loop _     (Return x) = pure x
-    loop state (E u q) = case prj u of
-      Just x -> lowerEff (handler state x (fmap raiseEff . k))
-      _      -> E u (tsingleton (k state))
-      where k state' = q >>> loop state'
 
 
 -- * Effect handlers
