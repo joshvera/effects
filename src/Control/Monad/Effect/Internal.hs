@@ -39,6 +39,7 @@ module Control.Monad.Effect.Internal (
   , run
   , runM
   -- * Local effect handlers
+  , eavesdrop
   , interpose
   -- * Effect handlers
   , interpret
@@ -228,6 +229,16 @@ runM m = case lowerEff m of
 
 
 -- * Local handlers
+
+eavesdrop :: (Member eff effects, Effectful m, Effects effects)
+          => (forall v. eff (Eff effects) v -> m effects ())
+          -> m effects a
+          -> m effects a
+eavesdrop listener = raiseHandler loop
+  where loop (Return a) = pure a
+        loop (E u q) = case prj u of
+          Just eff -> lowerEff (listener eff) >> send eff >>= (q >>> loop)
+          _        -> liftHandler (eavesdrop (lowerEff . listener)) u (q >>> loop)
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled

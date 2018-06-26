@@ -32,6 +32,7 @@ module Control.Monad.Effect
   , reinterpret
   , reinterpret2
   -- * Local effect handlers
+  , eavesdrop
   , interpose
   -- * Checking a List of Effects
   , Member
