@@ -1,10 +1,8 @@
-{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, KindSignatures, Rank2Types, TypeOperators #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, LambdaCase, KindSignatures, Rank2Types, TypeOperators #-}
 module Control.Monad.Effect.Resumable
   ( Resumable(..)
   , SomeExc(..)
   , throwResumable
-  , catchResumable
-  , handleResumable
   , runResumable
   , runResumableWith
   ) where
@@ -17,19 +15,6 @@ data Resumable exc (m :: * -> *) a where
 
 throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
 throwResumable = send . Throw
-
-catchResumable :: (Member (Resumable exc) e, Effectful m)
-               => m e a
-               -> (forall v. exc v -> m e v)
-               -> m e a
-catchResumable m handler = handleResumable handler m
-
-handleResumable :: (Member (Resumable exc) e, Effectful m)
-                => (forall v. exc v -> m e v)
-                -> m e a
-                -> m e a
-handleResumable handler = raiseHandler (interpose (\(Throw e) yield -> lowerEff (handler e) >>= yield))
-
 
 runResumable :: (Effectful m, Effect (Union e)) => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
 runResumable = raiseHandler go
