@@ -66,7 +66,7 @@ catchError = flip handleError
 -- in situations where the code for the handler is shorter, or when
 -- composing chains of handlers together.
 handleError :: (Member (Exc exc) e, Effectful m) => (exc -> m e a) -> m e a -> m e a
-handleError handler = raiseHandler (interpose pure (\(Throw e) _ -> lowerEff (handler e)))
+handleError handler = raiseHandler (interpose (\(Throw e) _ -> lowerEff (handler e)))
 
 
 instance Effect (Exc exc) where
@@ -94,7 +94,7 @@ handleIO :: ( Exc.Exception exc
         => (exc -> m e a)
         -> m e a
         -> m e a
-handleIO handler = raiseHandler (interpose pure (\ (Lift go) yield -> liftIO (Exc.try go) >>= either (lowerEff . handler) yield))
+handleIO handler = raiseHandler (interpose (\ (Lift go) yield -> liftIO (Exc.try go) >>= either (lowerEff . handler) yield))
 
 -- | Lift an 'IO' action into 'Eff', catching and rethrowing any exceptions it throws into an 'Exc' effect.
 -- If you need more granular control over the types of exceptions caught, use 'catchIO' and rethrow in the handler.

@@ -233,12 +233,11 @@ runM m = case lowerEff m of
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
 interpose :: (Member eff e, Effectful m)
-          => Arrow (m e) a b
-          -> (forall v. eff (Eff e) v -> Arrow (m e) v b -> m e b)
-          -> m e a -> m e b
-interpose pure' h = raiseHandler loop
+          => (forall v. eff (Eff e) v -> Arrow (m e) v a -> m e a)
+          -> m e a -> m e a
+interpose h = raiseHandler loop
  where
-   loop (Return x) = lowerEff (pure' x)
+   loop (Return x) = pure x
    loop (E u q) = case prj u of
      Just x -> lowerEff (h x (raiseEff . k))
      _      -> E u (tsingleton k)

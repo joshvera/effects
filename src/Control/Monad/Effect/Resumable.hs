@@ -27,7 +27,7 @@ handleResumable :: (Member (Resumable exc) e, Effectful m)
                 => (forall v. exc v -> m e v)
                 -> m e a
                 -> m e a
-handleResumable handler = raiseHandler (interpose pure (\(Resumable e) yield -> lowerEff (handler e) >>= yield))
+handleResumable handler = raiseHandler (interpose (\(Resumable e) yield -> lowerEff (handler e) >>= yield))
 
 
 runResumable :: (Effectful m, Effect (Union e)) => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
