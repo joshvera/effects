@@ -247,13 +247,12 @@ interpose h = raiseHandler loop
 -- parameter like 'relayState'.
 interposeState :: (Member eff e, Effectful m)
                => s
-               -> (s -> Arrow (m e) a b)
-               -> (forall v. s -> eff (Eff e) v -> (s -> Arrow (m e) v b) -> m e b)
+               -> (forall v. s -> eff (Eff e) v -> (s -> Arrow (m e) v a) -> m e a)
                -> m e a
-               -> m e b
-interposeState initial pure' handler = raiseHandler (loop initial)
+               -> m e a
+interposeState initial handler = raiseHandler (loop initial)
   where
-    loop state (Return x) = lowerEff (pure' state x)
+    loop _     (Return x) = pure x
     loop state (E u q) = case prj u of
       Just x -> lowerEff (handler state x (fmap raiseEff . k))
       _      -> E u (tsingleton (k state))

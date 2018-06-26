@@ -41,7 +41,7 @@ fresh :: (Member Fresh e, Effectful m) => m e Int
 fresh = send Fresh
 
 resetFresh :: (Effectful m, Member Fresh effects) => Int -> m effects a -> m effects a
-resetFresh start = raiseHandler (interposeState start (const pure) (\ counter Fresh yield -> (yield $! succ counter) counter))
+resetFresh start = raiseHandler (interposeState start (\ counter Fresh yield -> (yield $! succ counter) counter))
 
 -- | Handler for Fresh effects, with an Int for a starting value
 runFresh :: (Effectful m, Effect (Union e)) => Int -> m (Fresh ': e) a -> m e a
