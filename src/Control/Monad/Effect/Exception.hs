@@ -39,8 +39,9 @@ import Control.Monad.Effect.Internal
                            -- Exceptions --
 --------------------------------------------------------------------------------
 -- | Exceptions of the type 'exc'; no resumption
-newtype Exc exc (m :: * -> *) a where
+data Exc exc (m :: * -> *) a where
   Throw :: exc -> Exc exc m a
+  Catch :: m a -> (exc -> m a) -> Exc exc m a
 
 -- | Throws an error carrying information of type 'exc'.
 throwError :: (Member (Exc exc) e, Effectful m) => exc -> m e a
@@ -52,25 +53,31 @@ throwError = send . Throw
 -- any other effect handlers.
 runError :: (Effectful m, Effect (Union e)) => m (Exc exc ': e) a -> m e (Either exc a)
 runError = raiseHandler go
-  where go (Return a)           = pure (Right a)
-        go (Effect (Throw e) _) = pure (Left e)
-        go (Other u k)          = liftStatefulHandler (Right ()) (either (pure . Left) runError) u k
+  where go (Return a)             = pure (Right a)
+        go (Effect (Throw e) _)   = pure (Left e)
+        go (Effect (Catch a h) k) = do
+          a' <- runError a
+          case a' of
+            Left e    -> runError (h e >>= k)
+            Right a'' -> runError (k a'')
+        go (Other u k)            = liftStatefulHandler (Right ()) (either (pure . Left) runError) u k
 
 -- | A catcher for Exceptions. Handlers are allowed to rethrow
 -- exceptions.
 catchError :: (Member (Exc exc) e, Effectful m) =>
         m e a -> (exc -> m e a) -> m e a
-catchError = flip handleError
+catchError a h = send (Catch (lowerEff a) (lowerEff . h))
 
 -- | 'catchError', but with its arguments in the opposite order. Useful
 -- in situations where the code for the handler is shorter, or when
 -- composing chains of handlers together.
 handleError :: (Member (Exc exc) e, Effectful m) => (exc -> m e a) -> m e a -> m e a
-handleError handler = raiseHandler (interpose (\(Throw e) _ -> lowerEff (handler e)))
+handleError = flip catchError
 
 
 instance Effect (Exc exc) where
   handleState c dist (Request (Throw exc) k) = Request (Throw exc) (dist . (<$ c) . k)
+  handleState c dist (Request (Catch a h) k) = Request (Catch (dist (a <$ c)) (dist . (<$ c) . h)) (dist . fmap k)
 
 -- | Catch exceptions in 'IO' actions embedded in 'Eff', handling them with the passed function.
 --
