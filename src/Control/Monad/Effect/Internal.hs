@@ -230,6 +230,7 @@ runM m = case lowerEff m of
 
 -- * Local handlers
 
+-- | Listen for an effect, and take some action before re-sending it.
 eavesdrop :: (Member eff effects, Effectful m, Effects effects)
           => (forall v. eff (Eff effects) v -> m effects ())
           -> m effects a
