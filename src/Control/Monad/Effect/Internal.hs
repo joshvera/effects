@@ -239,7 +239,7 @@ eavesdrop listener = raiseHandler loop
   where loop (Return a) = pure a
         loop (E u q) = case prj u of
           Just eff -> lowerEff (listener eff) >> send eff >>= (q >>> loop)
-          _        -> liftHandler (eavesdrop (lowerEff . listener)) u (q >>> loop)
+          _        -> liftHandler (eavesdrop (lowerEff . listener)) u (apply q)
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
