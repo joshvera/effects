@@ -1,16 +1,4 @@
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ConstraintKinds, DataKinds #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE RoleAnnotations #-}
-
--- Only for MemberU below, when emulating Monad Transformers
-{-# LANGUAGE FunctionalDependencies, UndecidableInstances #-}
-
-{-# OPTIONS_GHC -Wno-redundant-constraints #-} -- Due to MemberU2
+{-# LANGUAGE DataKinds, FlexibleInstances, GADTs, KindSignatures, MultiParamTypeClasses, RankNTypes, RoleAnnotations, ScopedTypeVariables, TypeOperators #-}
 
 {-|
 Module      : Data.Union
@@ -39,90 +27,80 @@ universe.
 The data constructors of Union are not exported.
 -}
 
-module Data.Union (
-  Union,
-  decompose,
-  weaken,
-  inj,
-  prj,
-  Member,
-  MemberU2,
+module Data.Union
+( Union
+, decompose
+, weaken
+, strengthen
+, inj
+, prj
+, Member
 ) where
 
-import Unsafe.Coerce(unsafeCoerce)
+import Unsafe.Coerce (unsafeCoerce)
 
-
-type role Union nominal nominal
+type role Union nominal nominal nominal
 
 -- Strong Sum (Existential with the evidence) is an open union
 -- t is can be a GADT and hence not necessarily a Functor.
 -- Int is the index of t in the list r; that is, the index of t in the
 -- universe r.
-data Union (r :: [ * -> * ]) (v :: *) where
-  Union :: {-# UNPACK #-} !Int -> t v -> Union r v
-
-{-# INLINE prj' #-}
-{-# INLINE inj' #-}
-inj' :: Int -> t v -> Union r v
-inj' = Union
-
-prj' :: Int -> Union r v -> Maybe (t v)
-prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
-                    | otherwise = Nothing
-
-newtype P (t :: * -> *) (r :: [* -> *]) = P { unP :: Int }
+data Union (r :: [ (* -> *) -> (* -> *) ]) (f :: * -> *) (v :: *) where
+  Union :: {-# UNPACK #-} !Int -> t f v -> Union r f v
 
 -- | Inject a functor into a type-aligned union.
-inj :: forall e r v. Member e r => e v -> Union r v
-inj = inj' (unP (elemNo :: P e r))
+inj :: forall e r f v. Member e r => e f v -> Union r f v
+inj = inj' (getOffset (offset :: Offset e r))
 {-# INLINE inj #-}
 
 -- | Maybe project a functor out of a type-aligned union.
-prj :: forall e r v. Member e r => Union r v -> Maybe (e v)
-prj = prj' (unP (elemNo :: P e r))
+prj :: forall e r f v. Member e r => Union r f v -> Maybe (e f v)
+prj = prj' (getOffset (offset :: Offset e r))
 {-# INLINE prj #-}
 
 
-decompose :: Union (t ': r) v -> Either (Union r v) (t v)
+decompose :: Union (t ': r) f v -> Either (Union r f v) (t f v)
 decompose (Union 0 v) = Right $ unsafeCoerce v
 decompose (Union n v) = Left  $ Union (n-1) v
 {-# INLINE [2] decompose #-}
 
 
--- | Specialized version of 'decompose'.
-decompose0 :: Union '[t] v -> Either (Union '[] v) (t v)
-decompose0 (Union _ v) = Right $ unsafeCoerce v
--- No other case is possible
-{-# RULES "decompose/singleton"  decompose = decompose0 #-}
-{-# INLINE decompose0 #-}
-
-weaken :: Union r w -> Union (any ': r) w
+weaken :: Union r f v -> Union (any ': r) f v
 weaken (Union n v) = Union (n+1) v
+
+strengthen :: Union '[last] f v -> last f v
+strengthen (Union _ t) = unsafeCoerce t
 
 
 -- Find an index of an element in an `r'.
 -- The element must exist, so this is essentially a compile-time computation.
 class Member t r where
-  elemNo :: P t r
+  offset :: Offset t r
 
 instance Member t (t ': r) where
-  elemNo = P 0
+  offset = Offset 0
 
 instance {-# OVERLAPPABLE #-} Member t r => Member t (t' ': r) where
-  elemNo = P $ 1 + unP (elemNo :: P t r)
+  offset = Offset $ 1 + getOffset (offset :: Offset t r)
 
 
-type family EQU (a :: * -> *) (b :: * -> *) :: Bool where
-  EQU a a = 'True
-  EQU a b = 'False
+-- Implementation details
 
--- This class is used for emulating monad transformers
-class Member t r => MemberU2 (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
-instance (Member t1 (t2 ': r), MemberU' (EQU t1 t2) tag t1 (t2 ': r)) => MemberU2 tag t1 (t2 ': r)
+inj' :: Int -> t f v -> Union r f v
+inj' = Union
+{-# INLINE inj' #-}
 
-class Member t r =>
-      MemberU' (f::Bool) (tag :: (* -> *) -> * -> *) (t :: * -> *) r | tag r -> t
+prj' :: Int -> Union r f v -> Maybe (t f v)
+prj' n (Union n' x) | n == n'   = Just (unsafeCoerce x)
+                    | otherwise = Nothing
+{-# INLINE prj' #-}
 
-instance MemberU' 'True tag (tag e) (tag e ': r)
-instance (Member t (t' ': r), MemberU2 tag t r) =>
-           MemberU' 'False tag t (t' ': r)
+newtype Offset (t :: (* -> *) -> (* -> *)) (r :: [(* -> *) -> (* -> *)]) = Offset { getOffset :: Int }
+
+
+-- | Specialized version of 'decompose'.
+decompose0 :: Union '[t] f v -> Either (Union '[] f v) (t f v)
+decompose0 (Union _ v) = Right $ unsafeCoerce v
+-- No other case is possible
+{-# RULES "decompose/singleton"  decompose = decompose0 #-}
+{-# INLINE decompose0 #-}

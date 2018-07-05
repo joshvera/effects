@@ -1,41 +1,29 @@
-{-# LANGUAGE TypeOperators, TypeApplications, GADTs, FlexibleContexts, DataKinds, Rank2Types #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, LambdaCase, KindSignatures, Rank2Types, TypeOperators #-}
 module Control.Monad.Effect.Resumable
   ( Resumable(..)
   , SomeExc(..)
   , throwResumable
-  , catchResumable
-  , handleResumable
   , runResumable
   , runResumableWith
   ) where
 
-import Data.Functor.Classes
 import Control.Monad.Effect.Internal
+import Data.Functor.Classes
 
-data Resumable exc a = Resumable (exc a)
+newtype Resumable exc (m :: * -> *) a = Resumable (exc a)
 
 throwResumable :: (Member (Resumable exc) e, Effectful m) => exc v -> m e v
 throwResumable = send . Resumable
 
-catchResumable :: (Member (Resumable exc) e, Effectful m)
-               => m e a
-               -> (forall v. exc v -> m e v)
-               -> m e a
-catchResumable m handle = handleResumable handle m
-
-handleResumable :: (Member (Resumable exc) e, Effectful m)
-                => (forall v. exc v -> m e v)
-                -> m e a
-                -> m e a
-handleResumable handle = raiseHandler (interpose pure (\(Resumable e) yield -> lowerEff (handle e) >>= yield))
-
-
-runResumable :: Effectful m => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
-runResumable = raiseHandler (relay (pure . Right) (\ (Resumable e) _ -> pure (Left (SomeExc e))))
+runResumable :: (Effectful m, Effect (Union e)) => m (Resumable exc ': e) a -> m e (Either (SomeExc exc) a)
+runResumable = raiseHandler go
+  where go (Return a)           = pure (Right a)
+        go (Effect (Resumable e) _) = pure (Left (SomeExc e))
+        go (Other u k)          = liftStatefulHandler (Right ()) (either (pure . Left) runResumable) u k
 
 -- | Run a 'Resumable' effect in an 'Effectful' context, using a handler to resume computation.
-runResumableWith :: Effectful m => (forall resume . exc resume -> m effects resume) -> m (Resumable exc ': effects) a -> m effects a
-runResumableWith handler = raiseHandler (relay pure (\ (Resumable err) yield -> lowerEff (handler err) >>= yield))
+runResumableWith :: (Effectful m, Effect (Union effects)) => (forall resume . exc resume -> m effects resume) -> m (Resumable exc ': effects) a -> m effects a
+runResumableWith handler = interpret (\ (Resumable e) -> handler e)
 
 
 data SomeExc exc where
@@ -46,3 +34,7 @@ instance Eq1 exc => Eq (SomeExc exc) where
 
 instance (Show1 exc) => Show (SomeExc exc) where
   showsPrec num (SomeExc exc) = liftShowsPrec (const (const id)) (const id) num exc
+
+
+instance Effect (Resumable exc) where
+  handleState c dist (Request (Resumable exc) k) = Request (Resumable exc) (dist . (<$ c) . k)

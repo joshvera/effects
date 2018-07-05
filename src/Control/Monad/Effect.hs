@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE PatternSynonyms, TypeOperators #-}
 {-|
 Module      : Control.Monad.Effect
 Description : Effects - an extensible effects library
@@ -9,24 +9,37 @@ Stability   : experimental
 Portability : POSIX
 
 -}
-module Control.Monad.Effect (
+module Control.Monad.Effect
+  (
   -- * Running and Sending Effects
-  Eff
-  , Effectful(..)
+    Eff
+  , Effectful
+  , raiseEff
+  , lowerEff
   , run
   , runM
   , send
-  -- * Handling Effects
-  , relay
-  , relayState
-  , interpose
-  , interposeState
+  -- * Effect handlers
+  , pattern Effect
+  , pattern Other
+  , pattern Effect2_1
+  , pattern Effect2_2
+  , pattern Other2
+  , liftStatefulHandler
+  , liftHandler
+  , Request(..)
   , interpret
   , reinterpret
   , reinterpret2
-  -- * Checking a List of Effects#
+  -- * Local effect handlers
+  , eavesdrop
+  , interpose
+  -- * Checking a List of Effects
   , Member
-  , Embedded
+  -- * Effects
+  , Effects
+  , Effect(..)
+  , Lift(..)
   , Exc
   , Fail
   , NonDet
@@ -40,7 +53,6 @@ module Control.Monad.Effect (
 
 import Control.Monad.Effect.Internal
 
-import Control.Monad.Effect.Embedded (Embedded)
 import Control.Monad.Effect.Exception (Exc)
 import Control.Monad.Effect.Fail (Fail)
 import Control.Monad.Effect.NonDet (NonDet)

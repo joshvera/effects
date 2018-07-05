@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, KindSignatures #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
 
@@ -29,24 +29,30 @@ module Control.Monad.Effect.Trace
 
 import Control.Monad.Effect.Internal
 import Control.Monad.Effect.State
+import Control.Monad.IO.Class
+import Data.Bifunctor (first)
 import System.IO
 
 -- | A Trace effect; takes a String and performs output
-data Trace v where
-  Trace :: String -> Trace ()
+data Trace (m :: * -> *) v where
+  Trace :: String -> Trace m ()
 
 -- | Printing a string in a trace
 trace :: (Member Trace e, Effectful m) => String -> m e ()
 trace = send . Trace
 
 -- | An IO handler for Trace effects. Prints output to stderr.
-runPrintingTrace :: (Member IO effects, Effectful m) => m (Trace ': effects) a -> m effects a
-runPrintingTrace = raiseHandler (relay pure (\ (Trace s) -> (send (hPutStrLn stderr s) >>=)))
+runPrintingTrace :: (Member (Lift IO) effects, Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects a
+runPrintingTrace = raiseHandler (interpret (\ (Trace s) -> liftIO (liftIO (hPutStrLn stderr s))))
 
 -- | Run a 'Trace' effect, discarding the traced values.
-runIgnoringTrace :: Effectful m => m (Trace ': effects) a -> m effects a
+runIgnoringTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects a
 runIgnoringTrace = raiseHandler (interpret (\ (Trace _) -> pure ()))
 
 -- | Run a 'Trace' effect, accumulating the traced values into a list like a 'Writer'.
-runReturningTrace :: Effectful m => m (Trace ': effects) a -> m effects (a, [String])
-runReturningTrace = raiseHandler (fmap (fmap reverse) . runState [] . reinterpret (\ (Trace s) -> modify' (s:)))
+runReturningTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects ([String], a)
+runReturningTrace = raiseHandler (fmap (first reverse) . runState [] . reinterpret (\ (Trace s) -> modify' (s:)))
+
+
+instance Effect Trace where
+  handleState c dist (Request (Trace s) k) = Request (Trace s) (dist . (<$ c) . k)

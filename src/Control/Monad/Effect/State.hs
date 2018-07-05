@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, KindSignatures #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GADTs #-}
@@ -39,16 +39,18 @@ import Data.Proxy
 --------------------------------------------------------------------------------
 
 -- | Run a 'State s' effect given an effect and an initial state.
-runState :: Effectful m => s -> m (State s ': e) b -> m e (b, s)
-runState initial = relayState initial (\ s b -> raiseEff (pure (b, s))) (\ s eff yield -> case eff of
-  Get    -> yield s s
-  Put s' -> yield s' ())
+runState :: (Effectful m, Effect (Union e)) => s -> m (State s ': e) b -> m e (s, b)
+runState = raiseHandler . go
+  where go s (Return a)         = pure (s, a)
+        go s (Effect Get k)     = runState s (k s)
+        go _ (Effect (Put s) k) = runState s (k ())
+        go s (Other u k)        = liftStatefulHandler (s, ()) (uncurry runState) u k
 
 
 -- | Strict State effects: one can either Get values or Put them
-data State s v where
-  Get :: State s s
-  Put :: !s -> State s ()
+data State s (m :: * -> *) v where
+  Get :: State s m s
+  Put :: !s -> State s m ()
 
 -- | Retrieve state
 get :: (Member (State s) e, Effectful m) => m e s
@@ -83,8 +85,8 @@ transactionState :: forall s e a m. (Member (State s) e, Effectful m)
 transactionState _ m = raiseEff $ do s <- get; loop s (lowerEff m)
  where
    loop :: s -> Eff e a -> Eff e a
-   loop s (Val x) = put s >> pure x
-   loop s (E (u :: Union e b) q) = case prj u :: Maybe (State s b) of
+   loop s (Return x) = put s >> pure x
+   loop s (E (u :: Union e (Eff e) b) q) = case prj u :: Maybe (State s (Eff e) b) of
      Just Get      -> loop s (apply q s)
      Just (Put s') -> loop s'(apply q ())
      _             -> E u (tsingleton k)
@@ -97,3 +99,8 @@ localState f action = raiseEff $ do
   v <- lowerEff action
   put original
   pure v
+
+
+instance Effect (State s) where
+  handleState c dist (Request Get k) = Request Get (dist . (<$ c) . k)
+  handleState c dist (Request (Put s) k) = Request (Put s) (dist . (<$ c) . k)

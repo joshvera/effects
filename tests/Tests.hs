@@ -53,13 +53,13 @@ exceptionTests :: TestTree
 exceptionTests = testGroup "Exception Eff tests"
   [ testProperty "Exc takes precedence" (\x y -> testExceptionTakesPriority x y == Left y)
   , testCase "uncaught: runState (runError t)" $
-      ter1 @?= (Left "exc", 2)
+      ter1 @?= (2, Left "exc")
   , testCase "uncaught: runError (runState t)" $
       ter2 @?= Left "exc"
   , testCase "caught: runState (runError t)" $
-      ter3 @?= (Right "exc", 2)
+      ter3 @?= (2, Right "exc")
   , testCase "caught: runError (runState t)" $
-      ter4 @?= Right ("exc", 2)
+      ter4 @?= Right (1, "exc")
   , testCase "success: runReader (runErrBig t)" (ex2rr @?= Right 5)
   , testCase "uncaught: runReader (runErrBig t)" $
       ex2rr1 @?= Left (TooBig 7)
@@ -112,7 +112,7 @@ stateTests :: TestTree
 stateTests = testGroup "State tests"
   [ testProperty "get after put n yields (n,n)" (\n -> testPutGet n 0 == (n,n))
   , testProperty "Final put determines stored state" $
-    \p1 p2 start -> testPutGetPutGetPlus p1 p2 start == (p1+p2, p2)
+    \p1 p2 start -> testPutGetPutGetPlus p1 p2 start == (p2, p1+p2)
   , testProperty "If only getting, start state determines outcome" $
     \start -> testGetStart start == (start,start)
   , testProperty "testPutGet: State == StateRW" $

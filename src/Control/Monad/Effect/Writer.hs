@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, KindSignatures #-}
 
 {-|
 Module      : Control.Monad.Effect.Writer
@@ -27,13 +27,21 @@ module Control.Monad.Effect.Writer (
 import Control.Monad.Effect.Internal
 
 -- | Writer effects - send outputs to an effect environment
-data Writer o x where
-  Writer :: o -> Writer o ()
+data Writer o (m :: * -> *) x where
+  Writer :: o -> Writer o m ()
 
 -- | Send a change to the attached environment
 tell :: (Member (Writer o) e, Effectful m) => o -> m e ()
 tell = send . Writer
 
 -- | Simple handler for Writer effects
-runWriter :: (Monoid o, Effectful m) => m (Writer o ': e) a -> m e (a,o)
-runWriter = raiseHandler (relay (\x -> pure (x, mempty)) (\ (Writer o) k -> k () >>= \ (x,l) -> pure (x, o `mappend` l)))
+runWriter :: (Monoid o, Effectful m, Effect (Union e)) => m (Writer o ': e) a -> m e (o, a)
+runWriter = raiseHandler (go mempty)
+  where go :: (Monoid o, Effect (Union e)) => o -> Eff (Writer o ': e) a -> Eff e (o, a)
+        go w (Return a)            = pure (w, a)
+        go w (Effect (Writer o) k) = go (w `mappend` o) (k ())
+        go w (Other u k)           = liftStatefulHandler (w, ()) (uncurry go) u k
+
+
+instance Effect (Writer o) where
+  handleState c dist (Request (Writer o) k) = Request (Writer o) (dist . (<$ c) . k)

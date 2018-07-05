@@ -1,17 +1,17 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, KindSignatures #-}
 module Teletype where
 
 import Control.Monad.Effect
 import Control.Monad.Effect.Internal as I
 import System.Exit hiding (ExitSuccess)
 
-data Teletype s where
-  PutStrLn    :: String -> Teletype ()
-  GetLine     :: Teletype String
-  ExitSuccess :: Teletype ()
+data Teletype (m :: * -> *) s where
+  PutStrLn    :: String -> Teletype m ()
+  GetLine     :: Teletype m String
+  ExitSuccess :: Teletype m ()
 
 -- Takes a string and returns a teletype effect.
 putStrLn' :: Member Teletype e => String -> Eff e ()
@@ -27,7 +27,7 @@ exitSuccess' = send ExitSuccess
 
 -- Runs a Teletype effect b and returns IO b.
 run :: Eff '[Teletype] a -> IO a
-run (Val x) = pure x
+run (Return x) = pure x
 run (E u q) = case decompose u of
   Right (PutStrLn msg) -> putStrLn msg  >> Teletype.run (apply q ())
   Right GetLine        -> getLine      >>= \s -> Teletype.run (apply q s)
@@ -39,13 +39,13 @@ run (E u q) = case decompose u of
 runPure :: [String] -> Eff '[Teletype] a -> [String]
 runPure inputs req = reverse (go inputs req [])
   where go :: [String] -> Eff '[Teletype] w -> [String] -> [String]
-        go _  (Val _) acc = acc
+        go _  (Return _) acc = acc
         go xs (E u q) acc = case xs of
           (x:xs') -> case decompose u of
             Right (PutStrLn msg) -> go (x:xs') (apply q ()) (msg:acc)
             Right GetLine        -> go xs'     (apply q x) acc
-            Right ExitSuccess    -> go xs'     (Val ())   acc
-            Left _               -> go xs'     (Val ())   acc
+            Right ExitSuccess    -> go xs'     (Return ())   acc
+            Left _               -> go xs'     (Return ())   acc
           _      -> case decompose u of
             Right (PutStrLn msg) -> go xs (apply q ()) (msg:acc)
-            _                    -> go xs     (Val ())   acc
+            _                    -> go xs     (Return ())   acc

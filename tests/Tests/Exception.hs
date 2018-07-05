@@ -44,19 +44,19 @@ tes1 = do
  incr
  throwError "exc"
 
-ter1 :: (Either String Int, Int)
+ter1 :: (Int, Either String Int)
 ter1 = run $ runState (1::Int) (runError tes1)
 
-ter2 :: Either String (String, Int)
+ter2 :: Either String (Int, String)
 ter2 = run $ runError (runState (1::Int) tes1)
 
 teCatch :: Member (Exc String) r => Eff r a -> Eff r String
 teCatch m = catchError (m >> pure "done") (\e -> pure (e::String))
 
-ter3 :: (Either String String, Int)
+ter3 :: (Int, Either String String)
 ter3 = run $ runState (1::Int) (runError (teCatch tes1))
 
-ter4 :: Either String (String, Int)
+ter4 :: Either String (Int, String)
 ter4 = run $ runError (runState (1::Int) (teCatch tes1))
 
 -- The example from the paper
@@ -69,7 +69,7 @@ ex2 m = do
      else pure v
 
 -- specialization to tell the type of the exception
-runErrBig :: Eff (Exc TooBig ': r) a -> Eff r (Either TooBig a)
+runErrBig :: Effects r => Eff (Exc TooBig ': r) a -> Eff r (Either TooBig a)
 runErrBig = runError
 
 ex2rr :: Either TooBig Int
