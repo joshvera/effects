@@ -111,7 +111,7 @@ rethrowing :: ( Member (Exc Exc.SomeException) e
               )
            => IO a
            -> m e a
-rethrowing = handleIO (throwError . Exc.toException @Exc.SomeException) . raiseEff . liftIO
+rethrowing m = raiseEff (liftIO (Exc.try m) >>= either (throwError . Exc.toException @Exc.SomeException) pure)
 
 -- | The semantics of @bracket before after handler@ are as follows:
 -- * Exceptions in @before@ and @after@ are thrown in IO.
