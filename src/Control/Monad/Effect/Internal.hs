@@ -8,6 +8,7 @@ module Control.Monad.Effect.Internal (
   , Lift(..)
   -- * Handling effects
   , pattern Effect0
+  , pattern Other0
   , pattern Effect
   , pattern Other
   , pattern Effect2_1
@@ -66,6 +67,9 @@ data Eff effects b
 
 pattern Effect0 :: Member effect effects => effect (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects a
 pattern Effect0 eff k <- (decomposeEff -> Right (Request (prj -> Just eff) k))
+
+pattern Other0 :: Union effects (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects a
+pattern Other0 u k <- (decomposeEff -> Right (Request u k))
 
 -- | The topmost effect, and the continuation following it.
 pattern Effect :: effect (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
