@@ -120,14 +120,13 @@ rethrowing = handleIO (throwError . Exc.toException @Exc.SomeException) . raiseE
 -- Call 'catchIO' at the call site if you want to recover.
 bracket :: ( Member (Lift IO) e
            , Effectful m
-           , MonadIO (m e)
            )
         => IO a
         -> (a -> IO b)
         -> (a -> m e c)
         -> m e c
-bracket before after action = do
+bracket before after action = raiseEff $ do
   a <- liftIO before
   let cleanup = liftIO (after a)
-  res <- action a `catchIO` (\e -> cleanup >> liftIO (Exc.throwIO @Exc.SomeException e))
+  res <- lowerEff (action a) `catchIO` (\e -> cleanup >> liftIO (Exc.throwIO @Exc.SomeException e))
   res <$ cleanup
