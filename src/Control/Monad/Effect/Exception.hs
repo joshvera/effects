@@ -103,5 +103,5 @@ bracket :: ( Member (Lift IO) e
 bracket before after action = raiseEff $ do
   a <- liftIO before
   let cleanup = liftIO (after a)
-  res <- interpose' (\ (Lift m) -> liftIO (Exc.try m) >>= either (\ exc -> cleanup >> liftIO (Exc.throwIO @Exc.SomeException exc)) pure) (lowerEff (action a))
+  res <- interpose (\ (Lift m) -> liftIO (Exc.try m) >>= either (\ exc -> cleanup >> liftIO (Exc.throwIO @Exc.SomeException exc)) pure) (lowerEff (action a))
   res <$ cleanup
