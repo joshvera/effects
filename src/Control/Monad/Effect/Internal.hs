@@ -7,7 +7,6 @@ module Control.Monad.Effect.Internal (
   , Fail(..)
   , Lift(..)
   -- * Handling effects
-  , pattern Effect0
   , pattern Effect
   , pattern Other
   , pattern Effect2_1
@@ -63,9 +62,6 @@ data Eff effects b
   = Return b
   -- | Send an union of 'effects' and 'eff a' to handle, and a queues of effects to apply from 'a' to 'b'.
   | forall a. E (Union effects (Eff effects) a) (Queue (Eff effects) a b)
-
-pattern Effect0 :: Member effect effects => effect (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects a
-pattern Effect0 eff k <- (decomposeEff -> Right (Request (prj -> Just eff) k))
 
 -- | The topmost effect, and the continuation following it.
 pattern Effect :: effect (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
