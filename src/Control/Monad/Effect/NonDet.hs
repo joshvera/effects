@@ -35,13 +35,21 @@ runNonDetM :: (Monoid b, Effectful m, Effects e)
            -> m e b
 runNonDetM unit = raiseHandler (fmap (foldMap unit) . runNonDet)
 
-gatherM :: (Monoid b, Member NonDet e, Effectful m)
+gatherM :: (Monoid b, Member NonDet e, Effectful m, Effects e)
         => (a -> b) -- ^ A function constructing a 'Monoid'al value from a single computed result. This might typically be @unit@ (for @Reducer@s), 'pure' (for 'Applicative's), or some similar singleton constructor.
         -> m e a    -- ^ The computation to run locally-nondeterministically.
         -> m e b
-gatherM f = raiseHandler (interpose (\ m k -> case m of
-  MZero -> pure mempty
-  MPlus -> mappend <$> k True <*> k False) . fmap f)
+gatherM unit = raiseHandler (fmap (foldMap unit) . gather)
+
+gather :: (Member NonDet e, Effectful m, Effects e)
+       => m e a
+       -> m e [a]
+gather = raiseHandler go
+  where go (Return a) = pure [a]
+        go (E u q) = case prj u of
+          Just MZero -> pure []
+          Just MPlus -> liftA2 (++) (gather (apply q True)) (gather (apply q False))
+          Nothing    -> liftStatefulHandler [] (fmap join . traverse gather) u (apply q)
 
 -- | A handler for nondeterminstic effects
 runNonDetA :: (Alternative f, Effectful m, Effects e)
