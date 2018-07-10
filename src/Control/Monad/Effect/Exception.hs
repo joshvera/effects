@@ -24,8 +24,6 @@ module Control.Monad.Effect.Exception
 , catchError
 , handleError
 -- * Handling impure/IO errors
-, catchIO
-, handleIO
 , rethrowing
 -- * Resource management
 , bracket
@@ -78,30 +76,6 @@ handleError = flip catchError
 instance Effect (Exc exc) where
   handleState c dist (Request (Throw exc) k) = Request (Throw exc) (dist . (<$ c) . k)
   handleState c dist (Request (Catch a h) k) = Request (Catch (dist (a <$ c)) (dist . (<$ c) . h)) (dist . fmap k)
-
--- | Catch exceptions in 'IO' actions embedded in 'Eff', handling them with the passed function.
---
--- Note that while the type allows 'IO' to occur anywhere within the
--- effect list, it must actually occur at the end to be able to run
--- the computation.
-catchIO :: ( Exc.Exception exc
-           , Member (Lift IO) e
-           , Effectful m
-           )
-        => m e a
-        -> (exc -> m e a)
-        -> m e a
-catchIO = flip handleIO
-
--- | As 'catchIO', but with its arguments in the opposite order.
-handleIO :: ( Exc.Exception exc
-            , Member (Lift IO) e
-            , Effectful m
-            )
-        => (exc -> m e a)
-        -> m e a
-        -> m e a
-handleIO handler = raiseHandler (interpose (\ (Lift go) yield -> liftIO (Exc.try go) >>= either (lowerEff . handler) yield))
 
 -- | Lift an 'IO' action into 'Eff', catching and rethrowing any exceptions it throws into an 'Exc' effect.
 -- If you need more granular control over the types of exceptions caught, use 'catchIO' and rethrow in the handler.
