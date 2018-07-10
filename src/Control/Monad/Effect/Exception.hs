@@ -108,11 +108,10 @@ handleIO handler = raiseHandler (interpose (\ (Lift go) yield -> liftIO (Exc.try
 rethrowing :: ( Member (Exc Exc.SomeException) e
               , Member (Lift IO) e
               , Effectful m
-              , MonadIO (m e)
               )
            => IO a
            -> m e a
-rethrowing = handleIO (throwError . Exc.toException @Exc.SomeException) . liftIO
+rethrowing = handleIO (throwError . Exc.toException @Exc.SomeException) . raiseEff . liftIO
 
 -- | The semantics of @bracket before after handler@ are as follows:
 -- * Exceptions in @before@ and @after@ are thrown in IO.
