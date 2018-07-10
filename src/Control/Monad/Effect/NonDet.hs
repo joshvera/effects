@@ -64,8 +64,8 @@ runNonDet :: (Effectful m, Effects e)
 runNonDet = raiseHandler go
   where go (Return a)       = pure [a]
         go (Effect MZero _) = pure []
-        go (Effect MPlus k) = liftA2 (++) (runNonDetA (k True)) (runNonDetA (k False))
-        go (Other u k)      = liftStatefulHandler [] (fmap join . traverse runNonDetA) u k
+        go (Effect MPlus k) = liftA2 (++) (runNonDet (k True)) (runNonDet (k False))
+        go (Other u k)      = liftStatefulHandler [] (fmap join . traverse runNonDet) u k
 
 -- FIXME: It would probably be more efficient to define these in terms of a binary tree rather than a list.
 
