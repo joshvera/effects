@@ -43,7 +43,7 @@ trace = send . Trace
 
 -- | An IO handler for Trace effects. Prints output to stderr.
 runPrintingTrace :: (Member (Lift IO) effects, Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects a
-runPrintingTrace = raiseHandler (interpret (\ (Trace s) -> liftIO (liftIO (hPutStrLn stderr s))))
+runPrintingTrace = raiseHandler (interpret (\ (Trace s) -> liftIO (hPutStrLn stderr s)))
 
 -- | Run a 'Trace' effect, discarding the traced values.
 runIgnoringTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects a
@@ -55,4 +55,4 @@ runReturningTrace = raiseHandler (fmap (first reverse) . runState [] . reinterpr
 
 
 instance Effect Trace where
-  handleState c dist (Request (Trace s) k) = Request (Trace s) (dist . (<$ c) . k)
+  handleState c dist (Request (Trace s) k) = Request (Trace s) (\result -> dist (pure result <$ c) k)

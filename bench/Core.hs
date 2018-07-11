@@ -12,7 +12,6 @@ import Control.Monad.Effect
 import Control.Monad.Effect.Internal
 import Control.Monad.Effect.Exception
 import Control.Monad.Effect.State
-import Control.Monad.Effect.StateRW
 
 import Criterion
 import Criterion.Main
@@ -29,10 +28,6 @@ oneGet n = run (runState get n)
 countDown :: Int -> (Int,Int)
 countDown start = run (runState go start)
   where go = get >>= (\n -> if n <= 0 then pure n else put (n-1) >> go)
-
-countDownRW :: Int -> (Int,Int)
-countDownRW start = run (runStateR go start)
-  where go = ask >>= (\n -> if n <= 0 then pure n else tell (n-1) >> go)
 
 countDownMTL :: Int -> (Int,Int)
 countDownMTL = MTL.runState go
@@ -133,7 +128,6 @@ main =
     ],
     bgroup "Countdown Bench" [
         bench "effects.State"    $ whnf countDown 10000
-      , bench "effects.StateRW"  $ whnf countDownRW 10000
       , bench "mtl.State"      $ whnf countDownMTL 10000
     ],
     bgroup "Countdown+Except Bench" [

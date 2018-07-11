@@ -24,8 +24,6 @@ module Control.Monad.Effect.Exception
 , catchError
 , handleError
 -- * Handling impure/IO errors
-, catchIO
-, handleIO
 , rethrowing
 -- * Resource management
 , bracket
@@ -60,7 +58,7 @@ runError = raiseHandler go
           case a' of
             Left e    -> runError (h e >>= k)
             Right a'' -> runError (k a'')
-        go (Other u k)            = liftStatefulHandler (Right ()) (either (pure . Left) runError) u k
+        go (Other u k)            = liftStatefulHandler (Right ()) (\act yield -> either (pure . Left) (runError . (>>= yield)) act) u k
 
 -- | A catcher for Exceptions. Handlers are allowed to rethrow
 -- exceptions.
@@ -76,43 +74,18 @@ handleError = flip catchError
 
 
 instance Effect (Exc exc) where
-  handleState c dist (Request (Throw exc) k) = Request (Throw exc) (dist . (<$ c) . k)
-  handleState c dist (Request (Catch a h) k) = Request (Catch (dist (a <$ c)) (dist . (<$ c) . h)) (dist . fmap k)
-
--- | Catch exceptions in 'IO' actions embedded in 'Eff', handling them with the passed function.
---
--- Note that while the type allows 'IO' to occur anywhere within the
--- effect list, it must actually occur at the end to be able to run
--- the computation.
-catchIO :: ( Exc.Exception exc
-           , Member (Lift IO) e
-           , Effectful m
-           )
-        => m e a
-        -> (exc -> m e a)
-        -> m e a
-catchIO = flip handleIO
-
--- | As 'catchIO', but with its arguments in the opposite order.
-handleIO :: ( Exc.Exception exc
-            , Member (Lift IO) e
-            , Effectful m
-            )
-        => (exc -> m e a)
-        -> m e a
-        -> m e a
-handleIO handler = raiseHandler (interpose (\ (Lift go) yield -> liftIO (Exc.try go) >>= either (lowerEff . handler) yield))
+  handleState c dist (Request (Throw exc) k) = Request (Throw exc) (\result -> dist (pure result <$ c) k)
+  handleState c dist (Request (Catch a h) k) = Request (Catch (dist (a <$ c) k) (flip dist k . (<$ c) . h)) pure
 
 -- | Lift an 'IO' action into 'Eff', catching and rethrowing any exceptions it throws into an 'Exc' effect.
 -- If you need more granular control over the types of exceptions caught, use 'catchIO' and rethrow in the handler.
 rethrowing :: ( Member (Exc Exc.SomeException) e
               , Member (Lift IO) e
               , Effectful m
-              , MonadIO (m e)
               )
            => IO a
            -> m e a
-rethrowing m = catchIO (liftIO m) (throwError . Exc.toException @Exc.SomeException)
+rethrowing m = raiseEff (liftIO (Exc.try m) >>= either (throwError . Exc.toException @Exc.SomeException) pure)
 
 -- | The semantics of @bracket before after handler@ are as follows:
 -- * Exceptions in @before@ and @after@ are thrown in IO.
@@ -121,14 +94,14 @@ rethrowing m = catchIO (liftIO m) (throwError . Exc.toException @Exc.SomeExcepti
 -- Call 'catchIO' at the call site if you want to recover.
 bracket :: ( Member (Lift IO) e
            , Effectful m
-           , MonadIO (m e)
+           , Effects e
            )
         => IO a
         -> (a -> IO b)
         -> (a -> m e c)
         -> m e c
-bracket before after action = do
+bracket before after action = raiseEff $ do
   a <- liftIO before
   let cleanup = liftIO (after a)
-  res <- action a `catchIO` (\e -> cleanup >> liftIO (Exc.throwIO @Exc.SomeException e))
+  res <- interpose (\ (Lift m) -> liftIO (Exc.try m) >>= either (\ exc -> cleanup >> liftIO (Exc.throwIO @Exc.SomeException exc)) pure) (lowerEff (action a))
   res <$ cleanup
