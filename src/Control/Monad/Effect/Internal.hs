@@ -117,21 +117,21 @@ class Effect effect where
   --   First-order effects (ones not using the @m@ parameter) have relatively simple definitions, more or less just pushing the distributive law through the continuation. Higher-order effects (like @Reader@’s @Local@ constructor) must additionally apply the handler to their scoped actions.
   handleState :: Functor c
               => c ()
-              -> (forall x . c (Eff effects x) -> Eff effects' (c x))
+              -> (forall x . c (Eff effects x) -> Arrow (Eff effects) x a -> Eff effects' (c a))
               -> Request effect (Eff effects) a
               -> Request effect (Eff effects') (c a)
 
 -- | Lift a stateful effect handler through other effects in the 'Union'.
 --
 --   Useful when defining effect handlers which maintain some state (such as @runState@) or which must return values in some carrier functor encapsulating the effects (such as @runError@).
-liftStatefulHandler :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' (c a)
+liftStatefulHandler :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Arrow (Eff effects) x a -> Eff effects' (c a)) -> Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' (c a)
 liftStatefulHandler c handler u k = fromRequest (handleState c handler (Request u k))
 
 -- | Lift a pure effect handler through other effects in the 'Union'.
 --
 --   Useful when defining pure effect handlers (such as @runReader@).
-liftHandler :: (Effectful m, Effects effects') => (forall x . m effects x -> m effects' x) -> Union effects' (Eff effects) b -> Arrow (m effects) b a -> m effects' a
-liftHandler handler u k = raiseEff $ runIdentity <$> liftStatefulHandler (Identity ()) (fmap Identity . lowerHandler handler . runIdentity) u (lowerEff . k)
+liftHandler :: (Effectful m, Effects effects') => (forall x . m effects x -> Arrow (m effects) x a -> m effects' a) -> Union effects' (Eff effects) b -> Arrow (m effects) b a -> m effects' a
+liftHandler handler u k = raiseEff $ runIdentity <$> liftStatefulHandler (Identity ()) (\act k -> fmap Identity . lowerEff $ handler (raiseEff (runIdentity act)) (raiseEff . k)) u (lowerEff . k)
 
 instance Effect (Union '[]) where
   handleState _ _ _ = error "impossible: handleState on empty Union"
