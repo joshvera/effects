@@ -45,12 +45,15 @@ gatherM unit = raiseHandler (fmap (foldMap unit) . gather)
 gather :: (Member NonDet e, Effectful m, Effects e)
        => m e a
        -> m e [a]
-gather = raiseHandler go
-  where go (Return a) = pure [a]
-        go (E u q) = case prj u of
-          Just MZero -> pure []
-          Just MPlus -> liftA2 (++) (gather (apply q True)) (gather (apply q False))
-          Nothing    -> liftStatefulHandler [] (fmap join . traverse gather) u (apply q)
+gather = raiseHandler (fmap fst . go [])
+  where go state (Return a) = pure (a : state, Just a)
+        go state (E u q) = case prj u of
+          Just MZero -> pure (state, Nothing)
+          Just MPlus -> do
+            (xs, a) <- (go state (apply q True))
+            (ys, b) <- (go state (apply q False))
+            pure (xs ++ ys, a <|> b)
+          Nothing    -> runNonDetPair <$> liftStatefulHandler (NonDetPair (state, Just ())) (\(NonDetPair (state', act)) yield -> maybe (pure $ NonDetPair (state', Nothing)) (fmap NonDetPair . go state' . (>>= yield)) act) u (apply q)
 
 -- | A handler for nondeterminstic effects
 runNonDetA :: (Alternative f, Effectful m, Effects e)
