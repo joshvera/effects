@@ -15,6 +15,7 @@ module Control.Monad.Effect.NonDet (
   NonDet(..),
   runNonDetM,
   gatherM,
+  gather,
   runNonDetA,
   runNonDet,
   msplit
