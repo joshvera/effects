@@ -13,7 +13,6 @@ import Tests.Fresh
 import Tests.NonDet
 import Tests.Reader
 import Tests.State
-import Tests.StateRW
 
 import qualified Data.List
 
@@ -115,12 +114,6 @@ stateTests = testGroup "State tests"
     \p1 p2 start -> testPutGetPutGetPlus p1 p2 start == (p2, p1+p2)
   , testProperty "If only getting, start state determines outcome" $
     \start -> testGetStart start == (start,start)
-  , testProperty "testPutGet: State == StateRW" $
-    \n -> testPutGet n 0 == testPutGetRW n 0
-  , testProperty "testPutGetPutGetPlus: State == StateRW" $
-    \p1 p2 start -> testPutGetPutGetPlus p1 p2 start == testPutGetPutGetPlusRW p1 p2 start
-  , testProperty "testGetStart: State == StateRW" $
-    \n -> testGetStart n == testGetStartRW n
   ]
 
 --------------------------------------------------------------------------------
