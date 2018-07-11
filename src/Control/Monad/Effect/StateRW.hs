@@ -20,24 +20,9 @@ Using <http://okmij.org/ftp/Haskell/extensible/Eff1.hs> as a
 starting point.
 
 -}
-module Control.Monad.Effect.StateRW (
-  runStateR,
-  Reader(..),
-  Writer(..),
-  tell,
-  ask
-) where
+module Control.Monad.Effect.StateRW () where
 
 import Control.Monad.Effect.Reader
 import Control.Monad.Effect.Writer
 import Control.Monad.Effect.Internal
 
--- | State handler, using Reader/Writer effects
-runStateR :: (Effectful m, Effect (Union e)) => s -> m (Writer s ': Reader s ': e) a -> m e (s, a)
-runStateR = raiseHandler . go
-  where go :: Effect (Union e) => s -> Eff (Writer s ': Reader s ': e) a -> Eff e (s, a)
-        go s (Return a)                = pure (s, a)
-        go _ (Effect2_1 (Writer s) k)  = go s (k ())
-        go s (Effect2_2 Reader k)      = go s (k s)
-        go s (Effect2_2 (Local f m) k) = go (f s) (m >>= k)
-        go s (Other2 u k)              = liftStatefulHandler (s, ()) (uncurry runStateR) u k

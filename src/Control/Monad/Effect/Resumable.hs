@@ -19,7 +19,7 @@ runResumable :: (Effectful m, Effect (Union e)) => m (Resumable exc ': e) a -> m
 runResumable = raiseHandler go
   where go (Return a)           = pure (Right a)
         go (Effect (Resumable e) _) = pure (Left (SomeExc e))
-        go (Other u k)          = liftStatefulHandler (Right ()) (either (pure . Left) runResumable) u k
+        go (Other u k)          = liftStatefulHandler (Right ()) (\act yield -> either (pure . Left) (runResumable . (>>= yield)) act) u k
 
 -- | Run a 'Resumable' effect in an 'Effectful' context, using a handler to resume computation.
 runResumableWith :: (Effectful m, Effect (Union effects)) => (forall resume . exc resume -> m effects resume) -> m (Resumable exc ': effects) a -> m effects a
@@ -37,4 +37,4 @@ instance (Show1 exc) => Show (SomeExc exc) where
 
 
 instance Effect (Resumable exc) where
-  handleState c dist (Request (Resumable exc) k) = Request (Resumable exc) (dist . (<$ c) . k)
+  handleState c dist (Request (Resumable exc) k) = Request (Resumable exc) (\result -> dist (pure result <$ c) k)
