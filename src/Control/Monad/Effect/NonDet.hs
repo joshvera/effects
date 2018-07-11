@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, TypeApplications, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, TypeApplications, TypeOperators, UndecidableInstances, DeriveFunctor #-}
 
 {-|
 Module      : Control.Monad.Effect.NonDet
@@ -15,6 +15,7 @@ module Control.Monad.Effect.NonDet (
   NonDet(..),
   runNonDetM,
   gatherM,
+  gather,
   runNonDetA,
   runNonDet,
   msplit
@@ -36,7 +37,7 @@ runNonDetM :: (Monoid b, Effectful m, Effects e)
 runNonDetM unit = raiseHandler (fmap (foldMap unit) . runNonDet)
 
 gatherM :: (Monoid b, Member NonDet e, Effectful m, Effects e)
-        => (a -> b) -- ^ A function constructing a 'Monoid'al value from a single computed result. This might typically be @unit@ (for @Reducer@s), 'pure' (for 'Applicative's), or some similar singleton constructor.
+        => (a -> b) -- ^ A function constructing a 'Monoid'al value from a single computed result. This might typically be @unit@ (for @Reducer@s), 'pure' (.hs 'Applicative's), or some similar singleton constructor.
         -> m e a    -- ^ The computation to run locally-nondeterministically.
         -> m e b
 gatherM unit = raiseHandler (fmap (foldMap unit) . gather)
@@ -61,11 +62,19 @@ runNonDetA = raiseHandler (fmap (asum . map pure) . runNonDet)
 runNonDet :: (Effectful m, Effects e)
            => m (NonDet ': e) a
            -> m e [a]
-runNonDet = raiseHandler go
-  where go (Return a)       = pure [a]
-        go (Effect MZero _) = pure []
-        go (Effect MPlus k) = liftA2 (++) (runNonDet (k True)) (runNonDet (k False))
-        go (Other u k)      = liftStatefulHandler [] (fmap join . traverse runNonDet) u k
+runNonDet = raiseHandler (fmap fst . go [])
+  where --go :: [a] -> Eff (NonDet ': e) x -> Eff e ([a], x)
+        -- go :: [a] -> Eff (NonDet ': e) a -> Eff e ([a], Maybe a)
+        go state (Return a)       = pure (a : state, Just a)
+        go state (Effect MZero k) = pure (state, Nothing)
+        go state (Effect MPlus k) = do
+          (xs, a) <- (go state (k True))
+          (ys, b) <- (go state (k False))
+          pure (xs ++ ys, a <|> b)
+        go state (Other u k)      = runNonDetPair <$> liftStatefulHandler (NonDetPair (state, Just ())) (\(NonDetPair (state', act)) yield -> maybe (pure $ NonDetPair (state', Nothing)) (fmap NonDetPair . go state' . (>>= yield)) act) u k
+
+newtype NonDetPair a x = NonDetPair { runNonDetPair :: ([a], Maybe x) }
+  deriving (Functor)
 
 -- FIXME: It would probably be more efficient to define these in terms of a binary tree rather than a list.
 
