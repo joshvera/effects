@@ -63,9 +63,7 @@ runNonDet :: (Effectful m, Effects e)
            => m (NonDet ': e) a
            -> m e [a]
 runNonDet = raiseHandler (fmap fst . go [])
-  where --go :: [a] -> Eff (NonDet ': e) x -> Eff e ([a], x)
-        -- go :: [a] -> Eff (NonDet ': e) a -> Eff e ([a], Maybe a)
-        go state (Return a)       = pure (a : state, Just a)
+  where go state (Return a)       = pure (a : state, Just a)
         go state (Effect MZero k) = pure (state, Nothing)
         go state (Effect MPlus k) = do
           (xs, a) <- (go state (k True))
