@@ -239,7 +239,7 @@ eavesdrop listener = raiseHandler loop
   where loop (Return a) = pure a
         loop (E u q) = case prj u of
           Just eff -> lowerEff (listener eff) >> send eff >>= (q >>> loop)
-          _        -> liftHandler (eavesdrop (lowerEff . listener)) u (apply q)
+          _        -> liftHandler (\ m yield -> eavesdrop (lowerEff . listener) m >>= yield) u (apply q)
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
@@ -251,7 +251,7 @@ interpose handler = raiseHandler loop
   where loop (Return a) = pure a
         loop (E u q) = case prj u of
           Just eff -> lowerEff (handler eff) >>= k
-          _        -> liftHandler (interpose (lowerEff . handler)) u k
+          _        -> liftHandler (\ m yield -> interpose (lowerEff . handler) m >>= yield) u k
           where k = q >>> loop
 
 
@@ -265,7 +265,7 @@ interpret :: (Effectful m, Effects effs)
 interpret bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
-        loop (Other u k)    = liftHandler (interpret (lowerEff . bind)) u k
+        loop (Other u k)    = liftHandler (\ m yield -> interpret (lowerEff . bind) (m >>= yield)) u k
 
 
 -- | Interpret an effect by replacing it with another effect.
@@ -276,7 +276,7 @@ reinterpret :: (Effectful m, Effects (newEffect ': effs))
 reinterpret bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
-        loop (Other u k)    = liftHandler (reinterpret (lowerEff . bind)) (weaken u) k
+        loop (Other u k)    = liftHandler (\ m yield -> reinterpret (lowerEff . bind) (m >>= yield)) (weaken u) k
 
 -- | Interpret an effect by replacing it with two new effects.
 reinterpret2 :: (Effectful m, Effects (newEffect1 ': newEffect2 ': effs))
@@ -286,7 +286,7 @@ reinterpret2 :: (Effectful m, Effects (newEffect1 ': newEffect2 ': effs))
 reinterpret2 bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
-        loop (Other u k)    = liftHandler (reinterpret2 (lowerEff . bind)) (weaken (weaken u)) k
+        loop (Other u k)    = liftHandler (\m yield -> reinterpret2 (lowerEff . bind) (m >>= yield)) (weaken (weaken u)) k
 
 
 -- * Effect Instances
@@ -323,7 +323,7 @@ newtype Lift effect (m :: * -> *) a = Lift { unLift :: effect a }
   deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
 
 instance Effect (Lift effect) where
-  handleState c dist (Request (Lift op) k) = Request (Lift op) (dist . (<$ c) . k)
+  handleState c dist (Request (Lift op) k) = Request (Lift op) (\result -> dist (pure result <$ c) k)
 
 
 -- | A data type for representing nondeterminstic choice
@@ -340,9 +340,8 @@ instance Member NonDet a => MonadPlus (Eff a) where
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
 
 instance Effect NonDet where
-  handleState c dist (Request MZero k) = Request MZero (dist . (<$ c) . k)
-  handleState c dist (Request MPlus k) = Request MPlus (dist . (<$ c) . k)
-
+  handleState c dist (Request MZero k) = Request MZero (\result -> dist (pure result <$ c) k)
+  handleState c dist (Request MPlus k) = Request MPlus (\result -> dist (pure result <$ c) k)
 
 -- | An effect representing failure.
 newtype Fail (m :: * -> *) a = Fail { failMessage :: String }
@@ -351,4 +350,4 @@ instance Member Fail fs => MonadFail (Eff fs) where
   fail = send . Fail
 
 instance Effect Fail where
-  handleState c dist (Request (Fail s) k) = Request (Fail s) (dist . (<$ c) . k)
+  handleState c dist (Request (Fail s) k) = Request (Fail s) (\result -> dist (pure result <$ c) k)
