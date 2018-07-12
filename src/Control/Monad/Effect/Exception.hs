@@ -74,8 +74,8 @@ handleError = flip catchError
 
 
 instance Effect (Exc exc) where
-  handleState c dist (Request (Throw exc) k) = Request (Throw exc) (\result -> dist (pure result <$ c) k)
-  handleState c dist (Request (Catch a h) k) = Request (Catch (dist (a <$ c) k) (flip dist k . (<$ c) . h)) pure
+  handleState c dist (Throw exc) k = Request (Throw exc) (\result -> dist (pure result <$ c) k)
+  handleState c dist (Catch a h) k = Request (Catch (dist (a <$ c) k) (flip dist k . (<$ c) . h)) pure
 
 -- | Lift an 'IO' action into 'Eff', catching and rethrowing any exceptions it throws into an 'Exc' effect.
 -- If you need more granular control over the types of exceptions caught, use 'catchIO' and rethrow in the handler.

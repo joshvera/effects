@@ -43,4 +43,4 @@ runWriter = raiseHandler (go mempty)
         go w (Other u k)           = liftStatefulHandler (w, ()) (\(w', act) yield -> go w' (act >>= yield)) u k
 
 instance Effect (Writer o) where
-  handleState c dist (Request (Writer o) k) = Request (Writer o) (\result -> dist (pure result <$ c) k)
+  handleState c dist (Writer o) k = Request (Writer o) (\result -> dist (pure result <$ c) k)

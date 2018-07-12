@@ -37,4 +37,4 @@ instance (Show1 exc) => Show (SomeExc exc) where
 
 
 instance Effect (Resumable exc) where
-  handleState c dist (Request (Resumable exc) k) = Request (Resumable exc) (\result -> dist (pure result <$ c) k)
+  handleState c dist (Resumable exc) k = Request (Resumable exc) (\result -> dist (pure result <$ c) k)

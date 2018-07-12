@@ -69,8 +69,8 @@ local f m = send (Local f (lowerEff m))
 
 
 instance Effect (Reader r) where
-  handleState c dist (Request Reader k) = Request Reader (\result -> dist (pure result <$ c) k)
-  handleState c dist (Request (Local f a) k) = Request (Local f (dist (a <$ c) k)) pure
+  handleState c dist Reader k = Request Reader (\result -> dist (pure result <$ c) k)
+  handleState c dist (Local f a) k = Request (Local f (dist (a <$ c) k)) pure
 
 
 {- $simpleReaderExample
