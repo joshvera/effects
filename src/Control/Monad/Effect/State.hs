@@ -44,8 +44,7 @@ runState = raiseHandler . go
   where go s (Return a)         = pure (s, a)
         go s (Effect Get k)     = runState s (k s)
         go _ (Effect (Put s) k) = runState s (k ())
-        go s (Other u k)        = liftStatefulHandler (s, ()) (\(s', act) yield -> runState s' (act >>= yield)) u k
-                                                                               -- runState s' act  >>= \ (s'', a) -> runState s'' (yield a)
+        go s (Other u k)        = liftStatefulHandler (s, ()) (uncurry runState) u k
 
 
 -- | Strict State effects: one can either Get values or Put them
@@ -103,5 +102,5 @@ localState f action = raiseEff $ do
 
 
 instance Effect (State s) where
-  handleState c dist (Request Get k) = Request Get (\result -> dist (pure result <$ c) k)
-  handleState c dist (Request (Put s) k) = Request (Put s) (\result -> dist (pure result <$ c) k)
+  handleState c dist (Request Get k) = Request Get (dist . (<$ c) . k)
+  handleState c dist (Request (Put s) k) = Request (Put s) (dist . (<$ c) . k)

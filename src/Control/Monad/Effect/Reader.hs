@@ -57,7 +57,7 @@ runReader = raiseHandler . go
         go _ (Return a)             = pure a
         go e (Effect Reader k)      = go e (k e)
         go e (Effect (Local f m) k) = go (f e) (m >>= k)
-        go e (Other u k)            = liftHandler (\act yield -> go e (act >>= yield)) u k
+        go e (Other u k)            = liftHandler (go e) u k
 
 -- |
 -- Locally rebind the value in the dynamic environment
@@ -69,8 +69,8 @@ local f m = send (Local f (lowerEff m))
 
 
 instance Effect (Reader r) where
-  handleState c dist (Request Reader k) = Request Reader (\result -> dist (pure result <$ c) k)
-  handleState c dist (Request (Local f a) k) = Request (Local f (dist (a <$ c) k)) pure
+  handleState c dist (Request Reader k) = Request Reader (dist . (<$ c) . k)
+  handleState c dist (Request (Local f a) k) = Request (Local f (dist (a <$ c))) (dist . fmap k)
 
 
 {- $simpleReaderExample

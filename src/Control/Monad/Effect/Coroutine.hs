@@ -54,16 +54,15 @@ status :: (w -> x) -> (a -> (b -> m e (Status m e a b w)) -> x) -> Status m e a 
 status f _ (Done w) = f w
 status _ g (Continue a f) = g a f
 
-bindStatus :: Effect (Union effs) => Status Eff effs a b (Eff (Yield a b : effs) x) -> (x -> Eff (Yield a b : effs) y) -> Eff effs (Status Eff effs a b y)
-bindStatus (Done w) yield' = runC (w >>= yield')
-bindStatus (Continue a f) yield' = pure (Continue a (\ b -> f b >>= flip bindStatus yield'))
+joinStatus :: Effect (Union effs) => Status Eff effs a b (Eff (Yield a b : effs) x) -> Eff effs (Status Eff effs a b x)
+joinStatus = status runC (\ a f -> pure (Continue a (joinStatus <=< f)))
 
 -- | Launch a thread and report its status
 runC :: (Effectful m, Effect (Union effs)) => m (Yield a b ': effs) w -> m effs (Status m effs a b w)
 runC = raiseHandler (fmap raiseStatus . go)
   where go (Return a)             = pure (Done a)
         go (Effect (Yield a f) k) = pure (Continue a (runC . k . f))
-        go (Other u k)            = liftStatefulHandler (Done ()) (\act yield' -> act `bindStatus` yield') u k
+        go (Other u k)            = liftStatefulHandler (Done ()) joinStatus u k
 
 -- | Launch a thread and run it to completion using a helper function to provide new inputs.
 runCoro :: (Effectful m, Effect (Union effs)) => (a -> b) -> m (Yield a b ': effs) w -> m effs w
@@ -73,4 +72,4 @@ runCoro f = raiseHandler (loop <=< runC)
 
 
 instance Effect (Yield a bs) where
-  handleState c dist (Request (Yield a f) k) = Request (Yield a f) (\result -> dist (pure result <$ c) k)
+  handleState c dist (Request (Yield a f) k) = Request (Yield a f) (dist . (<$ c) . k)
