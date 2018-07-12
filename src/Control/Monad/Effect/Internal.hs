@@ -115,11 +115,11 @@ class Effect effect where
   -- | Lift some initial state and a handler for some effect through another effect.
   --
   --   First-order effects (ones not using the @m@ parameter) have relatively simple definitions, more or less just pushing the distributive law through the continuation. Higher-order effects (like @Reader@’s @Local@ constructor) must additionally apply the handler to their scoped actions.
-  handleState :: Functor c
-              => c ()                                                                            -- ^ The handler’s suspended current state. For many effects this will be @(,) s@ for some state type @s@, but it’s left opaque aside from the 'Functor' instance as far as instances of 'Effect' are concerned.
-              -> (forall x . c (Eff effects x) -> Arrow (Eff effects) x a -> Eff effects' (c a)) -- ^ An effect handler, encoded as a distributive law in continuation-passing style.
-              -> Request effect (Eff effects) a                                                  -- ^ A request for @effect@, ultimately producing a result of type @a@.
-              -> Request effect (Eff effects') (c a)                                             -- ^ The resulting request, with the handler applied to any embedded effects and to the continuation.
+  handleState :: (Functor c, Monad m, Monad n)
+              => c ()                                           -- ^ The handler’s suspended current state. For many effects this will be @(,) s@ for some state type @s@, but it’s left opaque aside from the 'Functor' instance as far as instances of 'Effect' are concerned.
+              -> (forall x . c (m x) -> Arrow m x a -> n (c a)) -- ^ An effect handler, encoded as a distributive law in continuation-passing style.
+              -> Request effect m a                             -- ^ A request for @effect@, ultimately producing a result of type @a@.
+              -> Request effect n (c a)                         -- ^ The resulting request, with the handler applied to any embedded effects and to the continuation.
 
 -- | Lift a stateful effect handler through other effects in the 'Union'.
 --
