@@ -73,4 +73,4 @@ runCoro f = raiseHandler (loop <=< runC)
 
 
 instance Effect (Yield a bs) where
-  handleState c dist (Request (Yield a f) k) = Request (Yield a f) (\result -> dist (pure result <$ c) k)
+  handleState c dist (Yield a f) k = Request (Yield a f) (\result -> dist (pure result <$ c) k)

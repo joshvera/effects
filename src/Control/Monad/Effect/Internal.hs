@@ -115,31 +115,41 @@ class Effect effect where
   -- | Lift some initial state and a handler for some effect through another effect.
   --
   --   First-order effects (ones not using the @m@ parameter) have relatively simple definitions, more or less just pushing the distributive law through the continuation. Higher-order effects (like @Reader@’s @Local@ constructor) must additionally apply the handler to their scoped actions.
-  handleState :: Functor c
-              => c ()
-              -> (forall x . c (Eff effects x) -> Arrow (Eff effects) x a -> Eff effects' (c a))
-              -> Request effect (Eff effects) a
-              -> Request effect (Eff effects') (c a)
+  handleState :: (Functor c, Monad m, Monad n)
+              => c ()                                           -- ^ The handler’s suspended current state. For many effects this will be @(,) s@ for some state type @s@, but it’s left opaque aside from the 'Functor' instance as far as instances of 'Effect' are concerned.
+              -> (forall x . c (m x) -> Arrow m x a -> n (c a)) -- ^ An effect handler, encoded as a distributive law in continuation-passing style.
+              -> effect m b                                     -- ^ An effect at some incremental result type @b@.
+              -> Arrow m b a                                    -- ^ A continuation from the incremental result type @b@ to the ultimate result type @a@.
+              -> Request effect n (c a)                         -- ^ The resulting request, with the handler applied to any embedded effects and to the continuation.
 
 -- | Lift a stateful effect handler through other effects in the 'Union'.
 --
 --   Useful when defining effect handlers which maintain some state (such as @runState@) or which must return values in some carrier functor encapsulating the effects (such as @runError@).
-liftStatefulHandler :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Arrow (Eff effects) x a -> Eff effects' (c a)) -> Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' (c a)
-liftStatefulHandler c handler u k = fromRequest (handleState c handler (Request u k))
+liftStatefulHandler :: (Functor c, Effects effects')
+                    => c ()
+                    -> (forall x . c (Eff effects x) -> Arrow (Eff effects) x a -> Eff effects' (c a))
+                    -> Union effects' (Eff effects) b
+                    -> Arrow (Eff effects) b a
+                    -> Eff effects' (c a)
+liftStatefulHandler c handler u = fromRequest . handleState c handler u
 
 -- | Lift a pure effect handler through other effects in the 'Union'.
 --
 --   Useful when defining pure effect handlers (such as @runReader@).
-liftHandler :: (Effectful m, Effects effects') => (forall x . m effects x -> Arrow (m effects) x a -> m effects' a) -> Union effects' (Eff effects) b -> Arrow (m effects) b a -> m effects' a
-liftHandler handler u k = raiseEff $ runIdentity <$> liftStatefulHandler (Identity ()) (\act k -> fmap Identity . lowerEff $ handler (raiseEff (runIdentity act)) (raiseEff . k)) u (lowerEff . k)
+liftHandler :: Effects effects'
+            => (forall x . Eff effects x -> Arrow (Eff effects) x a -> Eff effects' a)
+            -> Union effects' (Eff effects) b
+            -> Arrow (Eff effects) b a
+            -> Eff effects' a
+liftHandler handler u = fmap runIdentity . liftStatefulHandler (Identity ()) (\act -> fmap Identity . handler (coerce act)) u
 
 instance Effect (Union '[]) where
   handleState _ _ _ = error "impossible: handleState on empty Union"
 
 instance (Effect effect, Effect (Union effects)) => Effect (Union (effect ': effects)) where
-  handleState c dist (Request u k) = case decompose u of
-    Left u' -> weaken `requestMap` handleState c dist (Request u' k)
-    Right eff -> inj `requestMap` handleState c dist (Request eff k)
+  handleState c dist u k = case decompose u of
+    Left u' -> weaken `requestMap` handleState c dist u' k
+    Right eff -> inj `requestMap` handleState c dist eff k
 
 
 -- | Require an 'Effect' instance for each effect in the list.
@@ -323,7 +333,7 @@ newtype Lift effect (m :: * -> *) a = Lift { unLift :: effect a }
   deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
 
 instance Effect (Lift effect) where
-  handleState c dist (Request (Lift op) k) = Request (Lift op) (\result -> dist (pure result <$ c) k)
+  handleState c dist (Lift op) k = Request (Lift op) (\result -> dist (pure result <$ c) k)
 
 
 -- | A data type for representing nondeterminstic choice
@@ -340,8 +350,8 @@ instance Member NonDet a => MonadPlus (Eff a) where
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
 
 instance Effect NonDet where
-  handleState c dist (Request MZero k) = Request MZero (\result -> dist (pure result <$ c) k)
-  handleState c dist (Request MPlus k) = Request MPlus (\result -> dist (pure result <$ c) k)
+  handleState c dist MZero k = Request MZero (\result -> dist (pure result <$ c) k)
+  handleState c dist MPlus k = Request MPlus (\result -> dist (pure result <$ c) k)
 
 -- | An effect representing failure.
 newtype Fail (m :: * -> *) a = Fail { failMessage :: String }
@@ -350,4 +360,4 @@ instance Member Fail fs => MonadFail (Eff fs) where
   fail = send . Fail
 
 instance Effect Fail where
-  handleState c dist (Request (Fail s) k) = Request (Fail s) (\result -> dist (pure result <$ c) k)
+  handleState c dist (Fail s) k = Request (Fail s) (\result -> dist (pure result <$ c) k)

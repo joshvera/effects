@@ -54,5 +54,5 @@ runFresh i = raiseHandler (fmap snd . go i)
 
 
 instance Effect Fresh where
-  handleState c dist (Request Fresh k) = Request Fresh (\result -> dist (pure result <$ c) k)
-  handleState c dist (Request (Reset i a) k) = Request (Reset i (dist (a <$ c) k)) pure
+  handleState c dist Fresh k = Request Fresh (\result -> dist (pure result <$ c) k)
+  handleState c dist (Reset i a) k = Request (Reset i (dist (a <$ c) k)) pure

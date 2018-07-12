@@ -103,5 +103,5 @@ localState f action = raiseEff $ do
 
 
 instance Effect (State s) where
-  handleState c dist (Request Get k) = Request Get (\result -> dist (pure result <$ c) k)
-  handleState c dist (Request (Put s) k) = Request (Put s) (\result -> dist (pure result <$ c) k)
+  handleState c dist Get k = Request Get (\result -> dist (pure result <$ c) k)
+  handleState c dist (Put s) k = Request (Put s) (\result -> dist (pure result <$ c) k)
