@@ -56,7 +56,7 @@ runReader = raiseHandler . go
   where go :: Effect (Union e) => v -> Eff (Reader v ': e) a -> Eff e a
         go _ (Return a)             = pure a
         go e (Effect Reader k)      = go e (k e)
-        go e (Effect (Local f m) k) = go (f e) (m >>= k)
+        go e (Effect (Local f m) k) = go (f e) m >>= go e . k
         go e (Other u k)            = liftHandler (\act yield -> go e (act >>= yield)) u k
 
 -- |
