@@ -130,7 +130,7 @@ liftStatefulHandler :: (Functor c, Effects effects')
                     -> Union effects' (Eff effects) b
                     -> Arrow (Eff effects) b a
                     -> Eff effects' (c a)
-liftStatefulHandler c handler u k = fromRequest (handleState c handler (Request u k))
+liftStatefulHandler c handler u = fromRequest . handleState c handler . Request u
 
 -- | Lift a pure effect handler through other effects in the 'Union'.
 --
