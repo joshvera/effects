@@ -140,7 +140,7 @@ liftHandler :: Effects effects'
             -> Union effects' (Eff effects) b
             -> Arrow (Eff effects) b a
             -> Eff effects' a
-liftHandler handler u k = runIdentity <$> liftStatefulHandler (Identity ()) (\act k' -> Identity <$> handler (runIdentity act) k') u k
+liftHandler handler u = fmap runIdentity . liftStatefulHandler (Identity ()) (\act -> fmap Identity . handler (coerce act)) u
 
 instance Effect (Union '[]) where
   handleState _ _ _ = error "impossible: handleState on empty Union"
