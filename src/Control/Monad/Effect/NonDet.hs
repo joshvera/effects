@@ -50,7 +50,7 @@ gather = raiseHandler go
         go (E u q) = case prj u of
           Just MZero -> pure []
           Just MPlus -> liftA2 (++) (gather (apply q True)) (gather (apply q False))
-          Nothing    -> liftStatefulHandler [] (fmap join . traverse gather) u (apply q)
+          Nothing    -> liftStatefulHandler [()] (fmap join . traverse gather) u (apply q)
 
 -- | A handler for nondeterminstic effects
 runNonDetA :: (Alternative f, Effectful m, Effects e)
@@ -66,7 +66,7 @@ runNonDet = raiseHandler go
   where go (Return a)       = pure [a]
         go (Effect MZero _) = pure []
         go (Effect MPlus k) = liftA2 (++) (runNonDet (k True)) (runNonDet (k False))
-        go (Other u k)      = liftStatefulHandler [] (fmap join . traverse runNonDet) u k
+        go (Other u k)      = liftStatefulHandler [()] (fmap join . traverse runNonDet) u k
 
 -- FIXME: It would probably be more efficient to define these in terms of a binary tree rather than a list.
 
