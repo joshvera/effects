@@ -50,9 +50,9 @@ runFresh i = raiseHandler (fmap snd . go i)
         go s (Return a)              = pure (s, a)
         go s (Effect Fresh k)        = go (succ s) (k s)
         go s (Effect (Reset s' a) k) = go s' a >>= go s . k . snd
-        go s (Other u k)             = liftStatefulHandler (s, ()) (\(state', act) yield -> go state' (act >>= yield)) u k
+        go s (Other u k)             = liftStatefulHandler (s, ()) (uncurry go) u k
 
 
 instance Effect Fresh where
-  handleState c dist (Request Fresh k) = Request Fresh (\result -> dist (pure result <$ c) k)
-  handleState c dist (Request (Reset i a) k) = Request (Reset i (dist (a <$ c) k)) pure
+  handleState c dist (Request Fresh k) = Request Fresh (dist . (<$ c) . k)
+  handleState c dist (Request (Reset i a) k) = Request (Reset i (dist (a <$ c))) (dist . fmap k)
