@@ -38,6 +38,8 @@ module Control.Monad.Effect
   , Member
   -- * Effects
   , Effects
+  , PureEffect(..)
+  , defaultHandle
   , Effect(..)
   , Lift(..)
   , Exc
