@@ -149,6 +149,7 @@ liftStatefulHandler c handler u k = fromRequest (handleState c handler (Request 
 liftHandler :: Effects effects' => (forall x . Eff effects x -> Eff effects' x) -> Union effects' (Eff effects) b -> (b -> Eff effects a) -> Eff effects' a
 liftHandler handler u k = runIdentity <$> liftStatefulHandler (Identity ()) (fmap Identity . handler . runIdentity) u k
 
+instance PureEffect (Union '[]) where
 instance Effect (Union '[]) where
   handleState _ _ _ = error "impossible: handleState on empty Union"
 
