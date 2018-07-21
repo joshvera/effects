@@ -115,11 +115,11 @@ class Effect effect where
   -- | Lift some initial state and a handler for some effect through another effect.
   --
   --   First-order effects (ones not using the @m@ parameter) have relatively simple definitions, more or less just pushing the distributive law through the continuation. Higher-order effects (like @Reader@’s @Local@ constructor) must additionally apply the handler to their scoped actions.
-  handleState :: Functor c
+  handleState :: (Functor c, Monad m, Monad n)
               => c ()
-              -> (forall x . c (Eff effects x) -> Eff effects' (c x))
-              -> Request effect (Eff effects) a
-              -> Request effect (Eff effects') (c a)
+              -> (forall x . c (m x) -> n (c x))
+              -> Request effect m a
+              -> Request effect n (c a)
 
 -- | Lift a stateful effect handler through other effects in the 'Union'.
 --
