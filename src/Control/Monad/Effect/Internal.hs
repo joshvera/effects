@@ -14,6 +14,7 @@ module Control.Monad.Effect.Internal (
   , pattern Other2
   , Request(..)
   , decomposeEff
+  , PureEffects
   , Effects
   , PureEffect(..)
   , defaultHandle
@@ -163,6 +164,9 @@ instance (Effect effect, Effect (Union effects)) => Effect (Union (effect ': eff
     Left u' -> weaken `requestMap` handleState c dist (Request u' k)
     Right eff -> inj `requestMap` handleState c dist (Request eff k)
 
+
+-- | Require a 'PureEffect' instance for each effect in the list.
+type PureEffects effects = PureEffect (Union effects)
 
 -- | Require an 'Effect' instance for each effect in the list.
 type Effects effects = Effect (Union effects)

@@ -37,6 +37,7 @@ module Control.Monad.Effect
   -- * Checking a List of Effects
   , Member
   -- * Effects
+  , PureEffects
   , Effects
   , PureEffect(..)
   , defaultHandle
