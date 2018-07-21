@@ -1,4 +1,4 @@
-{-# LANGUAGE ConstraintKinds, DataKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, PatternSynonyms, RankNTypes, TypeOperators, UndecidableInstances, ViewPatterns #-}
+{-# LANGUAGE ConstraintKinds, DataKinds, DefaultSignatures, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, PatternSynonyms, RankNTypes, TypeOperators, UndecidableInstances, ViewPatterns #-}
 module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
   Eff(..)
@@ -116,6 +116,8 @@ class PureEffect effect where
   handle :: (forall x . m x -> n x)
          -> Request effect m a
          -> Request effect n a
+  default handle :: (Effect effect, Monad m, Monad n) => (forall x . m x -> n x) -> Request effect m a -> Request effect n a
+  handle = defaultHandle
 
 defaultHandle :: (Effect effect, Monad m, Monad n)
               => (forall x . m x -> n x)
