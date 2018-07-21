@@ -81,5 +81,5 @@ msplit = raiseHandler (fmap (fmap (fmap raiseEff)) . loop [])
                 []      -> pure Nothing
                 (j:jq') -> loop jq' j
             Just MPlus  -> loop (q `apply` False : jq) (q `apply` True)
-            Nothing     -> E u (tsingleton k)
+            Nothing     -> E u (tsingleton (Arrow k))
               where k = q >>> loop jq

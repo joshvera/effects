@@ -89,7 +89,7 @@ transactionState _ m = raiseEff $ do s <- get; loop s (lowerEff m)
    loop s (E (u :: Union e (Eff e) b) q) = case prj u :: Maybe (State s (Eff e) b) of
      Just Get      -> loop s (apply q s)
      Just (Put s') -> loop s'(apply q ())
-     _             -> E u (tsingleton k)
+     _             -> E u (tsingleton (Arrow k))
       where k = q >>> (loop s)
 
 localState :: (Member (State s) effects, Effectful m) => (s -> s) -> m effects a -> m effects a

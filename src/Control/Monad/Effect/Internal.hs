@@ -29,7 +29,7 @@ module Control.Monad.Effect.Internal (
   -- * Constructing and Decomposing Queues of Effects
   , Queue
   , tsingleton
-  , Arrow
+  , Arrow(..)
   , Union
   -- * Composing and Applying Effects
   , apply
@@ -64,37 +64,37 @@ data Eff effects b
   | forall a. E (Union effects (Eff effects) a) (Queue (Eff effects) a b)
 
 -- | The topmost effect, and the continuation following it.
-pattern Effect :: effect (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
+pattern Effect :: effect (Eff (effect ': effects)) b -> (b -> Eff (effect ': effects) a) -> Eff (effect ': effects) a
 pattern Effect eff k <- (decomposeEff -> Right (Request (decompose -> Right eff) k))
 
 -- | Another effect in the 'Union', and the continuation following it.
-pattern Other :: Union effects (Eff (effect ': effects)) b -> Arrow (Eff (effect ': effects)) b a -> Eff (effect ': effects) a
+pattern Other :: Union effects (Eff (effect ': effects)) b -> (b -> Eff (effect ': effects) a) -> Eff (effect ': effects) a
 pattern Other u k <- (decomposeEff -> Right (Request (decompose -> Left u) k))
 {-# COMPLETE Return, Effect, Other #-}
 
 -- | The first of the topmost two effects in the 'Union', and the continuation following it.
-pattern Effect2_1 :: effect1 (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
+pattern Effect2_1 :: effect1 (Eff (effect1 ': effect2 ': effects)) b -> (b -> Eff (effect1 ': effect2 ': effects) a) -> Eff (effect1 ': effect2 ': effects) a
 pattern Effect2_1 eff k <- (decomposeEff -> Right (Request (decompose -> Right eff) k))
 
 -- | The second of the topmost two effects in the 'Union', and the continuation following it.
-pattern Effect2_2 :: effect2 (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
+pattern Effect2_2 :: effect2 (Eff (effect1 ': effect2 ': effects)) b -> (b -> Eff (effect1 ': effect2 ': effects) a) -> Eff (effect1 ': effect2 ': effects) a
 pattern Effect2_2 eff k <- (decomposeEff -> Right (Request (decompose -> Left (decompose -> Right eff)) k))
 
 -- | Another effect in the 'Union', and the continuation following it.
-pattern Other2 :: Union effects (Eff (effect1 ': effect2 ': effects)) b -> Arrow (Eff (effect1 ': effect2 ': effects)) b a -> Eff (effect1 ': effect2 ': effects) a
+pattern Other2 :: Union effects (Eff (effect1 ': effect2 ': effects)) b -> (b -> Eff (effect1 ': effect2 ': effects) a) -> Eff (effect1 ': effect2 ': effects) a
 pattern Other2 u k <- (decomposeEff -> Right (Request (decompose -> Left (decompose -> Left u)) k))
 {-# COMPLETE Return, Effect2_1, Effect2_2, Other2 #-}
 
 
 -- | A queue of effects to apply from 'a' to 'b'.
-type Queue = FTCQueue
+type Queue m = FTCQueue (Arrow m)
 
 -- | An effectful function from 'a' to 'b'
 --   that also performs a list of 'effects'.
-type Arrow m a b = a -> m b
+newtype Arrow m a b = Arrow { runArrow :: a -> m b }
 
 
-data Request effect m a = forall b . Request (effect m b) (Arrow m b a)
+data Request effect m a = forall b . Request (effect m b) (b -> m a)
 
 instance Functor m => Functor (Request effect m) where
   fmap f (Request eff k) = Request eff (fmap f . k)
@@ -103,7 +103,7 @@ requestMap :: (forall x . effect m x -> effect' m x) -> Request effect m a -> Re
 requestMap f (Request effect q) = Request (f effect) q
 
 fromRequest :: Request (Union effects) (Eff effects) a -> Eff effects a
-fromRequest (Request u k) = E u (tsingleton k)
+fromRequest (Request u k) = E u (tsingleton (Arrow k))
 
 -- | Decompose an 'Eff' into 'Either' a value or a 'Request' for one of a 'Union' of effects.
 decomposeEff :: Eff effects a -> Either a (Request (Union effects) (Eff effects) a)
@@ -124,13 +124,13 @@ class Effect effect where
 -- | Lift a stateful effect handler through other effects in the 'Union'.
 --
 --   Useful when defining effect handlers which maintain some state (such as @runState@) or which must return values in some carrier functor encapsulating the effects (such as @runError@).
-liftStatefulHandler :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' (c a)
+liftStatefulHandler :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> Union effects' (Eff effects) b -> (b -> Eff effects a) -> Eff effects' (c a)
 liftStatefulHandler c handler u k = fromRequest (handleState c handler (Request u k))
 
 -- | Lift a pure effect handler through other effects in the 'Union'.
 --
 --   Useful when defining pure effect handlers (such as @runReader@).
-liftHandler :: Effects effects' => (forall x . Eff effects x -> Eff effects' x) -> Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' a
+liftHandler :: Effects effects' => (forall x . Eff effects x -> Eff effects' x) -> Union effects' (Eff effects) b -> (b -> Eff effects a) -> Eff effects' a
 liftHandler handler u k = raiseEff $ runIdentity <$> liftStatefulHandler (Identity ()) (fmap Identity . lowerHandler handler . runIdentity) u (lowerEff . k)
 
 instance Effect (Union '[]) where
@@ -180,28 +180,28 @@ lowerHandler handler = lowerEff . handler . raiseEff
 apply :: Queue (Eff effects) a b -> a -> Eff effects b
 apply q' x =
    case tviewl q' of
-   TOne k  -> k x
-   k :< t -> case k x of
+   TOne k  -> runArrow k x
+   k :< t -> case runArrow k x of
      Return y -> t `apply` y
      E u q -> E u (q >< t)
 
 -- | Compose queues left to right.
 (>>>) :: Queue (Eff effects) a b
       -> (Eff effects b -> Eff effects' c) -- ^ A function to compose.
-      -> Arrow (Eff effects') a c
+      -> (a -> Eff effects' c)
 (>>>) queue f = f . apply queue
 
 -- | Compose queues right to left.
 (<<<) :: (Eff effects b -> Eff effects' c) -- ^ A function to compose.
       -> Queue (Eff effects)  a b
-      -> Arrow (Eff effects') a c
+      -> (a -> Eff effects' c)
 (<<<) f queue  = f . apply queue
 
 -- * Sending and Running Effects
 
 -- | Send an effect and wait for a reply.
 send :: (Member eff e, Effectful m) => eff (Eff e) b -> m e b
-send t = raiseEff (E (inj t) (tsingleton Return))
+send t = raiseEff (E (inj t) (tsingleton (Arrow Return)))
 
 -- | Runs an effect whose effects has been consumed.
 --
@@ -293,7 +293,7 @@ reinterpret2 bind = raiseHandler loop
 
 instance Functor (Eff e) where
   fmap f (Return x) = Return (f x)
-  fmap f (E u q) = E u (q |> (Return . f))
+  fmap f (E u q) = E u (q |> Arrow (Return . f))
   {-# INLINE fmap #-}
 
 instance Applicative (Eff e) where
@@ -301,8 +301,8 @@ instance Applicative (Eff e) where
   {-# INLINE pure #-}
 
   Return f <*> Return x = Return $ f x
-  Return f <*> E u q = E u (q |> (Return . f))
-  E u q <*> m     = E u (q |> (`fmap` m))
+  Return f <*> E u q = E u (q |> Arrow (Return . f))
+  E u q <*> m     = E u (q |> Arrow (`fmap` m))
   {-# INLINE (<*>) #-}
 
 instance Monad (Eff e) where
@@ -310,7 +310,7 @@ instance Monad (Eff e) where
   {-# INLINE return #-}
 
   Return x >>= k = k x
-  E u q >>= k = E u (q |> k)
+  E u q >>= k = E u (q |> Arrow k)
   {-# INLINE (>>=) #-}
 
 instance Member (Lift IO) e => MonadIO (Eff e) where
