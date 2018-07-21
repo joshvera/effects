@@ -15,6 +15,7 @@ module Control.Monad.Effect.Internal (
   , Request(..)
   , decomposeEff
   , Effects
+  , PureEffect(..)
   , Effect(..)
   , liftStatefulHandler
   , liftHandler
@@ -109,6 +110,11 @@ fromRequest (Request u k) = E u (tsingleton (Arrow k))
 decomposeEff :: Eff effects a -> Either a (Request (Union effects) (Eff effects) a)
 decomposeEff (Return a) = Left a
 decomposeEff (E u q) = Right (Request u (apply q))
+
+class PureEffect effect where
+  handle :: (forall x . m x -> n x)
+         -> Request effect m a
+         -> Request effect n a
 
 -- | Effects are higher-order (may themselves contain effectful actions), and as such must be able to thread an effect handler (structured as a distributive law) through themselves.
 class Effect effect where
