@@ -25,7 +25,6 @@ module Data.FTCQueue (
   FTCQueue,
   tsingleton,
   (|>),
-  snoc,
   (><),
   append,
   ViewL(..),
@@ -48,11 +47,6 @@ tsingleton = Leaf
 (|>) :: FTCQueue m a x -> (x -> m b) -> FTCQueue m a b
 t |> r = Node t (Leaf r)
 {-# INLINE (|>) #-}
-
--- | An alias for '(|>)'
-snoc :: FTCQueue m a x -> (x -> m b) -> FTCQueue m a b
-snoc = (|>)
-{-# INLINE snoc #-}
 
 -- | Append two trees of operations [O(1)]
 (><)   :: FTCQueue m a x -> FTCQueue m x b -> FTCQueue m a b
