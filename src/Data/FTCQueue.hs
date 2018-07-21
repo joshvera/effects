@@ -26,7 +26,6 @@ module Data.FTCQueue (
   tsingleton,
   (|>),
   (><),
-  append,
   ViewL(..),
   tviewl
 ) where
@@ -52,11 +51,6 @@ t |> r = Node t (Leaf r)
 (><)   :: FTCQueue arrow a x -> FTCQueue arrow x b -> FTCQueue arrow a b
 t1 >< t2 = Node t1 t2
 {-# INLINE (><) #-}
-
--- | An alias for '(><)'
-append :: FTCQueue arrow a x -> FTCQueue arrow x b -> FTCQueue arrow a b
-append = (><)
-{-# INLINE append #-}
 
 -- | Left view deconstruction data structure
 data ViewL arrow a b where
