@@ -257,7 +257,7 @@ runM m = case lowerEff m of
 -- * Local handlers
 
 -- | Listen for an effect, and take some action before re-sending it.
-eavesdrop :: (Member eff effects, Effectful m, Effects effects)
+eavesdrop :: (Member eff effects, Effectful m, PureEffects effects)
           => (forall v. eff (Eff effects) v -> m effects ())
           -> m effects a
           -> m effects a
@@ -269,7 +269,7 @@ eavesdrop listener = raiseHandler loop
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
-interpose :: (Member eff e, Effectful m, Effects e)
+interpose :: (Member eff e, Effectful m, PureEffects e)
           => (forall v. eff (Eff e) v -> m e v)
           -> m e a
           -> m e a
