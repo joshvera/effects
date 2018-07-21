@@ -50,7 +50,7 @@ runIgnoringTrace :: (Effectful m, PureEffects effects) => m (Trace ': effects) a
 runIgnoringTrace = raiseHandler (interpret (\ (Trace _) -> pure ()))
 
 -- | Run a 'Trace' effect, accumulating the traced values into a list like a 'Writer'.
-runReturningTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects ([String], a)
+runReturningTrace :: (Effectful m, Effects effects) => m (Trace ': effects) a -> m effects ([String], a)
 runReturningTrace = raiseHandler (fmap (first reverse) . runState [] . reinterpret (\ (Trace s) -> modify' (s:)))
 
 
