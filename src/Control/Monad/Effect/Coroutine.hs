@@ -71,5 +71,6 @@ runCoro f = raiseHandler (loop <=< runC)
         loop (Continue a k) = k (f a) >>= loop
 
 
+instance PureEffect (Yield a bs)
 instance Effect (Yield a bs) where
   handleState c dist (Request (Yield a f) k) = Request (Yield a f) (dist . (<$ c) . k)
