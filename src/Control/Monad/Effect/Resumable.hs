@@ -36,5 +36,6 @@ instance (Show1 exc) => Show (SomeExc exc) where
   showsPrec num (SomeExc exc) = liftShowsPrec (const (const id)) (const id) num exc
 
 
+instance PureEffect (Resumable exc)
 instance Effect (Resumable exc) where
   handleState c dist (Request (Resumable exc) k) = Request (Resumable exc) (dist . (<$ c) . k)
