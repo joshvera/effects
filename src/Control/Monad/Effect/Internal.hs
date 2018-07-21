@@ -362,6 +362,7 @@ instance Member NonDet a => MonadPlus (Eff a) where
   mzero       = send MZero
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
 
+instance PureEffect NonDet
 instance Effect NonDet where
   handleState c dist (Request MZero k) = Request MZero (dist . (<$ c) . k)
   handleState c dist (Request MPlus k) = Request MPlus (dist . (<$ c) . k)
