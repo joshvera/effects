@@ -153,6 +153,11 @@ instance PureEffect (Union '[]) where
 instance Effect (Union '[]) where
   handleState _ _ _ = error "impossible: handleState on empty Union"
 
+instance (PureEffect effect, PureEffect (Union effects)) => PureEffect (Union (effect ': effects)) where
+  handle handler (Request u k) = case decompose u of
+    Left u' -> weaken `requestMap` handle handler (Request u' k)
+    Right eff -> inj `requestMap` handle handler (Request eff k)
+
 instance (Effect effect, Effect (Union effects)) => Effect (Union (effect ': effects)) where
   handleState c dist (Request u k) = case decompose u of
     Left u' -> weaken `requestMap` handleState c dist (Request u' k)
