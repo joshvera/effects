@@ -130,7 +130,7 @@ liftStatefulHandler c handler u k = fromRequest (handleState c handler (Request 
 -- | Lift a pure effect handler through other effects in the 'Union'.
 --
 --   Useful when defining pure effect handlers (such as @runReader@).
-liftHandler :: (Effectful m, Effects effects') => (forall x . m effects x -> m effects' x) -> Union effects' (Eff effects) b -> Arrow (m effects) b a -> m effects' a
+liftHandler :: Effects effects' => (forall x . Eff effects x -> Eff effects' x) -> Union effects' (Eff effects) b -> Arrow (Eff effects) b a -> Eff effects' a
 liftHandler handler u k = raiseEff $ runIdentity <$> liftStatefulHandler (Identity ()) (fmap Identity . lowerHandler handler . runIdentity) u (lowerEff . k)
 
 instance Effect (Union '[]) where
