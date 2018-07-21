@@ -43,5 +43,6 @@ runWriter = raiseHandler (go mempty)
         go w (Other u k)           = liftStatefulHandler (w, ()) (uncurry go) u k
 
 
+instance PureEffect (Writer o)
 instance Effect (Writer o) where
   handleState c dist (Request (Writer o) k) = Request (Writer o) (dist . (<$ c) . k)
