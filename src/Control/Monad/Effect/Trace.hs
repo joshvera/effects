@@ -54,5 +54,6 @@ runReturningTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effect
 runReturningTrace = raiseHandler (fmap (first reverse) . runState [] . reinterpret (\ (Trace s) -> modify' (s:)))
 
 
+instance PureEffect Trace
 instance Effect Trace where
   handleState c dist (Request (Trace s) k) = Request (Trace s) (dist . (<$ c) . k)
