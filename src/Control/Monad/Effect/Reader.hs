@@ -68,6 +68,7 @@ local :: forall v b m e. (Member (Reader v) e, Effectful m) =>
 local f m = send (Local f (lowerEff m))
 
 
+instance PureEffect (Reader r)
 instance Effect (Reader r) where
   handleState c dist (Request Reader k) = Request Reader (dist . (<$ c) . k)
   handleState c dist (Request (Local f a) k) = Request (Local f (dist (a <$ c))) (dist . fmap k)
