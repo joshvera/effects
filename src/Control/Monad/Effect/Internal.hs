@@ -16,6 +16,7 @@ module Control.Monad.Effect.Internal (
   , decomposeEff
   , Effects
   , PureEffect(..)
+  , defaultHandle
   , Effect(..)
   , liftStatefulHandler
   , liftHandler
@@ -115,6 +116,12 @@ class PureEffect effect where
   handle :: (forall x . m x -> n x)
          -> Request effect m a
          -> Request effect n a
+
+defaultHandle :: (Effect effect, Monad m, Monad n)
+              => (forall x . m x -> n x)
+              -> Request effect m a
+              -> Request effect n a
+defaultHandle handler (Request u k) = runIdentity <$> handleState (Identity ()) (fmap Identity . handler . runIdentity) (Request u k)
 
 -- | Effects are higher-order (may themselves contain effectful actions), and as such must be able to thread an effect handler (structured as a distributive law) through themselves.
 class Effect effect where
