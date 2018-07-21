@@ -180,7 +180,7 @@ lowerHandler handler = lowerEff . handler . raiseEff
 apply :: Queue (Eff effects) a b -> a -> Eff effects b
 apply q' x =
    case tviewl q' of
-   TOne k  -> runArrow k x
+   TAEmptyL  -> pure x
    k :< t -> case runArrow k x of
      Return y -> t `apply` y
      E u q -> E u (q >< t)

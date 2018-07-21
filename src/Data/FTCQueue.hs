@@ -26,42 +26,38 @@ module Data.FTCQueue (
   tsingleton,
   (|>),
   (><),
-  ViewL(..),
+  TAViewL(..),
   tviewl
 ) where
+
+import Data.TASequence
 
 -- |
 -- Non-empty tree. Deconstruction operations make it more and more
 -- left-leaning
 data FTCQueue arrow a b where
+  Empty :: FTCQueue arrow a a
   Leaf :: arrow a b -> FTCQueue arrow a b
   Node :: FTCQueue arrow a x -> FTCQueue arrow x b -> FTCQueue arrow a b
 
--- | Build a leaf from a single operation [O(1)]
-tsingleton :: arrow a b -> FTCQueue arrow a b
-tsingleton = Leaf
-{-# INLINE tsingleton #-}
+instance TASequence FTCQueue where
+  tempty = Empty
+  {-# INLINE tempty #-}
 
--- | Append an operation to the right of the tree [O(1)]
-(|>) :: FTCQueue arrow a x -> arrow x b -> FTCQueue arrow a b
-t |> r = Node t (Leaf r)
-{-# INLINE (|>) #-}
+  tsingleton = Leaf
+  {-# INLINE tsingleton #-}
 
--- | Append two trees of operations [O(1)]
-(><)   :: FTCQueue arrow a x -> FTCQueue arrow x b -> FTCQueue arrow a b
-t1 >< t2 = Node t1 t2
-{-# INLINE (><) #-}
+  t |> r = Node t (Leaf r)
+  {-# INLINE (|>) #-}
 
--- | Left view deconstruction data structure
-data ViewL arrow a b where
-  TOne  :: arrow a b -> ViewL arrow a b
-  (:<)  :: arrow a x -> FTCQueue arrow x b -> ViewL arrow a b
+  t1 >< t2 = Node t1 t2
+  {-# INLINE (><) #-}
 
--- | Left view deconstruction [average O(1)]
-tviewl :: FTCQueue arrow a b -> ViewL arrow a b
-tviewl (Leaf r) = TOne r
-tviewl (Node t1 t2) = go t1 t2
- where
-   go :: FTCQueue arrow a x -> FTCQueue arrow x b -> ViewL arrow a b
-   go (Leaf r) tr = r :< tr
-   go (Node tl1 tl2) tr = go tl1 (Node tl2 tr)
+  tviewl Empty = TAEmptyL
+  tviewl (Leaf r) = r :< Empty
+  tviewl (Node t1 t2) = go t1 t2
+   where
+     go :: FTCQueue arrow a x -> FTCQueue arrow x b -> TAViewL FTCQueue arrow a b
+     go Empty tr = tviewl tr
+     go (Leaf r) tr = r :< tr
+     go (Node tl1 tl2) tr = go tl1 (Node tl2 tr)
