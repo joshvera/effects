@@ -49,7 +49,7 @@ throwError = send . Throw
 -- If there are no exceptions thrown, returns Right If exceptions are
 -- thrown and not handled, returns Left, interrupting the execution of
 -- any other effect handlers.
-runError :: (Effectful m, Effect (Union e)) => m (Exc exc ': e) a -> m e (Either exc a)
+runError :: (Effectful m, Effects e) => m (Exc exc ': e) a -> m e (Either exc a)
 runError = raiseHandler go
   where go (Return a)             = pure (Right a)
         go (Effect (Throw e) _)   = pure (Left e)

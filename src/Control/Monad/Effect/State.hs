@@ -39,7 +39,7 @@ import Data.Proxy
 --------------------------------------------------------------------------------
 
 -- | Run a 'State s' effect given an effect and an initial state.
-runState :: (Effectful m, Effect (Union e)) => s -> m (State s ': e) b -> m e (s, b)
+runState :: (Effectful m, Effects e) => s -> m (State s ': e) b -> m e (s, b)
 runState = raiseHandler . go
   where go s (Return a)         = pure (s, a)
         go s (Effect Get k)     = runState s (k s)

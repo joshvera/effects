@@ -8,7 +8,7 @@ module Control.Monad.Effect.Fail
 import Control.Monad.Effect.Internal
 import Control.Monad.Fail
 
-runFail :: (Effectful m, Effect (Union effs)) => m (Fail ': effs) a -> m effs (Either String a)
+runFail :: (Effectful m, Effects effs) => m (Fail ': effs) a -> m effs (Either String a)
 runFail = raiseHandler go
   where go (Return a)          = pure (Right a)
         go (Effect (Fail s) _) = pure (Left s)

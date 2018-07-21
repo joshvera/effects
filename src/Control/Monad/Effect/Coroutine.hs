@@ -58,14 +58,14 @@ joinStatus :: Effect (Union effs) => Status Eff effs a b (Eff (Yield a b : effs)
 joinStatus = status runC (\ a f -> pure (Continue a (joinStatus <=< f)))
 
 -- | Launch a thread and report its status
-runC :: (Effectful m, Effect (Union effs)) => m (Yield a b ': effs) w -> m effs (Status m effs a b w)
+runC :: (Effectful m, Effects effs) => m (Yield a b ': effs) w -> m effs (Status m effs a b w)
 runC = raiseHandler (fmap raiseStatus . go)
   where go (Return a)             = pure (Done a)
         go (Effect (Yield a f) k) = pure (Continue a (runC . k . f))
         go (Other u k)            = liftStatefulHandler (Done ()) joinStatus u k
 
 -- | Launch a thread and run it to completion using a helper function to provide new inputs.
-runCoro :: (Effectful m, Effect (Union effs)) => (a -> b) -> m (Yield a b ': effs) w -> m effs w
+runCoro :: (Effectful m, Effects effs) => (a -> b) -> m (Yield a b ': effs) w -> m effs w
 runCoro f = raiseHandler (loop <=< runC)
   where loop (Done a)       = pure a
         loop (Continue a k) = k (f a) >>= loop
