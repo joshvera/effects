@@ -113,7 +113,8 @@ decomposeEff (Return a) = Left a
 decomposeEff (E u q) = Right (Request u (apply q))
 
 class PureEffect effect where
-  handle :: (forall x . m x -> n x)
+  handle :: (Functor m, Functor n)
+         => (forall x . m x -> n x)
          -> Request effect m a
          -> Request effect n a
   default handle :: (Effect effect, Functor m, Functor n) => (forall x . m x -> n x) -> Request effect m a -> Request effect n a
