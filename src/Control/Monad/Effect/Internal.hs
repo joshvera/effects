@@ -374,5 +374,6 @@ newtype Fail (m :: * -> *) a = Fail { failMessage :: String }
 instance Member Fail fs => MonadFail (Eff fs) where
   fail = send . Fail
 
+instance PureEffect Fail
 instance Effect Fail where
   handleState c dist (Request (Fail s) k) = Request (Fail s) (dist . (<$ c) . k)
