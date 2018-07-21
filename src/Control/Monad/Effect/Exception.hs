@@ -73,6 +73,7 @@ handleError :: (Member (Exc exc) e, Effectful m) => (exc -> m e a) -> m e a -> m
 handleError = flip catchError
 
 
+instance PureEffect (Exc exc)
 instance Effect (Exc exc) where
   handleState c dist (Request (Throw exc) k) = Request (Throw exc) (dist . (<$ c) . k)
   handleState c dist (Request (Catch a h) k) = Request (Catch (dist (a <$ c)) (dist . (<$ c) . h)) (dist . fmap k)
