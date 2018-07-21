@@ -101,6 +101,7 @@ localState f action = raiseEff $ do
   pure v
 
 
+instance PureEffect (State s)
 instance Effect (State s) where
   handleState c dist (Request Get k) = Request Get (dist . (<$ c) . k)
   handleState c dist (Request (Put s) k) = Request (Put s) (dist . (<$ c) . k)
