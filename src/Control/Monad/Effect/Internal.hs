@@ -52,8 +52,8 @@ import Control.Monad (MonadPlus (..))
 import Control.Monad.Fail (MonadFail (..))
 import Control.Monad.IO.Class (MonadIO (..))
 import Data.Coerce
-import Data.FTCQueue
 import Data.Functor.Identity
+import Data.TASequence.BinaryTree
 import Data.Union
 
 -- | An effectful computation that returns 'b' and sends a list of 'effects'.
@@ -87,7 +87,7 @@ pattern Other2 u k <- (decomposeEff -> Right (Request (decompose -> Left (decomp
 
 
 -- | A queue of effects to apply from 'a' to 'b'.
-type Queue m = FTCQueue (Arrow m)
+type Queue m = BinaryTree (Arrow m)
 
 -- | An effectful function from 'a' to 'b'
 --   that also performs a list of 'effects'.
