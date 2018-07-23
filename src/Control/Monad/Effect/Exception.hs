@@ -95,7 +95,7 @@ rethrowing m = raiseEff (liftIO (Exc.try m) >>= either (throwError . Exc.toExcep
 -- Call 'catchIO' at the call site if you want to recover.
 bracket :: ( Member (Lift IO) e
            , Effectful m
-           , Effects e
+           , PureEffects e
            )
         => IO a
         -> (a -> IO b)
