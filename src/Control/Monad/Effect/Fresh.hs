@@ -53,6 +53,7 @@ runFresh i = raiseHandler (fmap snd . go i)
         go s (Other u k)             = liftStatefulHandler (s, ()) (uncurry go) u k
 
 
+instance PureEffect Fresh
 instance Effect Fresh where
   handleState c dist (Request Fresh k) = Request Fresh (dist . (<$ c) . k)
   handleState c dist (Request (Reset i a) k) = Request (Reset i (dist (a <$ c))) (dist . fmap k)

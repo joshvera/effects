@@ -51,9 +51,9 @@ asks :: (Member (Reader v) e, Effectful m) => (v -> a) -> m e a
 asks f = raiseEff (f <$> ask)
 
 -- | Handler for reader effects
-runReader :: (Effectful m, Effect (Union e)) => v -> m (Reader v ': e) a -> m e a
+runReader :: (Effectful m, PureEffects e) => v -> m (Reader v ': e) a -> m e a
 runReader = raiseHandler . go
-  where go :: Effect (Union e) => v -> Eff (Reader v ': e) a -> Eff e a
+  where go :: PureEffects e => v -> Eff (Reader v ': e) a -> Eff e a
         go _ (Return a)             = pure a
         go e (Effect Reader k)      = go e (k e)
         go e (Effect (Local f m) k) = go (f e) (m >>= k)
@@ -68,6 +68,7 @@ local :: forall v b m e. (Member (Reader v) e, Effectful m) =>
 local f m = send (Local f (lowerEff m))
 
 
+instance PureEffect (Reader r)
 instance Effect (Reader r) where
   handleState c dist (Request Reader k) = Request Reader (dist . (<$ c) . k)
   handleState c dist (Request (Local f a) k) = Request (Local f (dist (a <$ c))) (dist . fmap k)

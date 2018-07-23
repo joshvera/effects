@@ -42,17 +42,18 @@ trace :: (Member Trace e, Effectful m) => String -> m e ()
 trace = send . Trace
 
 -- | An IO handler for Trace effects. Prints output to stderr.
-runPrintingTrace :: (Member (Lift IO) effects, Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects a
+runPrintingTrace :: (Member (Lift IO) effects, Effectful m, PureEffects effects) => m (Trace ': effects) a -> m effects a
 runPrintingTrace = raiseHandler (interpret (\ (Trace s) -> liftIO (hPutStrLn stderr s)))
 
 -- | Run a 'Trace' effect, discarding the traced values.
-runIgnoringTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects a
+runIgnoringTrace :: (Effectful m, PureEffects effects) => m (Trace ': effects) a -> m effects a
 runIgnoringTrace = raiseHandler (interpret (\ (Trace _) -> pure ()))
 
 -- | Run a 'Trace' effect, accumulating the traced values into a list like a 'Writer'.
-runReturningTrace :: (Effectful m, Effect (Union effects)) => m (Trace ': effects) a -> m effects ([String], a)
+runReturningTrace :: (Effectful m, Effects effects) => m (Trace ': effects) a -> m effects ([String], a)
 runReturningTrace = raiseHandler (fmap (first reverse) . runState [] . reinterpret (\ (Trace s) -> modify' (s:)))
 
 
+instance PureEffect Trace
 instance Effect Trace where
   handleState c dist (Request (Trace s) k) = Request (Trace s) (dist . (<$ c) . k)

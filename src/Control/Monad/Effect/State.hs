@@ -39,7 +39,7 @@ import Data.Proxy
 --------------------------------------------------------------------------------
 
 -- | Run a 'State s' effect given an effect and an initial state.
-runState :: (Effectful m, Effect (Union e)) => s -> m (State s ': e) b -> m e (s, b)
+runState :: (Effectful m, Effects e) => s -> m (State s ': e) b -> m e (s, b)
 runState = raiseHandler . go
   where go s (Return a)         = pure (s, a)
         go s (Effect Get k)     = runState s (k s)
@@ -101,6 +101,7 @@ localState f action = raiseEff $ do
   pure v
 
 
+instance PureEffect (State s)
 instance Effect (State s) where
   handleState c dist (Request Get k) = Request Get (dist . (<$ c) . k)
   handleState c dist (Request (Put s) k) = Request (Put s) (dist . (<$ c) . k)

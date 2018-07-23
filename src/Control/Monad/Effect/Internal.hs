@@ -1,4 +1,4 @@
-{-# LANGUAGE ConstraintKinds, DataKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, PatternSynonyms, RankNTypes, TypeOperators, UndecidableInstances, ViewPatterns #-}
+{-# LANGUAGE ConstraintKinds, DataKinds, DefaultSignatures, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, PatternSynonyms, RankNTypes, TypeOperators, UndecidableInstances, ViewPatterns #-}
 module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
   Eff(..)
@@ -14,7 +14,10 @@ module Control.Monad.Effect.Internal (
   , pattern Other2
   , Request(..)
   , decomposeEff
+  , PureEffects
   , Effects
+  , PureEffect(..)
+  , defaultHandle
   , Effect(..)
   , liftStatefulHandler
   , liftHandler
@@ -110,16 +113,30 @@ decomposeEff :: Eff effects a -> Either a (Request (Union effects) (Eff effects)
 decomposeEff (Return a) = Left a
 decomposeEff (E u q) = Right (Request u (apply q))
 
+class PureEffect effect where
+  handle :: (Functor m, Functor n)
+         => (forall x . m x -> n x)
+         -> Request effect m a
+         -> Request effect n a
+  default handle :: (Effect effect, Functor m, Functor n) => (forall x . m x -> n x) -> Request effect m a -> Request effect n a
+  handle = defaultHandle
+
+defaultHandle :: (Effect effect, Functor m, Functor n)
+              => (forall x . m x -> n x)
+              -> Request effect m a
+              -> Request effect n a
+defaultHandle handler (Request u k) = runIdentity <$> handleState (Identity ()) (fmap Identity . handler . runIdentity) (Request u k)
+
 -- | Effects are higher-order (may themselves contain effectful actions), and as such must be able to thread an effect handler (structured as a distributive law) through themselves.
-class Effect effect where
+class PureEffect effect => Effect effect where
   -- | Lift some initial state and a handler for some effect through another effect.
   --
   --   First-order effects (ones not using the @m@ parameter) have relatively simple definitions, more or less just pushing the distributive law through the continuation. Higher-order effects (like @Reader@’s @Local@ constructor) must additionally apply the handler to their scoped actions.
-  handleState :: Functor c
+  handleState :: (Functor c, Functor m, Functor n)
               => c ()
-              -> (forall x . c (Eff effects x) -> Eff effects' (c x))
-              -> Request effect (Eff effects) a
-              -> Request effect (Eff effects') (c a)
+              -> (forall x . c (m x) -> n (c x))
+              -> Request effect m a
+              -> Request effect n (c a)
 
 -- | Lift a stateful effect handler through other effects in the 'Union'.
 --
@@ -130,17 +147,26 @@ liftStatefulHandler c handler u k = fromRequest (handleState c handler (Request 
 -- | Lift a pure effect handler through other effects in the 'Union'.
 --
 --   Useful when defining pure effect handlers (such as @runReader@).
-liftHandler :: Effects effects' => (forall x . Eff effects x -> Eff effects' x) -> Union effects' (Eff effects) b -> (b -> Eff effects a) -> Eff effects' a
-liftHandler handler u k = raiseEff $ runIdentity <$> liftStatefulHandler (Identity ()) (fmap Identity . lowerHandler handler . runIdentity) u (lowerEff . k)
+liftHandler :: (Effectful m, PureEffects effects') => (forall x . m effects x -> m effects' x) -> Union effects' (Eff effects) b -> (b -> m effects a) -> m effects' a
+liftHandler handler u k = raiseEff (fromRequest (handle (lowerHandler handler) (Request u (lowerEff . k))))
 
+instance PureEffect (Union '[])
 instance Effect (Union '[]) where
   handleState _ _ _ = error "impossible: handleState on empty Union"
+
+instance (PureEffect effect, PureEffect (Union effects)) => PureEffect (Union (effect ': effects)) where
+  handle handler (Request u k) = case decompose u of
+    Left u' -> weaken `requestMap` handle handler (Request u' k)
+    Right eff -> inj `requestMap` handle handler (Request eff k)
 
 instance (Effect effect, Effect (Union effects)) => Effect (Union (effect ': effects)) where
   handleState c dist (Request u k) = case decompose u of
     Left u' -> weaken `requestMap` handleState c dist (Request u' k)
     Right eff -> inj `requestMap` handleState c dist (Request eff k)
 
+
+-- | Require a 'PureEffect' instance for each effect in the list.
+type PureEffects effects = PureEffect (Union effects)
 
 -- | Require an 'Effect' instance for each effect in the list.
 type Effects effects = Effect (Union effects)
@@ -231,7 +257,7 @@ runM m = case lowerEff m of
 -- * Local handlers
 
 -- | Listen for an effect, and take some action before re-sending it.
-eavesdrop :: (Member eff effects, Effectful m, Effects effects)
+eavesdrop :: (Member eff effects, Effectful m, PureEffects effects)
           => (forall v. eff (Eff effects) v -> m effects ())
           -> m effects a
           -> m effects a
@@ -243,7 +269,7 @@ eavesdrop listener = raiseHandler loop
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
-interpose :: (Member eff e, Effectful m, Effects e)
+interpose :: (Member eff e, Effectful m, PureEffects e)
           => (forall v. eff (Eff e) v -> m e v)
           -> m e a
           -> m e a
@@ -258,7 +284,7 @@ interpose handler = raiseHandler loop
 -- * Effect handlers
 
 -- | Handle the topmost effect by interpreting it into the underlying effects.
-interpret :: (Effectful m, Effects effs)
+interpret :: (Effectful m, PureEffects effs)
           => (forall v. eff (Eff (eff ': effs)) v -> m effs v)
           -> m (eff ': effs) a
           -> m effs a
@@ -269,7 +295,7 @@ interpret bind = raiseHandler loop
 
 
 -- | Interpret an effect by replacing it with another effect.
-reinterpret :: (Effectful m, Effects (newEffect ': effs))
+reinterpret :: (Effectful m, PureEffects (newEffect ': effs))
             => (forall v. effect (Eff (effect ': effs)) v -> m (newEffect ': effs) v)
             -> m (effect ': effs) a
             -> m (newEffect ': effs) a
@@ -279,7 +305,7 @@ reinterpret bind = raiseHandler loop
         loop (Other u k)    = liftHandler (reinterpret (lowerEff . bind)) (weaken u) k
 
 -- | Interpret an effect by replacing it with two new effects.
-reinterpret2 :: (Effectful m, Effects (newEffect1 ': newEffect2 ': effs))
+reinterpret2 :: (Effectful m, PureEffects (newEffect1 ': newEffect2 ': effs))
              => (forall v. effect (Eff (effect ': effs)) v -> m (newEffect1 ': newEffect2 ': effs) v)
              -> m (effect ': effs) a
              -> m (newEffect1 ': newEffect2 ': effs) a
@@ -322,6 +348,7 @@ instance Member (Lift IO) e => MonadIO (Eff e) where
 newtype Lift effect (m :: * -> *) a = Lift { unLift :: effect a }
   deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
 
+instance PureEffect (Lift effect)
 instance Effect (Lift effect) where
   handleState c dist (Request (Lift op) k) = Request (Lift op) (dist . (<$ c) . k)
 
@@ -339,6 +366,7 @@ instance Member NonDet a => MonadPlus (Eff a) where
   mzero       = send MZero
   mplus m1 m2 = send MPlus >>= \x -> if x then m1 else m2
 
+instance PureEffect NonDet
 instance Effect NonDet where
   handleState c dist (Request MZero k) = Request MZero (dist . (<$ c) . k)
   handleState c dist (Request MPlus k) = Request MPlus (dist . (<$ c) . k)
@@ -350,5 +378,6 @@ newtype Fail (m :: * -> *) a = Fail { failMessage :: String }
 instance Member Fail fs => MonadFail (Eff fs) where
   fail = send . Fail
 
+instance PureEffect Fail
 instance Effect Fail where
   handleState c dist (Request (Fail s) k) = Request (Fail s) (dist . (<$ c) . k)

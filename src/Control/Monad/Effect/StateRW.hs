@@ -33,9 +33,9 @@ import Control.Monad.Effect.Writer
 import Control.Monad.Effect.Internal
 
 -- | State handler, using Reader/Writer effects
-runStateR :: (Effectful m, Effect (Union e)) => s -> m (Writer s ': Reader s ': e) a -> m e (s, a)
+runStateR :: (Effectful m, Effects e) => s -> m (Writer s ': Reader s ': e) a -> m e (s, a)
 runStateR = raiseHandler . go
-  where go :: Effect (Union e) => s -> Eff (Writer s ': Reader s ': e) a -> Eff e (s, a)
+  where go :: Effects e => s -> Eff (Writer s ': Reader s ': e) a -> Eff e (s, a)
         go s (Return a)                = pure (s, a)
         go _ (Effect2_1 (Writer s) k)  = go s (k ())
         go s (Effect2_2 Reader k)      = go s (k s)

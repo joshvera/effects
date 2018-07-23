@@ -35,13 +35,14 @@ tell :: (Member (Writer o) e, Effectful m) => o -> m e ()
 tell = send . Writer
 
 -- | Simple handler for Writer effects
-runWriter :: (Monoid o, Effectful m, Effect (Union e)) => m (Writer o ': e) a -> m e (o, a)
+runWriter :: (Monoid o, Effectful m, Effects e) => m (Writer o ': e) a -> m e (o, a)
 runWriter = raiseHandler (go mempty)
-  where go :: (Monoid o, Effect (Union e)) => o -> Eff (Writer o ': e) a -> Eff e (o, a)
+  where go :: (Monoid o, Effects e) => o -> Eff (Writer o ': e) a -> Eff e (o, a)
         go w (Return a)            = pure (w, a)
         go w (Effect (Writer o) k) = go (w `mappend` o) (k ())
         go w (Other u k)           = liftStatefulHandler (w, ()) (uncurry go) u k
 
 
+instance PureEffect (Writer o)
 instance Effect (Writer o) where
   handleState c dist (Request (Writer o) k) = Request (Writer o) (dist . (<$ c) . k)
