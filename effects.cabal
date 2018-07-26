@@ -40,6 +40,7 @@ library
                      , Control.Monad.Effect.Cut
                      , Control.Monad.Effect.Exception
                      , Control.Monad.Effect.Fail
+                     , Control.Monad.Effect.Fused
                      , Control.Monad.Effect.Fresh
                      , Control.Monad.Effect.Internal
                      , Control.Monad.Effect.NonDet
@@ -52,6 +53,7 @@ library
                      , Data.Union
   build-depends:       base >=4.7 && <5
                      , type-aligned
+                     , mtl
   hs-source-dirs:      src
   ghc-options:         -Wall
   default-language:    Haskell2010
