@@ -40,7 +40,6 @@ library
                      , Control.Monad.Effect.Cut
                      , Control.Monad.Effect.Exception
                      , Control.Monad.Effect.Fail
-                     , Control.Monad.Effect.Fused
                      , Control.Monad.Effect.Fresh
                      , Control.Monad.Effect.Internal
                      , Control.Monad.Effect.NonDet
@@ -50,6 +49,8 @@ library
                      , Control.Monad.Effect.StateRW
                      , Control.Monad.Effect.Trace
                      , Control.Monad.Effect.Writer
+                     , Control.Monad.Fused.Internal
+                     , Control.Monad.Fused.State
                      , Data.Union
   build-depends:       base >=4.7 && <5
                      , type-aligned
