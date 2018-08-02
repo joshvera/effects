@@ -277,7 +277,7 @@ interpose handler = raiseHandler loop
   where loop (Return a) = pure a
         loop (E u q) = case prj u of
           Just eff -> lowerEff (handler eff) >>= k
-          _        -> liftHandler (interpose (lowerEff . handler)) u k
+          _        -> liftHandler (interpose (lowerEff . handler)) u (apply q)
           where k = q >>> loop
 
 
