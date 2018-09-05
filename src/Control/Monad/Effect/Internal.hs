@@ -245,6 +245,7 @@ send t = raiseEff (E (inj t) (tsingleton (Arrow Return)))
 {-# RULES
   "send/bind" [~3] forall t k. send t >>= k = E (inj t) (tsingleton (Arrow k))
   #-}
+
 -- | Runs an effect whose effects has been consumed.
 --
 -- Typically composed as follows:
