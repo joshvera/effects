@@ -101,17 +101,21 @@ data Request effect m a = forall b . Request (effect m b) (b -> m a)
 
 instance Functor m => Functor (Request effect m) where
   fmap f (Request eff k) = Request eff (fmap f . k)
+  {-# INLINE fmap #-}
 
 requestMap :: (forall x . effect m x -> effect' m x) -> Request effect m a -> Request effect' m a
 requestMap f (Request effect q) = Request (f effect) q
+{-# INLINE requestMap #-}
 
 fromRequest :: Request (Union effects) (Eff effects) a -> Eff effects a
 fromRequest (Request u k) = E u (tsingleton (Arrow k))
+{-# INLINE fromRequest #-}
 
 -- | Decompose an 'Eff' into 'Either' a value or a 'Request' for one of a 'Union' of effects.
 decomposeEff :: Eff effects a -> Either a (Request (Union effects) (Eff effects) a)
 decomposeEff (Return a) = Left a
 decomposeEff (E u q) = Right (Request u (apply q))
+{-# INLINE decomposeEff #-}
 
 class PureEffect effect where
   handle :: (Functor m, Functor n)
@@ -120,12 +124,14 @@ class PureEffect effect where
          -> Request effect n a
   default handle :: (Effect effect, Functor m, Functor n) => (forall x . m x -> n x) -> Request effect m a -> Request effect n a
   handle = defaultHandle
+  {-# INLINE handle #-}
 
 defaultHandle :: (Effect effect, Functor m, Functor n)
               => (forall x . m x -> n x)
               -> Request effect m a
               -> Request effect n a
 defaultHandle handler (Request u k) = runIdentity <$> handleState (Identity ()) (fmap Identity . handler . runIdentity) (Request u k)
+{-# INLINE defaultHandle #-}
 
 -- | Effects are higher-order (may themselves contain effectful actions), and as such must be able to thread an effect handler (structured as a distributive law) through themselves.
 class PureEffect effect => Effect effect where
@@ -143,12 +149,14 @@ class PureEffect effect => Effect effect where
 --   Useful when defining effect handlers which maintain some state (such as @runState@) or which must return values in some carrier functor encapsulating the effects (such as @runError@).
 liftStatefulHandler :: (Functor c, Effects effects') => c () -> (forall x . c (Eff effects x) -> Eff effects' (c x)) -> Union effects' (Eff effects) b -> (b -> Eff effects a) -> Eff effects' (c a)
 liftStatefulHandler c handler u k = fromRequest (handleState c handler (Request u k))
+{-# INLINE liftStatefulHandler #-}
 
 -- | Lift a pure effect handler through other effects in the 'Union'.
 --
 --   Useful when defining pure effect handlers (such as @runReader@).
 liftHandler :: (Effectful m, PureEffects effects') => (forall x . m effects x -> m effects' x) -> Union effects' (Eff effects) b -> (b -> m effects a) -> m effects' a
 liftHandler handler u k = raiseEff (fromRequest (handle (lowerHandler handler) (Request u (lowerEff . k))))
+{-# INLINE liftHandler #-}
 
 instance PureEffect (Union '[])
 instance Effect (Union '[]) where
@@ -158,11 +166,13 @@ instance (PureEffect effect, PureEffect (Union effects)) => PureEffect (Union (e
   handle handler (Request u k) = case decompose u of
     Left u' -> weaken `requestMap` handle handler (Request u' k)
     Right eff -> inj `requestMap` handle handler (Request eff k)
+  {-# INLINE handle #-}
 
 instance (Effect effect, Effect (Union effects)) => Effect (Union (effect ': effects)) where
   handleState c dist (Request u k) = case decompose u of
     Left u' -> weaken `requestMap` handleState c dist (Request u' k)
     Right eff -> inj `requestMap` handleState c dist (Request eff k)
+  {-# INLINE handleState #-}
 
 
 -- | Require a 'PureEffect' instance for each effect in the list.
@@ -210,18 +220,21 @@ apply q' x =
    k :< t -> case runArrow k x of
      Return y -> t `apply` y
      E u q -> E u (q >< t)
+{-# INLINE apply #-}
 
 -- | Compose queues left to right.
 (>>>) :: Queue (Eff effects) a b
       -> (Eff effects b -> Eff effects' c) -- ^ A function to compose.
       -> (a -> Eff effects' c)
 (>>>) queue f = f . apply queue
+{-# INLINE (>>>) #-}
 
 -- | Compose queues right to left.
 (<<<) :: (Eff effects b -> Eff effects' c) -- ^ A function to compose.
       -> Queue (Eff effects)  a b
       -> (a -> Eff effects' c)
 (<<<) f queue  = f . apply queue
+{-# INLINE (<<<) #-}
 
 -- * Sending and Running Effects
 
@@ -252,6 +265,7 @@ runM :: (Effectful m, Monad m1) => m '[Lift m1] a -> m1 a
 runM m = case lowerEff m of
   Return x -> pure x
   E u q -> unLift (strengthen u) >>= runM . apply q
+{-# SPECIALIZE runM :: Eff '[Lift IO] a -> IO a #-}
 
 
 -- * Local handlers
@@ -266,6 +280,7 @@ eavesdrop listener = raiseHandler loop
         loop (E u q) = case prj u of
           Just eff -> lowerEff (listener eff) >> send eff >>= (q >>> loop)
           _        -> liftHandler (eavesdrop (lowerEff . listener)) u (apply q)
+{-# INLINE eavesdrop #-}
 
 -- | Intercept the request and possibly reply to it, but leave it
 -- unhandled
@@ -279,6 +294,7 @@ interpose handler = raiseHandler loop
           Just eff -> lowerEff (handler eff) >>= k
           _        -> liftHandler (interpose (lowerEff . handler)) u (apply q)
           where k = q >>> loop
+{-# INLINE interpose #-}
 
 
 -- * Effect handlers
@@ -292,6 +308,7 @@ interpret bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
         loop (Other u k)    = liftHandler (interpret (lowerEff . bind)) u k
+{-# INLINE interpret #-}
 
 
 -- | Interpret an effect by replacing it with another effect.
@@ -303,6 +320,7 @@ reinterpret bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
         loop (Other u k)    = liftHandler (reinterpret (lowerEff . bind)) (weaken u) k
+{-# INLINE reinterpret #-}
 
 -- | Interpret an effect by replacing it with two new effects.
 reinterpret2 :: (Effectful m, PureEffects (newEffect1 ': newEffect2 ': effs))
@@ -313,6 +331,7 @@ reinterpret2 bind = raiseHandler loop
   where loop (Return a)     = pure a
         loop (Effect eff k) = lowerEff (bind eff) >>= loop . k
         loop (Other u k)    = liftHandler (reinterpret2 (lowerEff . bind)) (weaken (weaken u)) k
+{-# INLINE reinterpret2 #-}
 
 
 -- * Effect Instances
