@@ -241,7 +241,10 @@ apply q' x =
 -- | Send an effect and wait for a reply.
 send :: (Member eff e, Effectful m) => eff (Eff e) b -> m e b
 send t = raiseEff (E (inj t) (tsingleton (Arrow Return)))
-
+{-# INLINE [2] send #-}
+{-# RULES
+  "send/bind" [~3] forall t k. send t >>= k = E (inj t) (tsingleton (Arrow k))
+  #-}
 -- | Runs an effect whose effects has been consumed.
 --
 -- Typically composed as follows:
@@ -356,7 +359,7 @@ instance Monad (Eff e) where
 
   Return x >>= k = k x
   E u q >>= k = E u (q |> Arrow k)
-  {-# INLINE (>>=) #-}
+  {-# INLINE [2] (>>=) #-}
 
 instance Member (Lift IO) e => MonadIO (Eff e) where
   liftIO = send . Lift
