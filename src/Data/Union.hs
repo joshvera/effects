@@ -114,7 +114,11 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 type ForAll typeclass members = ForAll' typeclass members
 
 -- | Lift an operation generalized over any possible member of a 'Union' into the 'Union'.
-forAll :: forall typeclass members m a c . ForAll typeclass members => (forall member . typeclass member => (forall n b . member n b -> Union members n b) -> member m a -> c) -> Union members m a -> c
+forAll :: forall typeclass members m a c
+       .  ForAll typeclass members
+       => (forall member . typeclass member => (forall n b . member n b -> Union members n b) -> member m a -> c)
+       -> Union members m a
+       -> c
 forAll f = forAll' @typeclass @members @members f 0
 {-# INLINE forAll #-}
 
