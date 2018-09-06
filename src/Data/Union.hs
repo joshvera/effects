@@ -36,7 +36,7 @@ module Data.Union
 , prj
 , Member
 , ForAll
-, case'
+, forAll
 ) where
 
 import Unsafe.Coerce (unsafeCoerce)
@@ -110,20 +110,20 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 
 type ForAll typeclass members = ForAll' typeclass members
 
-case' :: forall typeclass members m a c . ForAll typeclass members => (forall member . typeclass member => (forall n b . member n b -> Union members n b) -> member m a -> c) -> Union members m a -> c
-case' f = case'' @typeclass @members @members f 0
-{-# INLINE case' #-}
+forAll :: forall typeclass members m a c . ForAll typeclass members => (forall member . typeclass member => (forall n b . member n b -> Union members n b) -> member m a -> c) -> Union members m a -> c
+forAll f = forAll' @typeclass @members @members f 0
+{-# INLINE forAll #-}
 
 
 class ForAll' typeclass (members :: [(* -> *) -> (* -> *)]) where
-  case'' :: (forall member . typeclass member => (forall n b . member n b -> Union original n b) -> member m a -> c) -> Int -> Union original m a -> c
+  forAll' :: (forall member . typeclass member => (forall n b . member n b -> Union original n b) -> member m a -> c) -> Int -> Union original m a -> c
 
 instance ForAll' typeclass '[] where
-  case'' _ _ _ = error "impossible: case'' on empty Union"
-  {-# INLINE case'' #-}
+  forAll' _ _ _ = error "impossible: forAll' on empty Union"
+  {-# INLINE forAll' #-}
 
 instance (typeclass member, ForAll' typeclass members) => ForAll' typeclass (member ': members) where
-  case'' f n u@(Union n' t)
+  forAll' f n u@(Union n' t)
     | n == n'   = f @member (Union n') (unsafeCoerce t)
-    | otherwise = case'' @typeclass @members f (n + 1) u
-  {-# INLINE case'' #-}
+    | otherwise = forAll' @typeclass @members f (n + 1) u
+  {-# INLINE forAll' #-}

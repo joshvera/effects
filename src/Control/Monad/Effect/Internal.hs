@@ -159,11 +159,11 @@ liftHandler handler u k = raiseEff (fromRequest (handle (lowerHandler handler) (
 {-# INLINE liftHandler #-}
 
 instance ForAll PureEffect effects => PureEffect (Union effects) where
-  handle handler (Request u k) = case' @PureEffect (\ reinj eff -> reinj `requestMap` handle handler (Request eff k)) u
+  handle handler (Request u k) = forAll @PureEffect (\ reinj eff -> reinj `requestMap` handle handler (Request eff k)) u
   {-# INLINE handle #-}
 
 instance (ForAll PureEffect effects, ForAll Effect effects) => Effect (Union effects) where
-  handleState state handler (Request u k) = case' @Effect (\ reinj eff -> reinj `requestMap` handleState state handler (Request eff k)) u
+  handleState state handler (Request u k) = forAll @Effect (\ reinj eff -> reinj `requestMap` handleState state handler (Request eff k)) u
   {-# INLINE handleState #-}
 
 
