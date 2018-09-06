@@ -108,6 +108,9 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 {-# INLINE decompose0 #-}
 
 
+-- | A constraint synonym stating that all members of a 'Union' satisfy some constraint.
+--
+--   This is used to lift operations on members (made available by some typeclass) into operations on 'Union's.
 type ForAll typeclass members = ForAll' typeclass members
 
 forAll :: forall typeclass members m a c . ForAll typeclass members => (forall member . typeclass member => (forall n b . member n b -> Union members n b) -> member m a -> c) -> Union members m a -> c
