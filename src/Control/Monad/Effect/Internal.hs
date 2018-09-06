@@ -1,4 +1,4 @@
-{-# LANGUAGE ConstraintKinds, DataKinds, DefaultSignatures, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, PatternSynonyms, RankNTypes, TypeOperators, UndecidableInstances, ViewPatterns #-}
+{-# LANGUAGE ConstraintKinds, DataKinds, DefaultSignatures, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving, KindSignatures, PatternSynonyms, RankNTypes, TypeApplications, TypeOperators, UndecidableInstances, ViewPatterns #-}
 module Control.Monad.Effect.Internal (
   -- * Constructing and Sending Effects
   Eff(..)
@@ -158,28 +158,20 @@ liftHandler :: (Effectful m, PureEffects effects') => (forall x . m effects x ->
 liftHandler handler u k = raiseEff (fromRequest (handle (lowerHandler handler) (Request u (lowerEff . k))))
 {-# INLINE liftHandler #-}
 
-instance PureEffect (Union '[])
-instance Effect (Union '[]) where
-  handleState _ _ _ = error "impossible: handleState on empty Union"
-
-instance (PureEffect effect, PureEffect (Union effects)) => PureEffect (Union (effect ': effects)) where
-  handle handler (Request u k) = case decompose u of
-    Left u' -> weaken `requestMap` handle handler (Request u' k)
-    Right eff -> inj `requestMap` handle handler (Request eff k)
+instance ForAll PureEffect effects => PureEffect (Union effects) where
+  handle handler (Request u k) = case' @PureEffect (\ reinj eff -> reinj `requestMap` handle handler (Request eff k)) u
   {-# INLINE handle #-}
 
-instance (Effect effect, Effect (Union effects)) => Effect (Union (effect ': effects)) where
-  handleState c dist (Request u k) = case decompose u of
-    Left u' -> weaken `requestMap` handleState c dist (Request u' k)
-    Right eff -> inj `requestMap` handleState c dist (Request eff k)
+instance (ForAll PureEffect effects, ForAll Effect effects) => Effect (Union effects) where
+  handleState state handler (Request u k) = case' @Effect (\ reinj eff -> reinj `requestMap` handleState state handler (Request eff k)) u
   {-# INLINE handleState #-}
 
 
 -- | Require a 'PureEffect' instance for each effect in the list.
-type PureEffects effects = PureEffect (Union effects)
+type PureEffects effects = ForAll PureEffect effects
 
 -- | Require an 'Effect' instance for each effect in the list.
-type Effects effects = Effect (Union effects)
+type Effects effects = (ForAll PureEffect effects, ForAll Effect effects)
 
 
 -- | Types wrapping 'Eff' actions.
