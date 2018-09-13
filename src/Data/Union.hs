@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, FlexibleInstances, GADTs, KindSignatures, MultiParamTypeClasses, RankNTypes, RoleAnnotations, ScopedTypeVariables, TypeOperators #-}
+{-# LANGUAGE AllowAmbiguousTypes, ConstraintKinds, DataKinds, FlexibleInstances, GADTs, KindSignatures, MultiParamTypeClasses, RankNTypes, RoleAnnotations, ScopedTypeVariables, TypeApplications, TypeOperators #-}
 
 {-|
 Module      : Data.Union
@@ -35,6 +35,8 @@ module Data.Union
 , inj
 , prj
 , Member
+, ForAll
+, forAll
 ) where
 
 import Unsafe.Coerce (unsafeCoerce)
@@ -104,3 +106,32 @@ decompose0 (Union _ v) = Right $ unsafeCoerce v
 -- No other case is possible
 {-# RULES "decompose/singleton"  decompose = decompose0 #-}
 {-# INLINE decompose0 #-}
+
+
+-- | A constraint synonym stating that all members of a 'Union' satisfy some constraint.
+--
+--   This is used to lift operations on members (made available by some typeclass) into operations on 'Union's.
+type ForAll typeclass members = ForAll' typeclass members
+
+-- | Lift an operation generalized over any possible member of a 'Union' into the 'Union'.
+forAll :: forall typeclass members m a c
+       .  ForAll typeclass members
+       => (forall member . typeclass member => (forall n b . member n b -> Union members n b) -> member m a -> c)
+       -> Union members m a
+       -> c
+forAll f = forAll' @typeclass @members @members f 0
+{-# INLINE forAll #-}
+
+
+class ForAll' typeclass (members :: [(* -> *) -> (* -> *)]) where
+  forAll' :: (forall member . typeclass member => (forall n b . member n b -> Union original n b) -> member m a -> c) -> Int -> Union original m a -> c
+
+instance ForAll' typeclass '[] where
+  forAll' _ _ _ = error "impossible: forAll' on empty Union"
+  {-# INLINE forAll' #-}
+
+instance (typeclass member, ForAll' typeclass members) => ForAll' typeclass (member ': members) where
+  forAll' f n u@(Union n' t)
+    | n == n'   = f @member (Union n') (unsafeCoerce t)
+    | otherwise = forAll' @typeclass @members f (n + 1) u
+  {-# INLINE forAll' #-}

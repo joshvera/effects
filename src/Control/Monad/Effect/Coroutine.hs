@@ -54,7 +54,7 @@ status :: (w -> x) -> (a -> (b -> m e (Status m e a b w)) -> x) -> Status m e a 
 status f _ (Done w) = f w
 status _ g (Continue a f) = g a f
 
-joinStatus :: Effect (Union effs) => Status Eff effs a b (Eff (Yield a b : effs) x) -> Eff effs (Status Eff effs a b x)
+joinStatus :: Effects effs => Status Eff effs a b (Eff (Yield a b : effs) x) -> Eff effs (Status Eff effs a b x)
 joinStatus = status runC (\ a f -> pure (Continue a (joinStatus <=< f)))
 
 -- | Launch a thread and report its status
