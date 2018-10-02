@@ -48,6 +48,7 @@ library
                      , Control.Monad.Effect.State
                      , Control.Monad.Effect.StateRW
                      , Control.Monad.Effect.Trace
+                     , Control.Monad.Effect.Update
                      , Control.Monad.Effect.Writer
                      , Data.Union
   build-depends:       base >=4.7 && <5
