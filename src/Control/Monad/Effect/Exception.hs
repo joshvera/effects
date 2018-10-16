@@ -25,8 +25,6 @@ module Control.Monad.Effect.Exception
 , handleError
 -- * Handling impure/IO errors
 , rethrowing
--- * Resource management
-, bracket
 ) where
 
 import qualified Control.Exception as Exc
@@ -87,22 +85,3 @@ rethrowing :: ( Member (Exc Exc.SomeException) e
            => IO a
            -> m e a
 rethrowing m = raiseEff (liftIO (Exc.try m) >>= either (throwError . Exc.toException @Exc.SomeException) pure)
-
--- | The semantics of @bracket before after handler@ are as follows:
--- * Exceptions in @before@ and @after@ are thrown in IO.
--- * @after@ is called on IO exceptions in @handler@, and then rethrown in IO.
--- * If @handler@ completes successfully, @after@ is called
--- Call 'catchIO' at the call site if you want to recover.
-bracket :: ( Member (Lift IO) e
-           , Effectful m
-           , PureEffects e
-           )
-        => IO a
-        -> (a -> IO b)
-        -> (a -> m e c)
-        -> m e c
-bracket before after action = raiseEff $ do
-  a <- liftIO before
-  let cleanup = liftIO (after a)
-  res <- interpose (\ (Lift m) -> liftIO (Exc.try m) >>= either (\ exc -> cleanup >> liftIO (Exc.throwIO @Exc.SomeException exc)) pure) (lowerEff (action a))
-  res <$ cleanup
