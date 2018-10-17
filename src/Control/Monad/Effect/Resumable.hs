@@ -7,6 +7,7 @@ module Control.Monad.Effect.Resumable
   , runResumableWith
   ) where
 
+import Control.DeepSeq
 import Control.Monad.Effect.Internal
 import Data.Functor.Classes
 
@@ -35,6 +36,8 @@ instance Eq1 exc => Eq (SomeExc exc) where
 instance (Show1 exc) => Show (SomeExc exc) where
   showsPrec num (SomeExc exc) = liftShowsPrec (const (const id)) (const id) num exc
 
+instance NFData1 exc => NFData (SomeExc exc) where
+  rnf (SomeExc exc) = liftRnf (\a -> seq a ()) exc
 
 instance PureEffect (Resumable exc)
 instance Effect (Resumable exc) where
